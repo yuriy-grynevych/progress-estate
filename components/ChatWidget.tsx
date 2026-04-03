@@ -197,10 +197,26 @@ export default function ChatWidget() {
         }),
       });
       const data = await res.json();
+      const newSuggestions: PropertySuggestion[] = data.suggestions ?? [];
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.reply, suggestions: data.suggestions ?? [] },
+        { role: "assistant", content: data.reply, suggestions: newSuggestions },
       ]);
+
+      // After showing property suggestions, prompt for contact (once per session)
+      if (newSuggestions.length > 0 && !contactSent) {
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: locale === "uk"
+                ? "Зацікавила якась із пропозицій? Залиште свій номер телефону прямо тут — і ми самі зателефонуємо у зручний час 📞"
+                : "Interested in any of these? Leave your phone number here and we'll call you at a convenient time 📞",
+            },
+          ]);
+        }, 1200);
+      }
     } catch {
       setMessages((prev) => [
         ...prev,
