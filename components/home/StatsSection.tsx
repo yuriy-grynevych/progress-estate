@@ -4,8 +4,8 @@ import { useLocale } from "next-intl";
 const stats = [
   { value: "150+", labelUk: "Проданих об'єктів", labelEn: "Properties Sold" },
   { value: "300+", labelUk: "Задоволених клієнтів", labelEn: "Happy Clients" },
-  { value: "5+", labelUk: "Років досвіду", labelEn: "Years of Experience" },
-  { value: "50+", labelUk: "Активних оголошень", labelEn: "Active Listings" },
+  { value: "250+", labelUk: "Активних оголошень", labelEn: "Active Listings" },
+  { value: "24/7", labelUk: "Підтримка клієнтів", labelEn: "Client Support" },
 ];
 
 export default function StatsSection() {
@@ -13,7 +13,7 @@ export default function StatsSection() {
   const isUk = locale === "uk";
 
   return (
-    <section className="bg-navy-900 py-12">
+    <section className="bg-black py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {stats.map(({ value, labelUk, labelEn }) => (
