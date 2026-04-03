@@ -25,7 +25,6 @@ export default function Navbar() {
 
   useEffect(() => {
     const heroLogo = document.getElementById("hero-logo");
-
     if (heroLogo) {
       const observer = new IntersectionObserver(
         ([entry]) => setLogoVisible(!entry.isIntersecting),
@@ -34,10 +33,12 @@ export default function Navbar() {
       observer.observe(heroLogo);
       return () => observer.disconnect();
     } else {
-      // No hero logo on this page — always show
       setLogoVisible(true);
     }
   }, [pathname]);
+
+  // Transparent navbar only on home page
+  const isHomePage = pathname === `/${locale}` || pathname === `/${locale}/`;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -61,7 +62,7 @@ export default function Navbar() {
   return (
     <nav className={cn(
       "fixed top-0 left-0 right-0 z-50 text-white transition-all duration-300",
-      scrolled ? "bg-black shadow-lg" : "bg-transparent"
+      (!isHomePage || scrolled) ? "bg-black shadow-lg" : "bg-transparent"
     )}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16">

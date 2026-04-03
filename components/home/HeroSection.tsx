@@ -118,7 +118,7 @@ export default function HeroSection() {
         <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
             d="M0 60L1440 60L1440 0C1440 0 1080 60 720 60C360 60 0 0 0 0L0 60Z"
-            fill="white"
+            fill="black"
           />
         </svg>
       </div>
