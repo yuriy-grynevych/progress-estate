@@ -28,7 +28,7 @@ export default function HeroSection() {
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url("https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/%D0%92%D0%B8%D0%B4_%D0%BD%D0%B0_%D0%86%D0%B2%D0%B0%D0%BD%D0%BE-%D0%A4%D1%80%D0%B0%D0%BD%D0%BA%D1%96%D0%B2%D1%81%D1%8C%D0%BA_%D0%B7_%D0%92%D0%BE%D0%B2%D1%87%D0%B8%D0%BD%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D1%85_%D0%B3%D1%96%D1%80_%28%D0%BF%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0%29.jpg/1920px-%D0%92%D0%B8%D0%B4_%D0%BD%D0%B0_%D0%86%D0%B2%D0%B0%D0%BD%D0%BE-%D0%A4%D1%80%D0%B0%D0%BD%D0%BA%D1%96%D0%B2%D1%81%D1%8C%D0%BA_%D0%B7_%D0%92%D0%BE%D0%B2%D1%87%D0%B8%D0%BD%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D1%85_%D0%B3%D1%96%D1%80_%28%D0%BF%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0%29.jpg")`,
+          backgroundImage: `url("/hero-bg.jpg")`,
         }}
       />
       {/* Dark overlay for text readability */}
