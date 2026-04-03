@@ -126,8 +126,12 @@ export async function POST(req: NextRequest) {
 
   // Extract [PROP:slug] tags and fetch property cards
   const propRegex = /\[PROP:([a-z0-9\-]+)\]/g;
-  const slugsFound = [...reply.matchAll(propRegex)].map((m) => m[1]);
-  const uniqueSlugs = [...new Set(slugsFound)];
+  const slugsFound: string[] = [];
+  let propMatch: RegExpExecArray | null;
+  while ((propMatch = propRegex.exec(reply)) !== null) {
+    slugsFound.push(propMatch[1]);
+  }
+  const uniqueSlugs = Array.from(new Set(slugsFound));
 
   // Remove tags from displayed text
   reply = reply.replace(propRegex, "");
