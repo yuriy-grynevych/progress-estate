@@ -39,11 +39,11 @@ export default function HeroSection() {
         <div className="max-w-3xl">
           <div className="mb-6" id="hero-logo">
             <Image
-              src="/logo-progress.png"
+              src="/logo-hero.png"
               alt="Progress Estate"
-              width={420}
-              height={130}
-              className="w-72 sm:w-96 lg:w-[420px] h-auto"
+              width={480}
+              height={480}
+              className="w-48 sm:w-56 lg:w-64 h-auto"
             />
           </div>
 

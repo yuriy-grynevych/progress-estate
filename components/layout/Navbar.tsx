@@ -28,7 +28,7 @@ export default function Navbar() {
     if (heroLogo) {
       const observer = new IntersectionObserver(
         ([entry]) => setLogoVisible(!entry.isIntersecting),
-        { threshold: 0 }
+        { threshold: 0, rootMargin: "0px 0px 0px 0px" }
       );
       observer.observe(heroLogo);
       return () => observer.disconnect();
