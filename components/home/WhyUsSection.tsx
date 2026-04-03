@@ -42,7 +42,7 @@ export default function WhyUsSection() {
               key={titleUk}
               className="text-center p-8 rounded-2xl border border-gray-100 hover:border-gold-400 hover:shadow-lg transition-all"
             >
-              <div className="w-14 h-14 bg-navy-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <div className="w-14 h-14 bg-black rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Icon className="w-7 h-7 text-gold-400" />
               </div>
               <h3 className="text-lg font-semibold text-navy-900 mb-2">

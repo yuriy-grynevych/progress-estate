@@ -91,7 +91,7 @@ export default async function InquiriesPage({
               href={s === "ALL" ? "/admin/inquiries" : `/admin/inquiries?status=${s}`}
               className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition ${
                 currentStatus === s
-                  ? "bg-navy-900 text-white"
+                  ? "bg-black text-white"
                   : "bg-white text-gray-500 hover:bg-gray-100 shadow-sm"
               }`}
             >

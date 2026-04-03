@@ -64,7 +64,7 @@ export default async function AdminPropertiesPage({
         </h1>
         <Link
           href="/admin/properties/new"
-          className="flex items-center gap-2 bg-navy-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-navy-800 transition"
+          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black/90 transition"
         >
           <PlusCircle className="w-4 h-4" />
           Додати

@@ -54,7 +54,7 @@ export default function FilterSidebar({ locale, searchParams }: FilterSidebarPro
             <button key={opt.v} onClick={() => updateFilter("listingType", opt.v || null)}
               className={cn("flex-1 py-1.5 text-xs rounded-lg border transition-colors",
                 (searchParams.listingType ?? "") === opt.v
-                  ? "bg-navy-900 text-white border-navy-900"
+                  ? "bg-black text-white border-navy-900"
                   : "border-gray-200 text-gray-700 hover:border-navy-300")}>
               {opt.l}
             </button>
@@ -112,7 +112,7 @@ export default function FilterSidebar({ locale, searchParams }: FilterSidebarPro
             <button key={r} onClick={() => updateFilter("rooms", r || null)}
               className={cn("flex-1 py-1.5 text-xs rounded-lg border transition-colors",
                 (searchParams.rooms ?? "") === r
-                  ? "bg-navy-900 text-white border-navy-900"
+                  ? "bg-black text-white border-navy-900"
                   : "border-gray-200 text-gray-700 hover:border-navy-300")}>
               {r || (isUk ? "Всі" : "All")}{r === "4" ? "+" : ""}
             </button>
@@ -137,7 +137,7 @@ export default function FilterSidebar({ locale, searchParams }: FilterSidebarPro
 
       {/* Mobile close button */}
       <button onClick={() => setMobileOpen(false)}
-        className="lg:hidden w-full bg-navy-900 text-white py-2.5 rounded-xl text-sm font-medium mt-2">
+        className="lg:hidden w-full bg-black text-white py-2.5 rounded-xl text-sm font-medium mt-2">
         {isUk ? "Застосувати" : "Apply"}
       </button>
     </div>

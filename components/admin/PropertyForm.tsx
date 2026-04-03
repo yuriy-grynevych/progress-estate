@@ -153,7 +153,7 @@ function FeatureTab({
                     : "border-gray-200 text-gray-600 hover:border-gray-300"
                 }`}
               >
-                <span className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${selected ? "bg-navy-900 text-white" : "border border-gray-300"}`}>
+                <span className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${selected ? "bg-black text-white" : "border border-gray-300"}`}>
                   {selected && (
                     <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2.5">
                       <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -183,7 +183,7 @@ function FeatureTab({
             type="button"
             onClick={addCustom}
             disabled={!input.trim()}
-            className="px-4 py-2 bg-navy-900 text-white rounded-xl text-sm font-medium hover:bg-navy-800 transition disabled:opacity-40"
+            className="px-4 py-2 bg-black text-white rounded-xl text-sm font-medium hover:bg-black/90 transition disabled:opacity-40"
           >
             Додати
           </button>
@@ -309,7 +309,7 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
           <button
             type="submit"
             disabled={saving}
-            className="px-6 py-2 bg-navy-900 text-white rounded-xl text-sm font-medium hover:bg-navy-800 transition disabled:opacity-60"
+            className="px-6 py-2 bg-black text-white rounded-xl text-sm font-medium hover:bg-black/90 transition disabled:opacity-60"
           >
             {saving ? "Збереження..." : isEdit ? "Зберегти зміни" : "Створити"}
           </button>
@@ -325,7 +325,7 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             onClick={() => setActiveTab(i)}
             className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition ${
               activeTab === i
-                ? "bg-navy-900 text-white"
+                ? "bg-black text-white"
                 : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
             }`}
           >
@@ -579,7 +579,7 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
         <button
           type="submit"
           disabled={saving}
-          className="px-8 py-2.5 bg-navy-900 text-white rounded-xl text-sm font-medium hover:bg-navy-800 transition disabled:opacity-60"
+          className="px-8 py-2.5 bg-black text-white rounded-xl text-sm font-medium hover:bg-black/90 transition disabled:opacity-60"
         >
           {saving ? "Збереження..." : isEdit ? "Зберегти зміни" : "Створити оголошення"}
         </button>

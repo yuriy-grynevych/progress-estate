@@ -17,7 +17,7 @@ export default function AboutPage({
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1">
-        <div className="bg-navy-900 text-white py-20">
+        <div className="bg-black text-white py-20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl font-bold mb-4">
               {isUk ? "Про Progress Estate" : "About Progress Estate"}

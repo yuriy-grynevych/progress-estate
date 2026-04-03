@@ -120,7 +120,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
             </div>
             <button
               onClick={() => fileRef.current?.click()}
-              className="absolute -bottom-1 -right-1 w-7 h-7 bg-navy-900 text-white rounded-full flex items-center justify-center hover:bg-navy-800 transition"
+              className="absolute -bottom-1 -right-1 w-7 h-7 bg-black text-white rounded-full flex items-center justify-center hover:bg-black/90 transition"
               title="Завантажити фото"
             >
               <Camera className="w-3.5 h-3.5" />
@@ -176,7 +176,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 bg-navy-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-navy-800 transition disabled:opacity-50"
+              className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black/90 transition disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               {saving ? "Збереження..." : "Зберегти"}
@@ -232,7 +232,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
             <button
               type="submit"
               disabled={saving}
-              className="flex items-center gap-2 bg-navy-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-navy-800 transition disabled:opacity-50"
+              className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black/90 transition disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
               Зберегти
@@ -289,7 +289,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="bg-navy-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-navy-800 transition"
+                className="bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black/90 transition"
               >
                 Змінити
               </button>

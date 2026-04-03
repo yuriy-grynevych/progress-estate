@@ -23,7 +23,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[85vh] flex items-center bg-navy-900 overflow-hidden">
+    <section className="relative min-h-[85vh] flex items-center bg-black overflow-hidden">
       {/* Background photo of Ivano-Frankivsk — CC0 Public Domain */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -32,7 +32,7 @@ export default function HeroSection() {
         }}
       />
       {/* Dark overlay for text readability */}
-      <div className="absolute inset-0 bg-navy-900/70" />
+      <div className="absolute inset-0 bg-black/70" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
         <div className="max-w-3xl">
@@ -59,7 +59,7 @@ export default function HeroSection() {
                   className={cn(
                     "flex-1 py-2.5 text-sm font-semibold rounded-lg transition-all",
                     listingType === type
-                      ? "bg-navy-900 text-white shadow"
+                      ? "bg-black text-white shadow"
                       : "text-gray-600 hover:text-navy-900"
                   )}
                 >

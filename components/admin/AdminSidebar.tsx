@@ -51,7 +51,7 @@ export default function AdminSidebar({ onClose, role = "EMPLOYEE" }: AdminSideba
   }
 
   return (
-    <div className="flex flex-col h-full bg-navy-900 text-white">
+    <div className="flex flex-col h-full bg-black text-white">
       {/* Logo */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
         <div>

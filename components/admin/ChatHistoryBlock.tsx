@@ -57,13 +57,13 @@ export default function ChatHistoryBlock({ history, source }: { history: ChatMes
           {history.map((msg, i) => (
             <div key={i} className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               {msg.role === "assistant" && (
-                <div className="w-6 h-6 rounded-full bg-navy-900 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-6 h-6 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
                   <Bot className="w-3 h-3 text-white" />
                 </div>
               )}
               <div className={`max-w-[80%] px-3 py-1.5 rounded-xl text-xs leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-navy-900 text-white rounded-br-sm"
+                  ? "bg-black text-white rounded-br-sm"
                   : "bg-gray-100 text-gray-700 rounded-bl-sm"
               }`}>
                 <MessageContent content={msg.content} isUser={msg.role === "user"} />

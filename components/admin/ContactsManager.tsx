@@ -206,7 +206,7 @@ export default function ContactsManager({ initialContacts, agents, role, current
         </div>
         <button
           onClick={() => { setShowForm(true); setError(""); }}
-          className="flex items-center justify-center gap-2 bg-navy-900 hover:bg-navy-800 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition w-full sm:w-auto sm:self-start"
+          className="flex items-center justify-center gap-2 bg-black hover:bg-black/90 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition w-full sm:w-auto sm:self-start"
         >
           <Plus className="w-4 h-4" />
           Додати {activeTab === "CLIENT" ? "клієнта" : "власника"}
@@ -304,7 +304,7 @@ export default function ContactsManager({ initialContacts, agents, role, current
               <button
                 type="submit"
                 disabled={saving}
-                className="px-5 py-2 bg-navy-900 hover:bg-navy-800 text-white text-sm font-medium rounded-xl transition disabled:opacity-50"
+                className="px-5 py-2 bg-black hover:bg-black/90 text-white text-sm font-medium rounded-xl transition disabled:opacity-50"
               >
                 {saving ? "Збереження..." : "Зберегти"}
               </button>
@@ -407,7 +407,7 @@ export default function ContactsManager({ initialContacts, agents, role, current
                     <button
                       onClick={() => handleSaveEdit(c.id)}
                       disabled={saving}
-                      className="flex items-center gap-1 px-3 py-1.5 text-sm bg-navy-900 text-white rounded-xl disabled:opacity-50"
+                      className="flex items-center gap-1 px-3 py-1.5 text-sm bg-black text-white rounded-xl disabled:opacity-50"
                     >
                       <Check className="w-3.5 h-3.5" /> Зберегти
                     </button>

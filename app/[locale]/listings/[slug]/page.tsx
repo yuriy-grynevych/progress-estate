@@ -141,7 +141,7 @@ export default async function PropertyPage({
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-navy-900 text-white">
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-black text-white">
                         {getListingTypeLabel(property.listingType, locale)}
                       </span>
                       <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700">

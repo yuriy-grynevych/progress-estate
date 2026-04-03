@@ -70,7 +70,7 @@ export default function FeaturesManager({ initialFeatures }: { initialFeatures: 
         <button
           type="submit"
           disabled={loading || !labelUk.trim() || !labelEn.trim()}
-          className="flex items-center gap-2 bg-navy-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-navy-800 transition disabled:opacity-50 h-[38px]"
+          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black/90 transition disabled:opacity-50 h-[38px]"
         >
           <Plus className="w-4 h-4" />
           Додати

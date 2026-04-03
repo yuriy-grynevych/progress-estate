@@ -146,7 +146,7 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link
           href="/admin/properties/new"
-          className="bg-navy-900 text-white rounded-2xl p-5 hover:bg-navy-800 transition"
+          className="bg-black text-white rounded-2xl p-5 hover:bg-black/90 transition"
         >
           <Building2 className="w-6 h-6 mb-2" />
           <p className="font-semibold">Додати нерухомість</p>

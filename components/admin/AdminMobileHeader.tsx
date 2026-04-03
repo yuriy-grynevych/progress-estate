@@ -14,7 +14,7 @@ export default function AdminMobileHeader({ role = "EMPLOYEE" }: AdminMobileHead
   return (
     <>
       {/* Mobile topbar */}
-      <header className="lg:hidden bg-navy-900 text-white px-4 py-3 flex items-center gap-3">
+      <header className="lg:hidden bg-black text-white px-4 py-3 flex items-center gap-3">
         <button onClick={() => setOpen(true)} className="text-white">
           <Menu className="w-6 h-6" />
         </button>

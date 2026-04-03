@@ -256,7 +256,7 @@ export default function ChatWidget() {
           style={{ maxHeight: "min(600px, calc(100vh - 120px))" }}
         >
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-navy-900 text-white flex-shrink-0">
+          <div className="flex items-center gap-3 px-4 py-3 bg-black text-white flex-shrink-0">
             <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
               <Image src="/logo.png" alt="Progress Estate" width={36} height={36} className="object-contain" />
             </div>
@@ -274,7 +274,7 @@ export default function ChatWidget() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} gap-2`}>
                 {msg.role === "assistant" && (
-                  <div className="w-7 h-7 rounded-full bg-navy-900 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
@@ -282,7 +282,7 @@ export default function ChatWidget() {
                   <div
                     className={`px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                       msg.role === "user"
-                        ? "bg-navy-900 text-white rounded-br-sm"
+                        ? "bg-black text-white rounded-br-sm"
                         : "bg-white text-gray-800 shadow-sm rounded-bl-sm"
                     }`}
                   >
@@ -331,7 +331,7 @@ export default function ChatWidget() {
 
             {loading && (
               <div className="flex justify-start gap-2">
-                <div className="w-7 h-7 rounded-full bg-navy-900 flex items-center justify-center flex-shrink-0">
+                <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center flex-shrink-0">
                   <Bot className="w-4 h-4 text-white" />
                 </div>
                 <div className="bg-white shadow-sm px-4 py-3 rounded-2xl rounded-bl-sm flex items-center gap-1">
@@ -379,7 +379,7 @@ export default function ChatWidget() {
                     <button
                       type="submit"
                       disabled={contactSaving}
-                      className="flex-1 bg-navy-900 text-white text-xs font-medium py-2 rounded-lg hover:bg-navy-800 transition disabled:opacity-50"
+                      className="flex-1 bg-black text-white text-xs font-medium py-2 rounded-lg hover:bg-black/90 transition disabled:opacity-50"
                     >
                       {t.send}
                     </button>
@@ -424,7 +424,7 @@ export default function ChatWidget() {
             <button
               onClick={send}
               disabled={!input.trim() || loading}
-              className="w-9 h-9 flex items-center justify-center bg-navy-900 text-white rounded-xl hover:bg-navy-800 transition disabled:opacity-40 flex-shrink-0"
+              className="w-9 h-9 flex items-center justify-center bg-black text-white rounded-xl hover:bg-black/90 transition disabled:opacity-40 flex-shrink-0"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -435,7 +435,7 @@ export default function ChatWidget() {
       {/* Floating button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-6 right-4 sm:right-6 z-50 w-14 h-14 bg-navy-900 hover:bg-navy-800 text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+        className="fixed bottom-6 right-4 sm:right-6 z-50 w-14 h-14 bg-black hover:bg-black/90 text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
         aria-label="Відкрити чат"
       >
         {open ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}

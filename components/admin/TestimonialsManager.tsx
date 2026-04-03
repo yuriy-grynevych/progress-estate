@@ -102,7 +102,7 @@ export default function TestimonialsManager({ initialTestimonials }: Props) {
             setEditingId(null);
             setForm(emptyForm);
           }}
-          className="flex items-center gap-2 bg-navy-900 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-navy-800 transition"
+          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black/90 transition"
         >
           <Plus className="w-4 h-4" />
           Додати відгук
@@ -196,7 +196,7 @@ export default function TestimonialsManager({ initialTestimonials }: Props) {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-navy-900 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-navy-800 transition disabled:opacity-60"
+                className="bg-black text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-black/90 transition disabled:opacity-60"
               >
                 {loading ? "Збереження..." : editingId ? "Зберегти" : "Додати"}
               </button>

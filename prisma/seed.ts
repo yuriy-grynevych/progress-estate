@@ -257,6 +257,34 @@ async function main() {
   }
   console.log(`✅ ${properties.length} properties seeded`);
 
+  // Owners
+  const owners = [
+    { name: "Василь Іваненко", phone: "+380671234567", email: "ivanenko@gmail.com", type: "OWNER" as const, notes: "Власник квартири в центрі та офісу", source: "Особистий контакт" },
+    { name: "Оксана Гриценко", phone: "+380509876543", email: "gritsenko@ukr.net", type: "OWNER" as const, notes: "Власниця 3 нерухомостей на Пасічній", source: "Рекомендація" },
+    { name: "Микола Бондаренко", phone: "+380632223344", type: "OWNER" as const, notes: "Власник будинку та земельної ділянки", source: "Сайт" },
+    { name: "Тетяна Савченко", phone: "+380951112233", email: "savchenko.t@gmail.com", type: "OWNER" as const, notes: "Власниця студії та квартири на БАМ", source: "Рекомендація" },
+  ];
+
+  const ownerSlugMap: Record<string, string[]> = {
+    "Василь Іваненко": ["dvokimnata-kvartira-tsentr-75m2", "ofisne-prymishchennya-tsentr-120m2"],
+    "Оксана Гриценко": ["trikimnatna-kvartira-pasyichna-95m2", "dilyanky-zemli-pid-zabrudoву-8sot"],
+    "Микола Бондаренко": ["budynok-prymiski-200m2-10sot", "budynok-v-mistsi-130m2-6sot"],
+    "Тетяна Савченко": ["kvartira-studiya-novobydova-35m2", "odnokimnata-kvartira-bam-42m2"],
+  };
+
+  for (const owner of owners) {
+    let contact = await prisma.contact.findFirst({ where: { phone: owner.phone } });
+    if (!contact) contact = await prisma.contact.create({ data: owner });
+    const slugs = ownerSlugMap[owner.name] ?? [];
+    for (const slug of slugs) {
+      await prisma.property.updateMany({
+        where: { slug },
+        data: { ownerContactId: contact.id },
+      });
+    }
+  }
+  console.log(`✅ ${owners.length} owners seeded and linked to properties`);
+
   // Testimonials
   const testimonials = [
     {

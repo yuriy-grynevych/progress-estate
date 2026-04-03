@@ -33,10 +33,10 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-navy-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-navy-900 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-black mb-4">
             <Lock className="w-6 h-6 text-gold-400" />
           </div>
           <h1 className="text-2xl font-bold text-navy-900">Progress Estate</h1>
@@ -87,7 +87,7 @@ export default function SignInPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-navy-900 text-white py-2.5 rounded-lg font-medium hover:bg-navy-800 transition disabled:opacity-60"
+            className="w-full bg-black text-white py-2.5 rounded-lg font-medium hover:bg-black/90 transition disabled:opacity-60"
           >
             {loading ? "Вхід..." : "Увійти"}
           </button>

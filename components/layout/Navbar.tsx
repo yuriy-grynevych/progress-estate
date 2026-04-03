@@ -29,7 +29,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-navy-900 text-white shadow-lg">
+    <nav className="sticky top-0 z-50 bg-black text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href={`/${locale}`} className="flex items-center">
@@ -76,7 +76,7 @@ export default function Navbar() {
       </div>
 
       {isOpen && (
-        <div className="md:hidden bg-navy-800 border-t border-white/10 px-4 py-4 space-y-3">
+        <div className="md:hidden bg-black border-t border-white/10 px-4 py-4 space-y-3">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href}
               className="block text-white/80 hover:text-gold-400 py-1"
