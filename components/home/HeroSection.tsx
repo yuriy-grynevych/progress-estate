@@ -24,13 +24,15 @@ export default function HeroSection() {
 
   return (
     <section className="relative min-h-[85vh] flex items-center bg-navy-900 overflow-hidden">
+      {/* Background photo of Ivano-Frankivsk — CC0 Public Domain */}
       <div
-        className="absolute inset-0 opacity-10"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage:
-            "radial-gradient(circle at 25% 50%, #d4af37 0%, transparent 50%), radial-gradient(circle at 75% 20%, #3b5fac 0%, transparent 50%)",
+          backgroundImage: `url("https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/%D0%92%D0%B8%D0%B4_%D0%BD%D0%B0_%D0%86%D0%B2%D0%B0%D0%BD%D0%BE-%D0%A4%D1%80%D0%B0%D0%BD%D0%BA%D1%96%D0%B2%D1%81%D1%8C%D0%BA_%D0%B7_%D0%92%D0%BE%D0%B2%D1%87%D0%B8%D0%BD%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D1%85_%D0%B3%D1%96%D1%80_%28%D0%BF%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0%29.jpg/1920px-%D0%92%D0%B8%D0%B4_%D0%BD%D0%B0_%D0%86%D0%B2%D0%B0%D0%BD%D0%BE-%D0%A4%D1%80%D0%B0%D0%BD%D0%BA%D1%96%D0%B2%D1%81%D1%8C%D0%BA_%D0%B7_%D0%92%D0%BE%D0%B2%D1%87%D0%B8%D0%BD%D0%B5%D1%86%D1%8C%D0%BA%D0%B8%D1%85_%D0%B3%D1%96%D1%80_%28%D0%BF%D0%B0%D0%BD%D0%BE%D1%80%D0%B0%D0%BC%D0%B0%29.jpg")`,
         }}
       />
+      {/* Dark overlay for text readability */}
+      <div className="absolute inset-0 bg-navy-900/70" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
         <div className="max-w-3xl">
