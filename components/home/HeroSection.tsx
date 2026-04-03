@@ -35,22 +35,18 @@ export default function HeroSection() {
       {/* Dark overlay for text readability */}
       <div className="absolute inset-0 bg-black/60" />
 
-      {/* Centered logo */}
-      <div
-        id="hero-logo"
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
-      >
-        <Image
-          src="/logo-progress.png"
-          alt="Progress Estate"
-          width={600}
-          height={185}
-          className="w-64 sm:w-80 lg:w-96 h-auto rounded-xl"
-        />
-      </div>
-
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 w-full">
         <div className="max-w-3xl">
+          <div id="hero-logo" className="mb-6">
+            <Image
+              src="/logo-progress.png"
+              alt="Progress Estate"
+              width={600}
+              height={185}
+              className="w-64 sm:w-80 lg:w-96 h-auto rounded-xl"
+            />
+          </div>
+
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
             {isUk ? "Знайдіть своє ідеальне житло" : "Find Your Perfect Home"}
           </h1>
