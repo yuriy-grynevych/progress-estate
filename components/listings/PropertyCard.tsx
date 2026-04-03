@@ -33,7 +33,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
               <Maximize2 className="w-12 h-12 opacity-30" />
             </div>
           )}
-          <div className="absolute bottom-3 right-3 flex gap-2">
+          <div className="absolute top-3 right-3 flex gap-2">
             <Badge
               className={
                 isRent
