@@ -33,7 +33,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
               <Maximize2 className="w-12 h-12 opacity-30" />
             </div>
           )}
-          <div className="absolute top-3 left-3">
+          <div className="absolute bottom-3 right-3 flex gap-2">
             <Badge
               className={
                 isRent
@@ -43,14 +43,12 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
             >
               {isRent ? (isUk ? "ОРЕНДА" : "RENT") : (isUk ? "ПРОДАЖ" : "SALE")}
             </Badge>
-          </div>
-          {property.isFeatured && (
-            <div className="absolute top-3 right-3">
+            {property.isFeatured && (
               <Badge className="bg-black hover:bg-black text-white text-xs">
                 {isUk ? "Виділене" : "Featured"}
               </Badge>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         <div className="p-4">
