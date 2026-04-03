@@ -23,28 +23,21 @@ export default function Navbar() {
   const [logoVisible, setLogoVisible] = useState(false);
   const isUk = locale === "uk";
 
-  useEffect(() => {
-    const heroLogo = document.getElementById("hero-logo");
-    if (heroLogo) {
-      const observer = new IntersectionObserver(
-        ([entry]) => setLogoVisible(!entry.isIntersecting),
-        { threshold: 0, rootMargin: "0px 0px 0px 0px" }
-      );
-      observer.observe(heroLogo);
-      return () => observer.disconnect();
-    } else {
-      setLogoVisible(true);
-    }
-  }, [pathname]);
-
   // Transparent navbar only on home page
   const isHomePage = pathname === `/${locale}` || pathname === `/${locale}/`;
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 10);
+      // On home page: show logo after scrolling ~280px (past the hero logo)
+      // On other pages: always show logo
+      setLogoVisible(!isHomePage || window.scrollY > 280);
+    };
+    onScroll(); // run immediately on mount
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [isHomePage]);
+
 
   const navLinks = [
     { href: `/${locale}/listings?listingType=SALE`, label: isUk ? "Купити" : "Buy" },
