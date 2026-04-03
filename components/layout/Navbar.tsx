@@ -34,11 +34,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           <Link href={`/${locale}`} className="flex items-center">
             <Image
-              src="/logo.png"
+              src="/logo-progress.png"
               alt="Progress Estate"
-              width={240}
-              height={90}
-              className="h-16 w-auto"
+              width={200}
+              height={60}
+              className="h-12 w-auto"
             />
           </Link>
 
