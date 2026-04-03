@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useLocale } from "next-intl";
 import { Search, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -23,7 +24,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative min-h-[85vh] flex items-center bg-black overflow-hidden">
+    <section className="relative min-h-screen flex items-center bg-black overflow-hidden">
       {/* Background photo of Ivano-Frankivsk — CC0 Public Domain */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -34,11 +35,16 @@ export default function HeroSection() {
       {/* Dark overlay for text readability */}
       <div className="absolute inset-0 bg-black/70" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 w-full">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 bg-gold-400/20 text-gold-400 border border-gold-400/30 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-            <span className="w-2 h-2 rounded-full bg-gold-400 animate-pulse" />
-            Progress Estate — {isUk ? "Івано-Франківськ" : "Ivano-Frankivsk"}
+          <div className="mb-8">
+            <Image
+              src="/logo-progress.png"
+              alt="Progress Estate"
+              width={420}
+              height={130}
+              className="w-72 sm:w-96 lg:w-[420px] h-auto"
+            />
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">

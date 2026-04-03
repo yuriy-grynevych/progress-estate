@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X, PhoneCall } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,14 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const isUk = locale === "uk";
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const navLinks = [
     { href: `/${locale}/listings?listingType=SALE`, label: isUk ? "Купити" : "Buy" },
@@ -29,7 +36,10 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-black text-white shadow-lg">
+    <nav className={cn(
+      "fixed top-0 left-0 right-0 z-50 text-white transition-all duration-300",
+      scrolled ? "bg-black shadow-lg" : "bg-transparent"
+    )}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href={`/${locale}`} className="flex items-center">
@@ -38,7 +48,7 @@ export default function Navbar() {
               alt="Progress Estate"
               width={200}
               height={60}
-              className="h-12 w-auto"
+              className="h-11 w-auto"
             />
           </Link>
 
@@ -46,7 +56,7 @@ export default function Navbar() {
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}
                 className={cn("text-sm font-medium transition-colors hover:text-gold-400",
-                  pathname.startsWith(link.href.split("?")[0]) ? "text-gold-400" : "text-white/80")}>
+                  pathname.startsWith(link.href.split("?")[0]) ? "text-gold-400" : "text-white/90")}>
                 {link.label}
               </Link>
             ))}
@@ -57,7 +67,7 @@ export default function Navbar() {
               {["uk", "en"].map((loc) => (
                 <button key={loc} onClick={() => switchLocale(loc)}
                   className={cn("px-3 py-1 text-xs font-medium transition-colors",
-                    locale === loc ? "bg-gold-400 text-navy-900" : "text-white/80 hover:text-white")}>
+                    locale === loc ? "bg-gold-400 text-black" : "text-white/80 hover:text-white")}>
                   {loc.toUpperCase()}
                 </button>
               ))}
@@ -89,7 +99,7 @@ export default function Navbar() {
               <button key={loc}
                 onClick={() => { switchLocale(loc); setIsOpen(false); }}
                 className={cn("px-3 py-1 text-xs rounded",
-                  locale === loc ? "bg-gold-400 text-navy-900 font-bold" : "text-white/70")}>
+                  locale === loc ? "bg-gold-400 text-black font-bold" : "text-white/70")}>
                 {loc.toUpperCase()}
               </button>
             ))}
