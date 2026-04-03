@@ -1,0 +1,120 @@
+{
+  "nav": {
+    "buy": "Buy",
+    "rent": "Rent",
+    "about": "About",
+    "contact": "Contact",
+    "allListings": "All Listings"
+  },
+  "hero": {
+    "title": "Find Your Perfect Home",
+    "subtitle": "Your trusted partner in real estate in Ivano-Frankivsk",
+    "searchPlaceholder": "Search by address or district",
+    "buyTab": "Buy",
+    "rentTab": "Rent",
+    "allTypes": "All Types",
+    "search": "Search"
+  },
+  "listings": {
+    "title": "Listings",
+    "noResults": "No properties found",
+    "noResultsDesc": "Try adjusting your search parameters",
+    "found": "Found",
+    "properties": "properties",
+    "filter": "Filters",
+    "sort": "Sort",
+    "clearFilters": "Clear Filters",
+    "loadMore": "Load More"
+  },
+  "filters": {
+    "listingType": "Transaction Type",
+    "propertyType": "Property Type",
+    "priceRange": "Price",
+    "areaRange": "Area (m²)",
+    "rooms": "Rooms",
+    "district": "District",
+    "features": "Amenities",
+    "allRooms": "Any",
+    "from": "from",
+    "to": "to"
+  },
+  "propertyCard": {
+    "viewDetails": "View Details",
+    "sale": "FOR SALE",
+    "rent": "FOR RENT",
+    "featured": "Featured",
+    "sqm": "m²",
+    "rooms": "rooms",
+    "floor": "fl."
+  },
+  "propertyDetail": {
+    "description": "Description",
+    "characteristics": "Characteristics",
+    "location": "Location",
+    "contactAgent": "Contact Agent",
+    "area": "Total Area",
+    "rooms": "Rooms",
+    "floor": "Floor",
+    "yearBuilt": "Year Built",
+    "type": "Property Type",
+    "id": "Listing ID",
+    "features": "Amenities",
+    "similar": "Similar Properties",
+    "pricePerSqm": "Price per m²",
+    "share": "Share",
+    "locationAvailable": "Location available upon request"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "Ready to help you find the perfect property",
+    "name": "Your Name",
+    "email": "Email",
+    "phone": "Phone",
+    "message": "Message",
+    "send": "Send Message",
+    "sending": "Sending...",
+    "success": "Thank you! We will contact you shortly.",
+    "error": "Error. Please try again.",
+    "required": "Required field",
+    "about": "Regarding"
+  },
+  "about": {
+    "title": "About Progress Estate",
+    "subtitle": "Your trusted real estate partner",
+    "mission": "Our Mission",
+    "missionText": "We help people find their ideal home or make profitable real estate investments in Ivano-Frankivsk and the region.",
+    "whyUs": "Why Choose Us"
+  },
+  "stats": {
+    "sold": "Properties Sold",
+    "clients": "Happy Clients",
+    "years": "Years of Experience",
+    "listings": "Active Listings"
+  },
+  "whyUs": {
+    "title": "Why Progress Estate?",
+    "professional": "Professional Team",
+    "professionalDesc": "Experienced agents with deep knowledge of the regional real estate market",
+    "transparent": "Transparent Deals",
+    "transparentDesc": "Full transaction support with no hidden fees or surprises",
+    "local": "Local Expertise",
+    "localDesc": "We know every district of Ivano-Frankivsk — helping you make the right choice"
+  },
+  "testimonials": {
+    "title": "Client Testimonials"
+  },
+  "footer": {
+    "rights": "All rights reserved",
+    "privacy": "Privacy Policy",
+    "quickLinks": "Quick Links",
+    "followUs": "Follow Us"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "back": "Back",
+    "viewAll": "View All",
+    "currency": "UAH",
+    "notAvailable": "Not specified"
+  }
+}
