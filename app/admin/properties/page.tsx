@@ -63,8 +63,8 @@ export default async function AdminPropertiesPage({
           Нерухомість
           <span className="text-gray-400 font-normal text-base">({properties.length})</span>
           {featuredCount > 0 && (
-            <span className="text-xs font-medium bg-gold-100 text-gold-600 px-2.5 py-1 rounded-full">
-              ⭐ Виділено на сайті: {featuredCount}
+            <span className="text-xs font-medium bg-orange-100 text-orange-600 px-2.5 py-1 rounded-full">
+              🔥 Гаряча пропозиція: {featuredCount}
             </span>
           )}
         </h1>
