@@ -39,7 +39,7 @@ export default function SignInPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-black mb-4">
             <Lock className="w-6 h-6 text-gold-400" />
           </div>
-          <h1 className="text-2xl font-bold text-navy-900">житлова компанія Progress</h1>
+          <h1 className="text-2xl font-bold text-navy-900">Житлова компанія Progress</h1>
           <p className="text-gray-500 text-sm mt-1">Панель адміністратора</p>
         </div>
 

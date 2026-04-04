@@ -59,7 +59,7 @@ async function getAIReply(userMessage: string): Promise<string> {
         return `• ${p.titleUk} — ${type}, ${[area, rooms, p.district].filter(Boolean).join(", ")}, ${p.price} ${p.currency}`;
       }).join("\n");
 
-  const systemPrompt = `Ти — досвідчений AI-асистент агентства нерухомості житлова компанія Progress з Івано-Франківська. Спілкуєшся через Telegram.
+  const systemPrompt = `Ти — досвідчений AI-асистент агентства нерухомості Житлова компанія Progress з Івано-Франківська. Спілкуєшся через Telegram.
 
 Контакти: тел. +380 67 123 45 67, email: info@progressestate.com.ua
 
@@ -122,9 +122,9 @@ export async function POST(req: NextRequest) {
     });
 
     if (agent) {
-      await sendMessage(chatId, `👋 Привіт, ${agent.name ?? firstName}! Ти підключений до системи житлова компанія Progress.\n\nЯ буду нагадувати тобі про клієнтів. Також можеш ставити питання!`);
+      await sendMessage(chatId, `👋 Привіт, ${agent.name ?? firstName}! Ти підключений до системи Житлова компанія Progress.\n\nЯ буду нагадувати тобі про клієнтів. Також можеш ставити питання!`);
     } else {
-      await sendMessage(chatId, `👋 Привіт, ${firstName}!\n\nЯ — AI-асистент агентства нерухомості <b>житлова компанія Progress</b> з Івано-Франківська.\n\nМожу розповісти про нерухомість, райони міста, ціни та допомогти з вибором. Запитуй!`);
+      await sendMessage(chatId, `👋 Привіт, ${firstName}!\n\nЯ — AI-асистент агентства нерухомості <b>Житлова компанія Progress</b> з Івано-Франківська.\n\nМожу розповісти про нерухомість, райони міста, ціни та допомогти з вибором. Запитуй!`);
     }
     return NextResponse.json({ ok: true });
   }

@@ -31,8 +31,8 @@ function extractPhone(text: string): string | null {
 }
 
 const GREETING = {
-  uk: "Вітаємо! 👋 Я AI-асистент житлова компанія Progress. Допоможу з питаннями про купівлю, продаж або оренду нерухомості в Івано-Франківську. Чим можу допомогти?",
-  en: "Welcome! 👋 I'm the AI assistant of житлова компанія Progress. I can help you with buying, selling or renting property in Ivano-Frankivsk. How can I help you?",
+  uk: "Вітаємо! 👋 Я AI-асистент Житлова компанія Progress. Допоможу з питаннями про купівлю, продаж або оренду нерухомості в Івано-Франківську. Чим можу допомогти?",
+  en: "Welcome! 👋 I'm the AI assistant of Житлова компанія Progress. I can help you with buying, selling or renting property in Ivano-Frankivsk. How can I help you?",
 };
 
 const UI = {
@@ -258,10 +258,10 @@ export default function ChatWidget() {
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-black text-white flex-shrink-0">
             <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
-              <Image src="/logo.png" alt="житлова компанія Progress" width={36} height={36} className="object-contain" />
+              <Image src="/logo.png" alt="Житлова компанія Progress" width={36} height={36} className="object-contain" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm leading-tight">житлова компанія Progress</p>
+              <p className="font-semibold text-sm leading-tight">Житлова компанія Progress</p>
               <p className="text-white/60 text-xs">{t.subtitle}</p>
             </div>
             <button onClick={() => setOpen(false)} className="text-white/60 hover:text-white transition">

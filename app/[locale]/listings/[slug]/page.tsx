@@ -50,7 +50,7 @@ export async function generateMetadata({
   if (!property) return {};
   const title = locale === "uk" ? property.titleUk : property.titleEn;
   return {
-    title: `${title} | житлова компанія Progress`,
+    title: `${title} | Житлова компанія Progress`,
     description: property.address,
   };
 }

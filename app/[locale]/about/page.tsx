@@ -20,7 +20,7 @@ export default function AboutPage({
         <div className="bg-black text-white py-20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h1 className="text-4xl font-bold mb-4">
-              {isUk ? "Про житлова компанія Progress" : "About житлова компанія Progress"}
+              {isUk ? "Про Житлова компанія Progress" : "About Житлова компанія Progress"}
             </h1>
             <p className="text-white/70 text-lg max-w-2xl mx-auto">
               {isUk
@@ -37,8 +37,8 @@ export default function AboutPage({
             </h2>
             <p className="text-gray-600 leading-relaxed">
               {isUk
-                ? "житлова компанія Progress — це команда досвідчених фахівців з ринку нерухомості Івано-Франківська. Ми допомагаємо нашим клієнтам знайти ідеальне житло, вигідно продати власність або зробити правильні інвестиції в нерухомість регіону. Наш підхід базується на прозорості, чесності та глибокому знанні місцевого ринку."
-                : "житлова компанія Progress is a team of experienced real estate specialists in Ivano-Frankivsk. We help our clients find the perfect home, sell their property profitably, or make the right investments in the region's real estate. Our approach is based on transparency, honesty, and deep knowledge of the local market."}
+                ? "Житлова компанія Progress — це команда досвідчених фахівців з ринку нерухомості Івано-Франківська. Ми допомагаємо нашим клієнтам знайти ідеальне житло, вигідно продати власність або зробити правильні інвестиції в нерухомість регіону. Наш підхід базується на прозорості, чесності та глибокому знанні місцевого ринку."
+                : "Житлова компанія Progress is a team of experienced real estate specialists in Ivano-Frankivsk. We help our clients find the perfect home, sell their property profitably, or make the right investments in the region's real estate. Our approach is based on transparency, honesty, and deep knowledge of the local market."}
             </p>
           </div>
         </div>

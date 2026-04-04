@@ -79,7 +79,7 @@ export default function Navbar() {
             )}>
               <Image
                 src="/logo-progress.png"
-                alt="житлова компанія Progress"
+                alt="Житлова компанія Progress"
                 width={180}
                 height={55}
                 className="h-10 w-auto"

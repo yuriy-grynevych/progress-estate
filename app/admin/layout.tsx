@@ -7,7 +7,7 @@ import SessionProvider from "@/components/admin/SessionProvider";
 import type { UserRole } from "@prisma/client";
 
 export const metadata = {
-  title: "Admin | житлова компанія Progress",
+  title: "Admin | Житлова компанія Progress",
 };
 
 export default async function AdminLayout({

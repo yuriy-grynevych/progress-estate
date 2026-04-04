@@ -78,7 +78,7 @@ export default function Footer({ locale }: { locale: string }) {
         </div>
 
         <div className="border-t border-white/10 mt-8 pt-6 text-center text-sm text-white/40">
-          © {year} житлова компанія Progress.{" "}
+          © {year} Житлова компанія Progress.{" "}
           {isUk ? "Всі права захищені." : "All rights reserved."}
         </div>
       </div>

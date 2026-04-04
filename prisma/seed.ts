@@ -324,8 +324,8 @@ async function main() {
     {
       authorName: "Іван Петренко",
       authorRole: "Продавець будинку",
-      contentUk: "Продали наш будинок швидко та за гарну ціну. Дуже задоволений співпрацею з житлова компанія Progress.",
-      contentEn: "Sold our house quickly and at a good price. Very satisfied with the cooperation with житлова компанія Progress.",
+      contentUk: "Продали наш будинок швидко та за гарну ціну. Дуже задоволений співпрацею з Житлова компанія Progress.",
+      contentEn: "Sold our house quickly and at a good price. Very satisfied with the cooperation with Житлова компанія Progress.",
       rating: 5,
       isPublished: true,
       order: 3,

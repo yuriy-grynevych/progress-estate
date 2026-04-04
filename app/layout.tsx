@@ -6,7 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
-  title: "житлова компанія Progress | Нерухомість в Івано-Франківську",
+  title: "Житлова компанія Progress | Нерухомість в Івано-Франківську",
   description: "Купівля, продаж та оренда нерухомості в Івано-Франківську та регіоні",
 };
 
