@@ -7,9 +7,10 @@ interface Props {
   id: string;
   field: "status" | "isFeatured";
   currentValue: string | boolean;
+  isFeatured?: boolean;
 }
 
-export default function ToggleStatusButton({ id, field, currentValue }: Props) {
+export default function ToggleStatusButton({ id, field, currentValue, isFeatured }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -40,7 +41,9 @@ export default function ToggleStatusButton({ id, field, currentValue }: Props) {
         onClick={toggle}
         disabled={loading}
         className={`text-xs font-medium px-2.5 py-1 rounded-full transition ${
-          isActive
+          isActive && isFeatured
+            ? "bg-blue-100 text-blue-700 hover:bg-blue-200"
+            : isActive
             ? "bg-green-100 text-green-700 hover:bg-green-200"
             : "bg-gray-100 text-gray-500 hover:bg-gray-200"
         }`}
