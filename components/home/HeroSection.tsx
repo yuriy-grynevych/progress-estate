@@ -78,7 +78,12 @@ export default function HeroSection() {
   const [propertyType, setPropertyType] = useState("");
   const [district, setDistrict] = useState("");
   const [search, setSearch] = useState("");
+  const [dbDistricts, setDbDistricts] = useState<{ value: string; labelUk: string; labelEn: string }[] | null>(null);
   const isUk = locale === "uk";
+
+  useEffect(() => {
+    fetch("/api/districts").then((r) => r.json()).then(setDbDistricts).catch(() => {});
+  }, []);
 
   const handleSearch = () => {
     const params = new URLSearchParams();
@@ -99,7 +104,8 @@ export default function HeroSection() {
     label: isUk ? t.labelUk : t.labelEn,
   }));
 
-  const districtOptions = DISTRICTS_IF.map((d) => ({
+  const districtSource = dbDistricts ?? DISTRICTS_IF;
+  const districtOptions = districtSource.map((d) => ({
     value: d.value,
     label: isUk ? d.labelUk : d.labelEn,
   }));
@@ -134,9 +140,9 @@ export default function HeroSection() {
           </p>
 
           {/* Search bar */}
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl">
             {/* Top row: search bar with columns */}
-            <div className="flex items-stretch divide-x divide-gray-100">
+            <div className="flex items-stretch divide-x divide-gray-100 rounded-2xl overflow-visible">
               {/* Дія */}
               <Dropdown
                 label={isUk ? "Дія" : "Action"}
@@ -182,7 +188,7 @@ export default function HeroSection() {
               {/* Button */}
               <button
                 onClick={handleSearch}
-                className="bg-gold-400 hover:bg-gold-500 text-white font-bold px-8 flex items-center gap-2 transition-colors flex-shrink-0"
+                className="bg-gold-400 hover:bg-gold-500 text-white font-bold px-8 flex items-center gap-2 transition-colors flex-shrink-0 rounded-r-2xl"
               >
                 <Search className="w-5 h-5" />
                 <span className="hidden sm:inline">{isUk ? "Шукати" : "Search"}</span>

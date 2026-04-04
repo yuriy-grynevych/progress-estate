@@ -4,12 +4,27 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { COMPANY } from "@/lib/constants";
 import FeaturesManager from "@/components/admin/FeaturesManager";
+import DistrictsManager from "@/components/admin/DistrictsManager";
+
+async function getDistricts() {
+  try {
+    const rows = await prisma.$queryRawUnsafe<{ id: string; value: string; labelUk: string; labelEn: string; order: number }[]>(
+      `SELECT id, value, "labelUk", "labelEn", "order" FROM districts ORDER BY "order" ASC`
+    );
+    return rows;
+  } catch {
+    return [];
+  }
+}
 
 export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   if ((session?.user as any)?.role !== "ADMIN") redirect("/admin");
 
-  const features = await prisma.feature.findMany({ orderBy: { order: "asc" } });
+  const [features, districts] = await Promise.all([
+    prisma.feature.findMany({ orderBy: { order: "asc" } }),
+    getDistricts(),
+  ]);
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
@@ -47,6 +62,15 @@ export default async function SettingsPage() {
           Список зручностей, які відображаються при додаванні нерухомості. Видалення не впливає на вже збережені об'єкти.
         </p>
         <FeaturesManager initialFeatures={features} />
+      </div>
+
+      {/* Districts manager */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <h2 className="font-semibold text-navy-900 mb-1">Райони міста</h2>
+        <p className="text-xs text-gray-400 mb-5">
+          Райони, які відображаються у пошуку та формі нерухомості.
+        </p>
+        <DistrictsManager initialDistricts={districts} />
       </div>
 
       {/* Quick links */}

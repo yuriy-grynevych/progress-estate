@@ -216,6 +216,19 @@ model PropertyAuditLog {
 }
 
 // ──────────────────────────────────────────────
+// DISTRICTS (managed by admin)
+// ──────────────────────────────────────────────
+model District {
+  id      String @id @default(cuid())
+  value   String @unique
+  labelUk String
+  labelEn String
+  order   Int    @default(0)
+
+  @@map("districts")
+}
+
+// ──────────────────────────────────────────────
 // TESTIMONIALS
 // ──────────────────────────────────────────────
 model Testimonial {
