@@ -47,6 +47,7 @@ export default async function AdminPropertiesPage({
   const userId = (session?.user as any)?.id as string;
 
   const properties = await getProperties(searchParams.search, role, userId);
+  const featuredCount = properties.filter((p) => p.isFeatured).length;
 
   // Fetch current user's agentToken for copy-link button
   const currentUser = await prisma.user.findUnique({
@@ -58,9 +59,14 @@ export default async function AdminPropertiesPage({
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-navy-900">
+        <h1 className="text-2xl font-bold text-navy-900 flex items-center gap-3 flex-wrap">
           Нерухомість
-          <span className="text-gray-400 font-normal text-base ml-2">({properties.length})</span>
+          <span className="text-gray-400 font-normal text-base">({properties.length})</span>
+          {featuredCount > 0 && (
+            <span className="text-xs font-medium bg-gold-100 text-gold-600 px-2.5 py-1 rounded-full">
+              ⭐ Виділено на сайті: {featuredCount}
+            </span>
+          )}
         </h1>
         <Link
           href="/admin/properties/new"

@@ -80,40 +80,40 @@ export default function ContactForm({
       </h2>
 
       {/* Agent card */}
-      <div className="flex items-center gap-3 mb-5 p-4 bg-gray-50 rounded-xl">
-        <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border-2 border-white shadow-sm">
+      <div className="flex flex-col items-center text-center mb-5 p-5 bg-gray-50 rounded-xl gap-3">
+        <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border-2 border-white shadow-md">
           {displayPhoto ? (
             <Image
               src={displayPhoto}
               alt={displayName}
-              width={48}
-              height={48}
+              width={80}
+              height={80}
               className="object-cover w-full h-full"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
-              <User className="w-5 h-5 text-gray-400" />
+              <User className="w-8 h-8 text-gray-400" />
             </div>
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-navy-900 text-sm truncate">{displayName}</p>
-          <div className="space-y-0.5 mt-1">
+        <div className="w-full">
+          <p className="font-bold text-navy-900 text-base mb-2">{displayName}</p>
+          <div className="space-y-1.5">
             {displayPhone && (
               <a
                 href={`tel:${displayPhone}`}
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gold-500 transition"
+                className="flex items-center justify-center gap-2 text-sm text-gray-700 hover:text-gold-500 transition font-medium"
               >
-                <Phone className="w-3 h-3 text-gold-400 flex-shrink-0" />
+                <Phone className="w-4 h-4 text-gold-400 flex-shrink-0" />
                 {displayPhone}
               </a>
             )}
             <a
               href={`mailto:${displayEmail}`}
-              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gold-500 transition"
+              className="flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gold-500 transition"
             >
-              <Mail className="w-3 h-3 text-gold-400 flex-shrink-0" />
-              <span className="truncate">{displayEmail}</span>
+              <Mail className="w-4 h-4 text-gold-400 flex-shrink-0" />
+              <span>{displayEmail}</span>
             </a>
           </div>
         </div>

@@ -72,8 +72,6 @@ interface PropertyFormProps {
   currentUserId?: string;
 }
 
-const tabs = ["Основне", "Параметри", "Локалізація", "Опис", "Зручності", "Фото"];
-
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -211,7 +209,6 @@ function FeatureTab({
 
 export default function PropertyForm({ initialData, employees = [], featureOptions, role = "EMPLOYEE", currentUserId }: PropertyFormProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState(0);
   const [saving, setSaving] = useState(false);
   const [propertyId, setPropertyId] = useState(initialData?.id ?? "new");
   const [images, setImages] = useState<PropertyImage[]>(initialData?.images ?? []);
@@ -316,126 +313,87 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-white rounded-2xl p-1.5 shadow-sm overflow-x-auto">
-        {tabs.map((tab, i) => (
-          <button
-            key={tab}
-            type="button"
-            onClick={() => setActiveTab(i)}
-            className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition ${
-              activeTab === i
-                ? "bg-black text-white"
-                : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
-        {/* Tab 0: Основне */}
-        {activeTab === 0 && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <FieldLabel required>Тип нерухомості</FieldLabel>
-                <Select {...register("type")}>
-                  {PROPERTY_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.labelUk}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div>
-                <FieldLabel required>Тип оголошення</FieldLabel>
-                <Select {...register("listingType")}>
-                  {LISTING_TYPES.map((t) => (
-                    <option key={t.value} value={t.value}>
-                      {t.labelUk}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
+      <div className="space-y-6">
+        {/* Основне */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Основне</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <FieldLabel required>Назва (UA)</FieldLabel>
-              <Input {...register("titleUk")} placeholder="Простора квартира в центрі..." />
-              {errors.titleUk && (
-                <p className="text-red-500 text-xs mt-1">{errors.titleUk.message}</p>
-              )}
+              <FieldLabel required>Тип нерухомості</FieldLabel>
+              <Select {...register("type")}>
+                {PROPERTY_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.labelUk}</option>
+                ))}
+              </Select>
             </div>
-
             <div>
-              <FieldLabel required>Назва (EN)</FieldLabel>
-              <Input {...register("titleEn")} placeholder="Spacious apartment in the center..." />
-              {errors.titleEn && (
-                <p className="text-red-500 text-xs mt-1">{errors.titleEn.message}</p>
-              )}
+              <FieldLabel required>Тип оголошення</FieldLabel>
+              <Select {...register("listingType")}>
+                {LISTING_TYPES.map((t) => (
+                  <option key={t.value} value={t.value}>{t.labelUk}</option>
+                ))}
+              </Select>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <FieldLabel required>Ціна</FieldLabel>
-                <Input type="number" {...register("price")} placeholder="50000" />
-                {errors.price && (
-                  <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>
-                )}
-              </div>
-              <div>
-                <FieldLabel required>Валюта</FieldLabel>
-                <Select {...register("currency")}>
-                  {CURRENCIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <div>
-                <FieldLabel required>Статус</FieldLabel>
-                <Select {...register("status")}>
-                  <option value="ACTIVE">Активне</option>
-                  <option value="INACTIVE">Неактивне</option>
-                  <option value="SOLD">Продано</option>
-                  <option value="RENTED">Здано</option>
-                </Select>
-              </div>
+          </div>
+          <div>
+            <FieldLabel required>Назва (UA)</FieldLabel>
+            <Input {...register("titleUk")} placeholder="Простора квартира в центрі..." />
+            {errors.titleUk && <p className="text-red-500 text-xs mt-1">{errors.titleUk.message}</p>}
+          </div>
+          <div>
+            <FieldLabel required>Назва (EN)</FieldLabel>
+            <Input {...register("titleEn")} placeholder="Spacious apartment in the center..." />
+            {errors.titleEn && <p className="text-red-500 text-xs mt-1">{errors.titleEn.message}</p>}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <FieldLabel required>Ціна</FieldLabel>
+              <Input type="number" {...register("price")} placeholder="50000" />
+              {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
             </div>
-
-            {role === "ADMIN" && employees.length > 0 && (
-              <div>
-                <FieldLabel>Відповідальний агент</FieldLabel>
-                <Select {...register("assignedUserId")}>
-                  <option value="">— Не призначено —</option>
-                  {employees.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.name ?? e.email}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            )}
-
+            <div>
+              <FieldLabel required>Валюта</FieldLabel>
+              <Select {...register("currency")}>
+                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </Select>
+            </div>
+            <div>
+              <FieldLabel required>Статус</FieldLabel>
+              <Select {...register("status")}>
+                <option value="ACTIVE">Активне</option>
+                <option value="INACTIVE">Неактивне</option>
+                <option value="SOLD">Продано</option>
+                <option value="RENTED">Здано</option>
+              </Select>
+            </div>
+          </div>
+          {role === "ADMIN" && employees.length > 0 && (
+            <div>
+              <FieldLabel>Відповідальний агент</FieldLabel>
+              <Select {...register("assignedUserId")}>
+                <option value="">— Не призначено —</option>
+                {employees.map((e) => (
+                  <option key={e.id} value={e.id}>{e.name ?? e.email}</option>
+                ))}
+              </Select>
+            </div>
+          )}
+          {role === "ADMIN" && (
             <label className="flex items-center gap-2 text-sm text-gray-700">
               <input type="checkbox" {...register("isFeatured")} className="rounded" />
               Виділити на головній сторінці
             </label>
-          </>
-        )}
+          )}
+        </div>
 
-        {/* Tab 1: Параметри */}
-        {activeTab === 1 && (
+        {/* Параметри */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Параметри</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div>
               <FieldLabel required>Площа (м²)</FieldLabel>
               <Input type="number" step="0.1" {...register("areaSqm")} placeholder="65" />
-              {errors.areaSqm && (
-                <p className="text-red-500 text-xs mt-1">{errors.areaSqm.message}</p>
-              )}
+              {errors.areaSqm && <p className="text-red-500 text-xs mt-1">{errors.areaSqm.message}</p>}
             </div>
             <div>
               <FieldLabel>Кімнати</FieldLabel>
@@ -462,92 +420,67 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
               <Input type="number" {...register("yearBuilt")} placeholder="2020" />
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Tab 2: Локалізація */}
-        {activeTab === 2 && (
-          <>
+        {/* Локалізація */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Локалізація</h2>
+          <div>
+            <FieldLabel>Район</FieldLabel>
+            <Select {...register("district")}>
+              <option value="">— Не вказано —</option>
+              {DISTRICTS_IF.map((d) => (
+                <option key={d.value} value={d.value}>{d.labelUk}</option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <FieldLabel>Адреса</FieldLabel>
+            <Input {...register("address")} placeholder="вул. Незалежності, 15, Івано-Франківськ" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <FieldLabel>Район</FieldLabel>
-              <Select {...register("district")}>
-                <option value="">— Не вказано —</option>
-                {DISTRICTS_IF.map((d) => (
-                  <option key={d.value} value={d.value}>
-                    {d.labelUk}
-                  </option>
-                ))}
-              </Select>
+              <FieldLabel>Широта (latitude)</FieldLabel>
+              <Input type="number" step="any" {...register("latitude")} placeholder="48.9226" />
             </div>
             <div>
-              <FieldLabel>Адреса</FieldLabel>
-              <Input
-                {...register("address")}
-                placeholder="вул. Незалежності, 15, Івано-Франківськ"
-              />
+              <FieldLabel>Довгота (longitude)</FieldLabel>
+              <Input type="number" step="any" {...register("longitude")} placeholder="24.7111" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <FieldLabel>Широта (latitude)</FieldLabel>
-                <Input
-                  type="number"
-                  step="any"
-                  {...register("latitude")}
-                  placeholder="48.9226"
-                />
-              </div>
-              <div>
-                <FieldLabel>Довгота (longitude)</FieldLabel>
-                <Input
-                  type="number"
-                  step="any"
-                  {...register("longitude")}
-                  placeholder="24.7111"
-                />
-              </div>
-            </div>
-            <p className="text-xs text-gray-400">
-              Знайдіть координати на{" "}
-              <a
-                href="https://www.openstreetmap.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gold-500 hover:underline"
-              >
-                openstreetmap.org
-              </a>{" "}
-              (правою кнопкою → Show address)
-            </p>
-          </>
-        )}
+          </div>
+          <p className="text-xs text-gray-400">
+            Знайдіть координати на{" "}
+            <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" className="text-gold-500 hover:underline">
+              openstreetmap.org
+            </a>{" "}
+            (правою кнопкою → Show address)
+          </p>
+        </div>
 
-        {/* Tab 3: Опис */}
-        {activeTab === 3 && (
-          <>
-            <div>
-              <FieldLabel>Опис (UA)</FieldLabel>
-              <Controller
-                name="descriptionUk"
-                control={control}
-                render={({ field }) => (
-                  <TiptapEditor value={field.value} onChange={field.onChange} />
-                )}
-              />
-            </div>
-            <div>
-              <FieldLabel>Опис (EN)</FieldLabel>
-              <Controller
-                name="descriptionEn"
-                control={control}
-                render={({ field }) => (
-                  <TiptapEditor value={field.value} onChange={field.onChange} />
-                )}
-              />
-            </div>
-          </>
-        )}
+        {/* Опис */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Опис</h2>
+          <div>
+            <FieldLabel>Опис (UA)</FieldLabel>
+            <Controller
+              name="descriptionUk"
+              control={control}
+              render={({ field }) => <TiptapEditor value={field.value} onChange={field.onChange} />}
+            />
+          </div>
+          <div>
+            <FieldLabel>Опис (EN)</FieldLabel>
+            <Controller
+              name="descriptionEn"
+              control={control}
+              render={({ field }) => <TiptapEditor value={field.value} onChange={field.onChange} />}
+            />
+          </div>
+        </div>
 
-        {/* Tab 4: Зручності */}
-        {activeTab === 4 && (
+        {/* Зручності */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Зручності</h2>
           <FeatureTab
             selectedFeatures={selectedFeatures ?? []}
             predefinedFeatures={featureOptions ?? PROPERTY_FEATURES.map((f) => ({ id: f.value, value: f.value, labelUk: f.labelUk, labelEn: f.labelEn }))}
@@ -555,23 +488,22 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             onAdd={(val) => setValue("features", [...(selectedFeatures ?? []), val] as any)}
             onRemoveCustom={(val) => setValue("features", (selectedFeatures ?? []).filter((f) => f !== val) as any)}
           />
-        )}
+        </div>
 
-        {/* Tab 5: Фото */}
-        {activeTab === 5 && (
-          <div>
-            {propertyId === "new" && (
-              <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-3 rounded-lg mb-4">
-                Спочатку збережіть нерухомість (натисніть «Створити»), потім додайте фото.
-              </div>
-            )}
-            <ImageUploader
-              propertyId={propertyId}
-              initialImages={images}
-              onChange={setImages}
-            />
-          </div>
-        )}
+        {/* Фото */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <h2 className="text-base font-semibold text-navy-900 border-b pb-3 mb-5">Фото</h2>
+          {propertyId === "new" && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-3 rounded-lg mb-4">
+              Спочатку збережіть нерухомість (натисніть «Створити»), потім додайте фото.
+            </div>
+          )}
+          <ImageUploader
+            propertyId={propertyId}
+            initialImages={images}
+            onChange={setImages}
+          />
+        </div>
       </div>
 
       {/* Bottom save */}
