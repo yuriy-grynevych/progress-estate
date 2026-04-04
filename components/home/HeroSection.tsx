@@ -40,7 +40,7 @@ export default function HeroSection() {
           <div id="hero-logo" className="mb-6">
             <Image
               src="/logo-progress.png"
-              alt="Progress Estate"
+              alt="житлова компанія Progress"
               width={600}
               height={185}
               className="w-64 sm:w-80 lg:w-96 h-auto rounded-xl"

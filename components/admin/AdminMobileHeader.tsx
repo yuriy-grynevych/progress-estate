@@ -18,7 +18,7 @@ export default function AdminMobileHeader({ role = "EMPLOYEE" }: AdminMobileHead
         <button onClick={() => setOpen(true)} className="text-white">
           <Menu className="w-6 h-6" />
         </button>
-        <span className="font-bold">Progress Estate Admin</span>
+        <span className="font-bold">житлова компанія Progress Admin</span>
       </header>
 
       {/* Mobile drawer overlay */}

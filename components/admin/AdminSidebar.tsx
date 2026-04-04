@@ -55,7 +55,7 @@ export default function AdminSidebar({ onClose, role = "EMPLOYEE" }: AdminSideba
       {/* Logo */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
         <div>
-          <p className="font-bold text-lg leading-none">Progress Estate</p>
+          <p className="font-bold text-lg leading-none">житлова компанія Progress</p>
           <p className="text-white/50 text-xs mt-0.5">
             {role === "ADMIN" ? "Адмін панель" : "Панель працівника"}
           </p>

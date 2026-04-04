@@ -49,7 +49,7 @@ export const LOCALES = ["uk", "en"] as const;
 export const DEFAULT_LOCALE = "uk";
 
 export const COMPANY = {
-  name: "Progress Estate",
+  name: "житлова компанія Progress",
   phone: "+380 67 123 45 67",
   email: "info@progressestate.com.ua",
   address: "м. Івано-Франківськ",

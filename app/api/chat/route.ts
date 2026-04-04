@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 function buildSystemPrompt(locale: string, listings: string): string {
   if (locale === "en") {
-    return `You are a knowledgeable AI assistant for Progress Estate, a real estate agency in Ivano-Frankivsk, Ukraine.
+    return `You are a knowledgeable AI assistant for житлова компанія Progress, a real estate agency in Ivano-Frankivsk, Ukraine.
 IMPORTANT: When recommending specific listings, keep the [PROP:slug] tag right before the property name so the system can render a clickable card. Do not remove these tags.
 
 Company info:
@@ -34,7 +34,7 @@ Rules:
 - If asked about a specific property from the list, provide details`;
   }
 
-  return `Ти — досвідчений AI-асистент агентства нерухомості Progress Estate з Івано-Франківська.
+  return `Ти — досвідчений AI-асистент агентства нерухомості житлова компанія Progress з Івано-Франківська.
 ВАЖЛИВО: Коли рекомендуєш конкретні оголошення, залишай тег [PROP:slug] перед назвою об'єкта — система відобразить красиву картку з фото і посиланням. Не видаляй ці теги.
 
 Контакти компанії:
