@@ -16,6 +16,7 @@ import {
 import ImageUploader from "./ImageUploader";
 
 const TiptapEditor = dynamic(() => import("./TiptapEditor"), { ssr: false });
+const MapPicker = dynamic(() => import("./MapPicker"), { ssr: false });
 
 const schema = z.object({
   titleUk: z.string().min(1, "Обов'язкове поле"),
@@ -439,23 +440,27 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             <FieldLabel>Адреса</FieldLabel>
             <Input {...register("address")} placeholder="вул. Незалежності, 15, Івано-Франківськ" />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div>
+            <FieldLabel>Місцезнаходження на карті</FieldLabel>
+            <MapPicker
+              lat={watch("latitude") ?? null}
+              lng={watch("longitude") ?? null}
+              onChange={(lat, lng) => {
+                setValue("latitude", lat);
+                setValue("longitude", lng);
+              }}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <FieldLabel>Широта (latitude)</FieldLabel>
+              <FieldLabel>Широта</FieldLabel>
               <Input type="number" step="any" {...register("latitude")} placeholder="48.9226" />
             </div>
             <div>
-              <FieldLabel>Довгота (longitude)</FieldLabel>
+              <FieldLabel>Довгота</FieldLabel>
               <Input type="number" step="any" {...register("longitude")} placeholder="24.7111" />
             </div>
           </div>
-          <p className="text-xs text-gray-400">
-            Знайдіть координати на{" "}
-            <a href="https://www.openstreetmap.org" target="_blank" rel="noopener noreferrer" className="text-gold-500 hover:underline">
-              openstreetmap.org
-            </a>{" "}
-            (правою кнопкою → Show address)
-          </p>
         </div>
 
         {/* Опис */}
