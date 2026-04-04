@@ -44,8 +44,8 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
               {isRent ? (isUk ? "ОРЕНДА" : "RENT") : (isUk ? "ПРОДАЖ" : "SALE")}
             </Badge>
             {property.isFeatured && (
-              <Badge className="bg-black hover:bg-black text-white text-xs">
-                {isUk ? "Виділене" : "Featured"}
+              <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-xs">
+                {isUk ? "🔥 Гаряча пропозиція" : "🔥 Hot Deal"}
               </Badge>
             )}
           </div>
