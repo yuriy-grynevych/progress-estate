@@ -210,6 +210,7 @@ function FeatureTab({
 export default function PropertyForm({ initialData, employees = [], featureOptions, role = "EMPLOYEE", currentUserId }: PropertyFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [translating, setTranslating] = useState(false);
   const [propertyId, setPropertyId] = useState(initialData?.id ?? "new");
   const [images, setImages] = useState<PropertyImage[]>(initialData?.images ?? []);
 
@@ -469,7 +470,32 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             />
           </div>
           <div>
-            <FieldLabel>Опис (EN)</FieldLabel>
+            <div className="flex items-center justify-between mb-1">
+              <FieldLabel>Опис (EN)</FieldLabel>
+              <button
+                type="button"
+                disabled={translating}
+                onClick={async () => {
+                  const ukText = watch("descriptionUk");
+                  if (!ukText?.trim()) return alert("Спочатку заповніть опис українською.");
+                  setTranslating(true);
+                  try {
+                    const res = await fetch("/api/translate", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ text: ukText }),
+                    });
+                    const data = await res.json();
+                    if (data.translated) setValue("descriptionEn", data.translated);
+                  } finally {
+                    setTranslating(false);
+                  }
+                }}
+                className="text-xs px-3 py-1.5 bg-black text-white rounded-lg hover:bg-black/80 transition disabled:opacity-50 flex items-center gap-1.5"
+              >
+                {translating ? "Перекладаю…" : "🤖 Перекласти з UA"}
+              </button>
+            </div>
             <Controller
               name="descriptionEn"
               control={control}

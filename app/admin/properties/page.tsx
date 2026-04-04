@@ -130,17 +130,22 @@ export default async function AdminPropertiesPage({
                       {formatPrice(Number(property.price), property.currency)}
                     </td>
                     <td className="px-4 py-3">
-                      {canEdit ? (
-                        <ToggleStatusButton
-                          id={property.id}
-                          field="status"
-                          currentValue={property.status}
-                        />
-                      ) : (
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
-                          {property.status}
-                        </span>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {canEdit ? (
+                          <ToggleStatusButton
+                            id={property.id}
+                            field="status"
+                            currentValue={property.status}
+                          />
+                        ) : (
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
+                            {property.status}
+                          </span>
+                        )}
+                        {property.isFeatured && (
+                          <span className="text-xs text-gold-600 font-medium">⭐ Виділене</span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       {property.assignedUser ? (
