@@ -111,7 +111,7 @@ export default function HeroSection() {
   }));
 
   return (
-    <section className="relative min-h-screen flex items-center bg-black overflow-hidden">
+    <section className="relative min-h-screen flex items-center bg-black">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url("/hero-bg.jpg")` }}
