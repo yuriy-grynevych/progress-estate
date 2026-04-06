@@ -42,7 +42,7 @@ export default function Navbar() {
   const navLinks = [
     { href: `/${locale}/listings?listingType=SALE`, label: isUk ? "Купити" : "Buy" },
     { href: `/${locale}/listings?listingType=RENT`, label: isUk ? "Орендувати" : "Rent" },
-    { href: `/${locale}/about`, label: isUk ? "Про нас" : "About" },
+    { href: `/${locale}#about`, label: isUk ? "Про нас" : "About" },
     { href: `/${locale}/contact`, label: isUk ? "Контакти" : "Contact" },
   ];
 
@@ -65,7 +65,7 @@ export default function Navbar() {
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href}
                 className={cn("text-sm font-medium transition-colors hover:text-gold-400",
-                  pathname.startsWith(link.href.split("?")[0]) ? "text-gold-400" : "text-white/90")}>
+                  pathname.startsWith(link.href.split("?")[0].split("#")[0]) && !link.href.includes("#about") ? "text-gold-400" : "text-white/90")}>
                 {link.label}
               </Link>
             ))}

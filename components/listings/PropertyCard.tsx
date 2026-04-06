@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Maximize2 } from "lucide-react";
+import { Maximize2, ImageOff } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { PropertyWithImages } from "@/types";
 
@@ -49,8 +49,9 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
                 sizes="(max-width: 640px) 100vw, 40vw"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
-                <Maximize2 className="w-10 h-10 opacity-30" />
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-300 gap-2">
+                <ImageOff className="w-10 h-10" />
+                <span className="text-xs">Фото відсутнє</span>
               </div>
             )}
             {/* Badge */}
