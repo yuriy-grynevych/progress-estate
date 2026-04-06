@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { BedDouble, Maximize2, Layers } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Maximize2 } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { PropertyWithImages } from "@/types";
 
@@ -13,88 +12,98 @@ interface PropertyCardProps {
 export default function PropertyCard({ property, locale }: PropertyCardProps) {
   const isUk = locale === "uk";
   const title = isUk ? property.titleUk : property.titleEn;
-  const primaryImage = property.images.find((i) => i.isPrimary) ?? property.images[0];
+  const images = property.images.sort((a, b) => a.order - b.order);
+  const mainImage = images.find((i) => i.isPrimary) ?? images[0];
+  const thumbs = images.filter((i) => i !== mainImage).slice(0, 4);
   const isRent = property.listingType === "RENT";
+
+  const details = [
+    { label: isUk ? "площа" : "area",   value: property.areaSqm ? `${property.areaSqm}м²` : "—" },
+    { label: isUk ? "к-сть кімнат" : "rooms",  value: property.rooms ?? "—" },
+    { label: isUk ? "поверх" : "floor",  value: property.floor && property.totalFloors ? `${property.floor}/${property.totalFloors}` : property.floor ?? "—" },
+    { label: isUk ? "район" : "district", value: property.district ?? "—" },
+    { label: isUk ? "вулиця" : "street",  value: property.address ?? "—" },
+    { label: isUk ? "тип" : "type",       value: isUk
+        ? (property.type === "APARTMENT" ? "Квартира"
+          : property.type === "HOUSE" ? "Будинок"
+          : property.type === "COMMERCIAL" ? "Комерція"
+          : property.type === "LAND" ? "Земля"
+          : property.type === "OFFICE" ? "Офіс"
+          : property.type)
+        : property.type },
+  ];
 
   return (
     <Link href={`/${locale}/listings/${property.slug}`} className="group block">
-      <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg hover:border-gold-400 transition-all duration-300">
-        <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-          {primaryImage ? (
-            <Image
-              src={primaryImage.url}
-              alt={title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
-              <Maximize2 className="w-12 h-12 opacity-30" />
-            </div>
-          )}
-          <div className="absolute top-3 right-3 flex gap-2">
-            <Badge
-              className={
-                isRent
-                  ? "bg-navy-700 hover:bg-navy-700 text-white text-xs"
-                  : "bg-gold-400 hover:bg-gold-400 text-navy-900 text-xs font-semibold"
-              }
-            >
-              {isRent ? (isUk ? "ОРЕНДА" : "RENT") : (isUk ? "ПРОДАЖ" : "SALE")}
-            </Badge>
-            {property.isFeatured && (
-              <Badge className="bg-orange-500 hover:bg-orange-500 text-white text-xs">
-                {isUk ? "🔥 Гаряча пропозиція" : "🔥 Hot Deal"}
-              </Badge>
-            )}
-          </div>
-        </div>
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-gold-300 transition-all duration-300 overflow-hidden">
+        <div className="flex flex-col sm:flex-row">
 
-        <div className="p-4">
-          <div className="text-xs text-gray-500 mb-1">
-            {property.city}
-            {property.district ? `, ${property.district}` : ""}
-          </div>
-          <h3 className="font-semibold text-navy-900 line-clamp-2 mb-3 group-hover:text-navy-700 transition-colors">
-            {title}
-          </h3>
-          <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
-            <span className="flex items-center gap-1">
-              <Maximize2 className="w-3.5 h-3.5" />
-              {property.areaSqm} м²
-            </span>
-            {property.rooms && (
-              <span className="flex items-center gap-1">
-                <Layers className="w-3.5 h-3.5" />
-                {property.rooms} {isUk ? "кімн" : "rooms"}
-              </span>
-            )}
-            {property.floor && property.totalFloors && (
-              <span className="flex items-center gap-1">
-                <BedDouble className="w-3.5 h-3.5" />
-                {property.floor}/{property.totalFloors} {isUk ? "пов" : "fl."}
-              </span>
-            )}
-          </div>
-          <div>
-            <div className="text-lg font-bold text-navy-900">
-              {formatPrice(property.price, property.currency, locale)}
-              {isRent && (
-                <span className="text-sm font-normal text-gray-500"> /міс</span>
-              )}
-            </div>
-            {!isRent && property.areaSqm > 0 && (
-              <div className="text-xs text-gray-400">
-                {formatPrice(
-                  Number(property.price) / property.areaSqm,
-                  property.currency,
-                  locale
-                )}{" "}
-                / м²
+          {/* Main photo */}
+          <div className="relative sm:w-[42%] aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100 overflow-hidden">
+            {mainImage ? (
+              <Image
+                src={mainImage.url}
+                alt={title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 640px) 100vw, 40vw"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400">
+                <Maximize2 className="w-10 h-10 opacity-30" />
               </div>
             )}
+            {/* Badge */}
+            <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-lg ${
+              isRent ? "bg-navy-700 text-white" : "bg-gold-400 text-white"
+            }`}>
+              {isRent ? (isUk ? "ОРЕНДА" : "RENT") : (isUk ? "ПРОДАЖ" : "SALE")}
+            </span>
           </div>
+
+          {/* Thumbnails 2×2 */}
+          <div className="hidden sm:grid grid-cols-2 sm:w-[22%] flex-shrink-0 gap-0.5 bg-gray-100">
+            {[0, 1, 2, 3].map((i) => {
+              const img = thumbs[i];
+              return img ? (
+                <div key={i} className="relative aspect-square overflow-hidden bg-gray-200">
+                  <Image
+                    src={img.url}
+                    alt={`${title} ${i + 2}`}
+                    fill
+                    className="object-cover hover:scale-105 transition-transform duration-300"
+                    sizes="10vw"
+                  />
+                </div>
+              ) : (
+                <div key={i} className="aspect-square bg-gray-100" />
+              );
+            })}
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 p-5 flex flex-col justify-between">
+            <div>
+              <div className="text-2xl font-bold text-navy-900 mb-2">
+                {formatPrice(property.price, property.currency, locale)}
+                {isRent && <span className="text-sm font-normal text-gray-400 ml-1">/міс</span>}
+              </div>
+              <h3 className="text-sm font-semibold text-gray-800 leading-snug mb-4 group-hover:text-gold-600 transition-colors line-clamp-2">
+                {title}
+              </h3>
+            </div>
+
+            {/* Details grid */}
+            <div className="grid grid-cols-3 gap-x-4 gap-y-3">
+              {details.map((d) => (
+                <div key={d.label}>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide leading-none mb-0.5">{d.label}</p>
+                  <p className="text-sm font-semibold text-navy-900 truncate">{String(d.value)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </div>
     </Link>

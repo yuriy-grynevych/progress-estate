@@ -120,7 +120,7 @@ export default async function ListingsPage({
                 </div>
               ) : (
                 <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                  <div className="flex flex-col gap-4">
                     {properties.map((property) => (
                       <PropertyCard
                         key={property.id}

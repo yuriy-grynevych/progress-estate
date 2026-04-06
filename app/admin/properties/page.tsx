@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
 import DeletePropertyButton from "@/components/admin/DeletePropertyButton";
 import ToggleStatusButton from "@/components/admin/ToggleStatusButton";
@@ -22,7 +23,7 @@ async function getProperties(search?: string, role?: string, userId?: string) {
     where: searchWhere,
     orderBy: { updatedAt: "desc" },
     include: {
-      images: { where: { isPrimary: true }, take: 1 },
+      images: { orderBy: { order: "asc" as const }, take: 1 },
       assignedUser: { select: { id: true, name: true, email: true } },
     },
   });
@@ -117,14 +118,29 @@ export default async function AdminPropertiesPage({
                 return (
                   <tr key={property.id} className="hover:bg-gray-50 transition">
                     <td className="px-4 py-3">
-                      <div>
-                        <p className="font-medium text-navy-900 line-clamp-1">
-                          {property.titleUk}
-                        </p>
-                        <p className="text-gray-400 text-xs mt-0.5 line-clamp-1">
-                          {property.address ?? property.district ?? "—"}
-                        </p>
-                      </div>
+                      <Link href={`/uk/listings/${property.slug}`} target="_blank" className="flex items-center gap-3 group">
+                        <div className="relative w-16 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                          {property.images[0] ? (
+                            <Image
+                              src={property.images[0].url}
+                              alt={property.titleUk}
+                              fill
+                              className="object-cover"
+                              sizes="64px"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-medium text-navy-900 line-clamp-1 group-hover:text-gold-500 transition-colors">
+                            {property.titleUk}
+                          </p>
+                          <p className="text-gray-400 text-xs mt-0.5 line-clamp-1">
+                            {property.address ?? property.district ?? "—"}
+                          </p>
+                        </div>
+                      </Link>
                     </td>
                     <td className="px-4 py-3 font-medium text-navy-900">
                       {formatPrice(Number(property.price), property.currency)}
