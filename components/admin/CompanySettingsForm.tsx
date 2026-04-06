@@ -35,7 +35,10 @@ export default function CompanySettingsForm({ initial }: CompanySettingsFormProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
-      if (!res.ok) throw new Error("Помилка збереження");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? `HTTP ${res.status}`);
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e: any) {

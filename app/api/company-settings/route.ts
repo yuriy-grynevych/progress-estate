@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { COMPANY } from "@/lib/constants";
 
@@ -18,7 +19,6 @@ async function ensureTable() {
       value TEXT NOT NULL DEFAULT ''
     )
   `);
-  // Seed defaults if empty
   for (const [key, value] of Object.entries(DEFAULTS)) {
     await prisma.$executeRawUnsafe(
       `INSERT INTO company_settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`,
@@ -42,11 +42,17 @@ export async function GET() {
 }
 
 export async function PUT(req: NextRequest) {
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  if (token?.role !== "ADMIN") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
   try {
+    const session = await getServerSession(authOptions);
+    const role = (session?.user as any)?.role;
+
+    if (!session || role !== "ADMIN") {
+      return NextResponse.json(
+        { error: `Unauthorized: session=${!!session} role=${role ?? "none"}` },
+        { status: 403 }
+      );
+    }
+
     await ensureTable();
     const body = await req.json() as Record<string, string>;
     for (const [key, value] of Object.entries(body)) {
