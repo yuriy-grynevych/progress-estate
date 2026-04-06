@@ -7,7 +7,7 @@ import WhyUsSection from "@/components/home/WhyUsSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import AboutSection from "@/components/home/AboutSection";
 import TeamSection from "@/components/home/TeamSection";
-import PropertyCard from "@/components/listings/PropertyCard";
+import FeaturedCard from "@/components/listings/FeaturedCard";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { setRequestLocale } from "next-intl/server";
@@ -56,7 +56,7 @@ export default async function HomePage({
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {featuredProperties.map((property) => (
-                  <PropertyCard key={property.id} property={property} locale={locale} />
+                  <FeaturedCard key={property.id} property={property} locale={locale} />
                 ))}
               </div>
             </div>
