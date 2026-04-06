@@ -31,7 +31,7 @@ export default function CompanySettingsForm({ initial }: CompanySettingsFormProp
     setError("");
     try {
       const res = await fetch("/api/company-settings", {
-        method: "PUT",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
