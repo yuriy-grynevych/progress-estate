@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ImageOff, Sparkles } from "lucide-react";
+import { ImageOff, Sparkles, Flame } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { PropertyWithImages } from "@/types";
 
@@ -53,6 +53,11 @@ export default function FeaturedCard({ property, locale }: FeaturedCardProps) {
             {fresh && (
               <span className="flex items-center gap-1 text-xs font-bold bg-emerald-500 text-white px-2.5 py-1 rounded-lg">
                 <Sparkles className="w-3 h-3" /> {isUk ? "НОВИНКА" : "NEW"}
+              </span>
+            )}
+            {property.isFeatured && (
+              <span className="flex items-center gap-1 text-xs font-bold bg-red-500 text-white px-2.5 py-1 rounded-lg">
+                <Flame className="w-3 h-3" /> {isUk ? "ГАРЯЧА" : "HOT"}
               </span>
             )}
             <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
