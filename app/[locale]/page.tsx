@@ -6,6 +6,7 @@ import StatsSection from "@/components/home/StatsSection";
 import WhyUsSection from "@/components/home/WhyUsSection";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import AboutSection from "@/components/home/AboutSection";
+import TeamSection from "@/components/home/TeamSection";
 import PropertyCard from "@/components/listings/PropertyCard";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
@@ -63,6 +64,7 @@ export default async function HomePage({
         )}
 
         <AboutSection locale={locale} />
+        <TeamSection locale={locale} />
         <WhyUsSection />
         <TestimonialsSection locale={locale} />
       </main>
