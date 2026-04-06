@@ -18,7 +18,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 bg-black/60" />
 
       {/* Logo — pinned just below navbar */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20 pb-0">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-32 pb-0">
         <Image
           src="/logo-progress.png"
           alt="Житлова компанія Progress"
