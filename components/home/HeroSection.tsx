@@ -10,42 +10,44 @@ export default function HeroSection() {
   const isUk = locale === "uk";
 
   return (
-    <section className="relative min-h-screen flex items-center bg-black">
+    <section className="relative min-h-screen flex flex-col bg-black">
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url("/hero-bg.jpg")` }}
       />
       <div className="absolute inset-0 bg-black/60" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 w-full">
-        <div className="max-w-4xl">
-          <div id="hero-logo" className="mb-6">
-            <Image
-              src="/logo-progress.png"
-              alt="Житлова компанія Progress"
-              width={600}
-              height={185}
-              className="w-64 sm:w-80 lg:w-96 h-auto rounded-xl"
-            />
+      {/* Logo — pinned near top */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-24">
+        <Image
+          src="/logo-progress.png"
+          alt="Житлова компанія Progress"
+          width={600}
+          height={185}
+          className="w-56 sm:w-72 lg:w-80 h-auto rounded-xl"
+        />
+      </div>
+
+      {/* Main content — vertically centered in remaining space */}
+      <div className="relative flex-1 flex items-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16">
+          <div className="max-w-3xl">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
+              {isUk ? "Знайдіть своє ідеальне житло" : "Find Your Perfect Home"}
+            </h1>
+            <p className="text-lg text-white/70 mb-8 max-w-xl">
+              {isUk
+                ? "Надійний партнер у виборі нерухомості в Івано-Франківську та регіоні"
+                : "Your trusted real estate partner in Ivano-Frankivsk and the region"}
+            </p>
+            <button
+              onClick={() => router.push(`/${locale}/listings`)}
+              className="inline-flex items-center gap-3 bg-gold-400 hover:bg-gold-500 text-white font-bold text-lg px-8 py-4 rounded-2xl transition-colors shadow-xl"
+            >
+              {isUk ? "Каталог нерухомості" : "Property Catalog"}
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
-
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
-            {isUk ? "Знайдіть своє ідеальне житло" : "Find Your Perfect Home"}
-          </h1>
-          <p className="text-lg text-white/70 mb-8 max-w-xl">
-            {isUk
-              ? "Надійний партнер у виборі нерухомості в Івано-Франківську та регіоні"
-              : "Your trusted real estate partner in Ivano-Frankivsk and the region"}
-          </p>
-
-          {/* CTA button */}
-          <button
-            onClick={() => router.push(`/${locale}/listings`)}
-            className="inline-flex items-center gap-3 bg-gold-400 hover:bg-gold-500 text-white font-bold text-lg px-8 py-4 rounded-2xl transition-colors shadow-xl"
-          >
-            {isUk ? "Каталог нерухомості" : "Property Catalog"}
-            <ArrowRight className="w-5 h-5" />
-          </button>
         </div>
       </div>
 
