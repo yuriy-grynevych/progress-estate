@@ -17,21 +17,18 @@ export default function HeroSection() {
       />
       <div className="absolute inset-0 bg-black/60" />
 
-      {/* Logo — pinned near top */}
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-24">
-        <Image
-          src="/logo-progress.png"
-          alt="Житлова компанія Progress"
-          width={600}
-          height={185}
-          className="w-56 sm:w-72 lg:w-80 h-auto rounded-xl"
-        />
-      </div>
-
-      {/* Main content — vertically centered in remaining space */}
+      {/* All content centered vertically */}
       <div className="relative flex-1 flex items-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-24 pb-16">
           <div className="max-w-3xl">
+            {/* Logo — sits between navbar and headline */}
+            <Image
+              src="/logo-progress.png"
+              alt="Житлова компанія Progress"
+              width={600}
+              height={185}
+              className="w-56 sm:w-72 lg:w-80 h-auto rounded-xl mb-10"
+            />
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-4">
               {isUk ? "Знайдіть своє ідеальне житло" : "Find Your Perfect Home"}
             </h1>
