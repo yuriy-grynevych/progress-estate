@@ -2,7 +2,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import { Building2, MessageSquare, Eye, Star } from "lucide-react";
+import Image from "next/image";
+import { Building2, MessageSquare, Eye, Star, Sparkles, ImageOff } from "lucide-react";
 
 async function getStats(role: string, userId: string) {
   const propertyWhere = role === "ADMIN" ? {} : { assignedUserId: userId };
@@ -26,12 +27,20 @@ async function getStats(role: string, userId: string) {
     include: { property: { select: { titleUk: true, slug: true } } },
   });
 
+  const recentProperties = await prisma.property.findMany({
+    where: propertyWhere,
+    take: 6,
+    orderBy: { createdAt: "desc" },
+    include: { images: { orderBy: { order: "asc" as const }, take: 1 } },
+  });
+
   return {
     activeProperties,
     totalProperties,
     newInquiries,
     totalViews: totalViews._sum.viewCount ?? 0,
     recentInquiries,
+    recentProperties,
   };
 }
 
@@ -66,8 +75,10 @@ export default async function AdminDashboard() {
   const role = (session?.user as any)?.role as string ?? "EMPLOYEE";
   const userId = (session?.user as any)?.id as string;
 
-  const { activeProperties, totalProperties, newInquiries, totalViews, recentInquiries } =
+  const { activeProperties, totalProperties, newInquiries, totalViews, recentInquiries, recentProperties } =
     await getStats(role, userId);
+
+  const isNew = (d: Date) => Date.now() - new Date(d).getTime() < 4 * 24 * 60 * 60 * 1000;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -103,6 +114,51 @@ export default async function AdminDashboard() {
           href="/admin/properties"
           color="bg-gold-50"
         />
+      </div>
+
+      {/* Recent properties */}
+      <div className="bg-white rounded-2xl shadow-sm">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="font-semibold text-navy-900">Нові оголошення</h2>
+          <Link href="/admin/properties" className="text-sm text-gold-500 hover:text-gold-600">
+            Всі →
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+          {recentProperties.map((p) => {
+            const img = p.images[0];
+            const fresh = isNew(p.createdAt);
+            return (
+              <Link key={p.id} href={`/admin/properties/${p.id}`}
+                className="group flex gap-3 p-3 rounded-xl hover:bg-gray-50 transition border border-gray-100">
+                <div className="relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                  {img ? (
+                    <Image src={img.url} alt={p.titleUk} fill className="object-cover" sizes="80px" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300">
+                      <ImageOff className="w-5 h-5" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start gap-1 mb-0.5">
+                    {fresh && (
+                      <span className="flex items-center gap-0.5 text-[9px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full flex-shrink-0">
+                        <Sparkles className="w-2 h-2" />НОВИНКА
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-navy-900 group-hover:text-gold-500 transition line-clamp-2 leading-snug">
+                    {p.titleUk}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {new Date(p.createdAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Recent inquiries */}

@@ -1,8 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Maximize2, ImageOff } from "lucide-react";
+import { ImageOff, Sparkles } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import type { PropertyWithImages } from "@/types";
+
+function isNew(d: Date | string) {
+  return Date.now() - new Date(d).getTime() < 4 * 24 * 60 * 60 * 1000;
+}
 
 interface PropertyCardProps {
   property: PropertyWithImages;
@@ -16,6 +20,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
   const mainImage = images.find((i) => i.isPrimary) ?? images[0];
   const thumbs = images.filter((i) => i !== mainImage).slice(0, 4);
   const isRent = property.listingType === "RENT";
+  const fresh = isNew(property.createdAt);
 
   const details = [
     { label: isUk ? "площа" : "area",   value: property.areaSqm ? `${property.areaSqm}м²` : "—" },
@@ -54,12 +59,19 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
                 <span className="text-xs">Фото відсутнє</span>
               </div>
             )}
-            {/* Badge */}
-            <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-lg ${
-              isRent ? "bg-navy-700 text-white" : "bg-gold-400 text-white"
-            }`}>
-              {isRent ? (isUk ? "ОРЕНДА" : "RENT") : (isUk ? "ПРОДАЖ" : "SALE")}
-            </span>
+            {/* Badges */}
+            <div className="absolute top-3 left-3 flex flex-col gap-1">
+              {fresh && (
+                <span className="flex items-center gap-1 text-xs font-bold bg-emerald-500 text-white px-2.5 py-1 rounded-lg">
+                  <Sparkles className="w-3 h-3" /> {isUk ? "НОВИНКА" : "NEW"}
+                </span>
+              )}
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${
+                isRent ? "bg-navy-700 text-white" : "bg-gold-400 text-white"
+              }`}>
+                {isRent ? (isUk ? "ОРЕНДА" : "RENT") : (isUk ? "ПРОДАЖ" : "SALE")}
+              </span>
+            </div>
           </div>
 
           {/* Thumbnails 2×2 */}
