@@ -4,7 +4,7 @@ import { useLocale } from "next-intl";
 const stats = [
   { value: "150+", labelUk: "Проданих об'єктів", labelEn: "Properties Sold" },
   { value: "300+", labelUk: "Задоволених клієнтів", labelEn: "Happy Clients" },
-  { value: "250+", labelUk: "Активних оголошень", labelEn: "Active Listings" },
+  { value: "200+", labelUk: "Активних оголошень", labelEn: "Active Listings" },
   { value: "24/7", labelUk: "Підтримка клієнтів", labelEn: "Client Support" },
 ];
 

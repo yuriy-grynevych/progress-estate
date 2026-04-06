@@ -35,8 +35,13 @@ export default function AboutSection({ locale }: AboutSectionProps) {
           </p>
           <p className="text-base sm:text-lg text-gray-500 leading-relaxed">
             {isUk
-              ? "Наша мета — зробити купівлю та оренду нерухомості максимально комфортним і прозорим процесом. Ми пишаємося довірою сотень родин, яким допомогли знайти своє ідеальне житло."
-              : "Our goal is to make buying and renting real estate as comfortable and transparent as possible. We are proud of the trust of hundreds of families we have helped find their perfect home."}
+              ? "Наша місія — зробити кожну угоду простою, безпечною та вигідною. Ми глибоко знаємо ринок Івано-Франківська, слідкуємо за тенденціями та завжди пропонуємо лише перевірені об'єкти. Індивідуальний підхід, чесність і результат — ось що відрізняє нас від інших."
+              : "Our mission is to make every transaction simple, safe and beneficial. We know the Ivano-Frankivsk market deeply, track trends, and always offer only verified properties. An individual approach, honesty and results — that is what sets us apart."}
+          </p>
+          <p className="text-base sm:text-lg text-gray-500 leading-relaxed">
+            {isUk
+              ? "Ми супроводжуємо клієнта на кожному етапі: від першої консультації та підбору об'єкта до юридичного оформлення угоди. Наші агенти завжди на зв'язку — відповідаємо швидко, діємо оперативно та несемо відповідальність за кожну рекомендацію."
+              : "We accompany the client at every stage: from the first consultation and property selection to the legal formalization of the deal. Our agents are always available — we respond quickly, act promptly, and take responsibility for every recommendation."}
           </p>
         </div>
       </div>
