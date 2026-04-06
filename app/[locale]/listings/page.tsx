@@ -14,11 +14,18 @@ interface SearchParams {
   listingType?: string;
   type?: string;
   district?: string;
+  street?: string;
   priceMin?: string;
   priceMax?: string;
   areaMin?: string;
   areaMax?: string;
   rooms?: string;
+  floorMin?: string;
+  floorMax?: string;
+  condition?: string;
+  govProgram?: string;
+  developer?: string;
+  complex?: string;
   search?: string;
   page?: string;
   sort?: string;
@@ -50,14 +57,42 @@ async function getProperties(sp: SearchParams) {
         }
       : {}),
     ...(sp.rooms && { rooms: { gte: Number(sp.rooms) } }),
-    ...(sp.search && {
+    ...((sp.floorMin || sp.floorMax)
+      ? {
+          floor: {
+            ...(sp.floorMin && { gte: Number(sp.floorMin) }),
+            ...(sp.floorMax && { lte: Number(sp.floorMax) }),
+          },
+        }
+      : {}),
+    ...(sp.condition && { features: { has: sp.condition } }),
+    ...(sp.govProgram && { features: { has: sp.govProgram } }),
+    ...(sp.street && { address: { contains: sp.street, mode: "insensitive" } }),
+    ...(sp.complex && { titleUk: { contains: sp.complex, mode: "insensitive" } }),
+  };
+
+  // AND-combine text search conditions that each use OR internally
+  const andConditions: Prisma.PropertyWhereInput[] = [];
+  if (sp.developer) {
+    andConditions.push({
+      OR: [
+        { titleUk: { contains: sp.developer, mode: "insensitive" } },
+        { address: { contains: sp.developer, mode: "insensitive" } },
+      ],
+    });
+  }
+  if (sp.search) {
+    andConditions.push({
       OR: [
         { titleUk: { contains: sp.search, mode: "insensitive" } },
         { titleEn: { contains: sp.search, mode: "insensitive" } },
         { address: { contains: sp.search, mode: "insensitive" } },
       ],
-    }),
-  };
+    });
+  }
+  if (andConditions.length > 0) {
+    where.AND = andConditions;
+  }
 
   const orderBy: Prisma.PropertyOrderByWithRelationInput =
     sp.sort === "price_asc"
