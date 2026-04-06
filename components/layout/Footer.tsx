@@ -13,8 +13,8 @@ export default function Footer({ locale }: { locale: string }) {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <Home className="w-6 h-6 text-gold-400" />
-              <span className="text-lg font-bold">
-                Житлова компанія <span className="text-gold-400">Progress</span>
+              <span className="text-lg font-bold text-gold-400">
+                Житлова компанія Progress
               </span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed">

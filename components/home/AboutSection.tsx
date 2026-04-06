@@ -26,14 +26,14 @@ export default function AboutSection({ locale }: AboutSectionProps) {
           />
         </div>
 
-        {/* Description */}
-        <div className="max-w-3xl space-y-4">
-          <p className="text-lg text-gray-700 leading-relaxed">
+        {/* Description in card */}
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 sm:p-10">
+          <p className="text-xl sm:text-2xl text-gray-800 leading-relaxed font-medium mb-6">
             {isUk
               ? "Житлова компанія Progress — це команда досвідчених фахівців у сфері нерухомості Івано-Франківська та регіону. Ми супроводжуємо клієнтів на кожному етапі: від пошуку житла до підписання договору."
               : "Progress Housing Company is a team of experienced real estate professionals in Ivano-Frankivsk and the region. We guide clients at every step — from property search to contract signing."}
           </p>
-          <p className="text-gray-500 leading-relaxed">
+          <p className="text-base sm:text-lg text-gray-500 leading-relaxed">
             {isUk
               ? "Наша мета — зробити купівлю та оренду нерухомості максимально комфортним і прозорим процесом. Ми пишаємося довірою сотень родин, яким допомогли знайти своє ідеальне житло."
               : "Our goal is to make buying and renting real estate as comfortable and transparent as possible. We are proud of the trust of hundreds of families we have helped find their perfect home."}
