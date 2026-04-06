@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PropertyCard from "@/components/listings/PropertyCard";
-import FilterSidebar from "@/components/listings/FilterSidebar";
+import FilterBar from "@/components/listings/FilterBar";
 import Pagination from "@/components/listings/Pagination";
 import { PAGE_SIZE } from "@/lib/constants";
 import { Prisma } from "@prisma/client";
@@ -104,40 +104,36 @@ export default async function ListingsPage({
               ({total})
             </span>
           </h1>
-          <div className="flex flex-col lg:flex-row gap-8">
-            <FilterSidebar locale={locale} searchParams={searchParams} />
-            <div className="flex-1 min-w-0">
-              {properties.length === 0 ? (
-                <div className="text-center py-20 text-gray-500">
-                  <p className="text-lg font-medium">
-                    {isUk ? "Оголошень не знайдено" : "No properties found"}
-                  </p>
-                  <p className="text-sm mt-1">
-                    {isUk
-                      ? "Спробуйте змінити параметри пошуку"
-                      : "Try adjusting your search parameters"}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                    {properties.map((property) => (
-                      <PropertyCard
-                        key={property.id}
-                        property={property}
-                        locale={locale}
-                      />
-                    ))}
-                  </div>
-                  {totalPages > 1 && (
-                    <div className="mt-8">
-                      <Pagination currentPage={page} totalPages={totalPages} />
-                    </div>
-                  )}
-                </>
-              )}
+          <FilterBar locale={locale} searchParams={searchParams} />
+          {properties.length === 0 ? (
+            <div className="text-center py-20 text-gray-500">
+              <p className="text-lg font-medium">
+                {isUk ? "Оголошень не знайдено" : "No properties found"}
+              </p>
+              <p className="text-sm mt-1">
+                {isUk
+                  ? "Спробуйте змінити параметри пошуку"
+                  : "Try adjusting your search parameters"}
+              </p>
             </div>
-          </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {properties.map((property) => (
+                  <PropertyCard
+                    key={property.id}
+                    property={property}
+                    locale={locale}
+                  />
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <div className="mt-8">
+                  <Pagination currentPage={page} totalPages={totalPages} />
+                </div>
+              )}
+            </>
+          )}
         </div>
       </main>
       <Footer locale={locale} />

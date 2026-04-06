@@ -1,114 +1,13 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useLocale } from "next-intl";
-import { Search, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { PROPERTY_TYPES, DISTRICTS_IF } from "@/lib/constants";
-
-function Dropdown({
-  label,
-  value,
-  options,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (v: string) => void;
-  placeholder: string;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const selected = options.find((o) => o.value === value);
-
-  return (
-    <div ref={ref} className="relative flex-1 min-w-0">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full text-left px-4 pt-3 pb-2.5 flex flex-col gap-0.5 hover:bg-gray-50 transition-colors rounded-xl"
-      >
-        <span className="text-xs text-gray-400 font-medium uppercase tracking-wide leading-none">{label}</span>
-        <span className={cn("text-sm font-semibold flex items-center justify-between gap-1", selected ? "text-gray-900" : "text-gray-400")}>
-          {selected ? selected.label : placeholder}
-          <ChevronDown className={cn("w-4 h-4 flex-shrink-0 transition-transform", open && "rotate-180")} />
-        </span>
-      </button>
-      {open && (
-        <div className="absolute top-full left-0 mt-1 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 min-w-[180px] py-2 max-h-64 overflow-y-auto">
-          <button
-            type="button"
-            onClick={() => { onChange(""); setOpen(false); }}
-            className={cn("w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors", !value && "font-semibold text-gold-500")}
-          >
-            {placeholder}
-          </button>
-          {options.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={cn("w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 transition-colors", value === opt.value && "font-semibold text-gold-500 bg-gold-50")}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+import { ArrowRight } from "lucide-react";
 
 export default function HeroSection() {
   const locale = useLocale();
   const router = useRouter();
-  const [listingType, setListingType] = useState<"SALE" | "RENT">("SALE");
-  const [propertyType, setPropertyType] = useState("");
-  const [district, setDistrict] = useState("");
-  const [search, setSearch] = useState("");
-  const [dbDistricts, setDbDistricts] = useState<{ value: string; labelUk: string; labelEn: string }[] | null>(null);
   const isUk = locale === "uk";
-
-  useEffect(() => {
-    fetch("/api/districts").then((r) => r.json()).then(setDbDistricts).catch(() => {});
-  }, []);
-
-  const handleSearch = () => {
-    const params = new URLSearchParams();
-    params.set("listingType", listingType);
-    if (propertyType) params.set("type", propertyType);
-    if (district) params.set("district", district);
-    if (search) params.set("search", search);
-    router.push(`/${locale}/listings?${params.toString()}`);
-  };
-
-  const listingOptions = [
-    { value: "SALE", label: isUk ? "Купити" : "Buy" },
-    { value: "RENT", label: isUk ? "Орендувати" : "Rent" },
-  ];
-
-  const typeOptions = PROPERTY_TYPES.map((t) => ({
-    value: t.value,
-    label: isUk ? t.labelUk : t.labelEn,
-  }));
-
-  const districtSource = dbDistricts ?? DISTRICTS_IF;
-  const districtOptions = districtSource.map((d) => ({
-    value: d.value,
-    label: isUk ? d.labelUk : d.labelEn,
-  }));
 
   return (
     <section className="relative min-h-screen flex items-center bg-black">
@@ -139,62 +38,14 @@ export default function HeroSection() {
               : "Your trusted real estate partner in Ivano-Frankivsk and the region"}
           </p>
 
-          {/* Search bar */}
-          <div className="bg-white rounded-2xl shadow-2xl">
-            {/* Top row: search bar with columns */}
-            <div className="flex items-stretch divide-x divide-gray-100 rounded-2xl overflow-visible">
-              {/* Дія */}
-              <Dropdown
-                label={isUk ? "Дія" : "Action"}
-                value={listingType}
-                options={listingOptions}
-                onChange={(v) => setListingType(v as "SALE" | "RENT")}
-                placeholder={isUk ? "Оберіть" : "Choose"}
-              />
-
-              {/* Тип */}
-              <Dropdown
-                label={isUk ? "Тип нерухомості" : "Property type"}
-                value={propertyType}
-                options={typeOptions}
-                onChange={setPropertyType}
-                placeholder={isUk ? "Будь-який" : "Any"}
-              />
-
-              {/* Район */}
-              <Dropdown
-                label={isUk ? "Район" : "District"}
-                value={district}
-                options={districtOptions}
-                onChange={setDistrict}
-                placeholder={isUk ? "Будь-який" : "Any"}
-              />
-
-              {/* Локація */}
-              <div className="flex-1 min-w-0 px-4 pt-3 pb-2.5 flex flex-col gap-0.5">
-                <span className="text-xs text-gray-400 font-medium uppercase tracking-wide leading-none">
-                  {isUk ? "Адреса / вулиця" : "Address / street"}
-                </span>
-                <input
-                  type="text"
-                  placeholder={isUk ? "напр. вул. Незалежності" : "e.g. Nezalezhnosti st."}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="text-sm font-semibold text-gray-900 placeholder:text-gray-400 placeholder:font-normal bg-transparent focus:outline-none w-full"
-                />
-              </div>
-
-              {/* Button */}
-              <button
-                onClick={handleSearch}
-                className="bg-gold-400 hover:bg-gold-500 text-white font-bold px-8 flex items-center gap-2 transition-colors flex-shrink-0 rounded-r-2xl"
-              >
-                <Search className="w-5 h-5" />
-                <span className="hidden sm:inline">{isUk ? "Шукати" : "Search"}</span>
-              </button>
-            </div>
-          </div>
+          {/* CTA button */}
+          <button
+            onClick={() => router.push(`/${locale}/listings`)}
+            className="inline-flex items-center gap-3 bg-gold-400 hover:bg-gold-500 text-white font-bold text-lg px-8 py-4 rounded-2xl transition-colors shadow-xl"
+          >
+            {isUk ? "Каталог нерухомості" : "Property Catalog"}
+            <ArrowRight className="w-5 h-5" />
+          </button>
         </div>
       </div>
 
