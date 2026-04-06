@@ -86,7 +86,7 @@ function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInput
   return (
     <input
       {...props}
-      className={`w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 ${className}`}
+      className={`w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 focus:border-navy-900 ${className}`}
     />
   );
 }
@@ -99,7 +99,7 @@ function Select({
   return (
     <select
       {...props}
-      className={`w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 bg-white ${className}`}
+      className={`w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 focus:border-navy-900 bg-white ${className}`}
     >
       {children}
     </select>
@@ -317,8 +317,11 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
 
       <div className="space-y-6">
         {/* Основне */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Основне</h2>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
+            <span className="w-1 h-5 bg-navy-900 rounded-full inline-block" />
+            Основне
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <FieldLabel required>Тип нерухомості</FieldLabel>
@@ -389,8 +392,11 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
         </div>
 
         {/* Параметри */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Параметри</h2>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
+            <span className="w-1 h-5 bg-gold-500 rounded-full inline-block" />
+            Параметри
+          </h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div>
               <FieldLabel required>Площа (м²)</FieldLabel>
@@ -425,8 +431,11 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
         </div>
 
         {/* Локалізація */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Локалізація</h2>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
+            <span className="w-1 h-5 bg-emerald-500 rounded-full inline-block" />
+            Локалізація
+          </h2>
           <div>
             <FieldLabel>Район</FieldLabel>
             <Select {...register("district")}>
@@ -464,8 +473,11 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
         </div>
 
         {/* Опис */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Опис</h2>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
+            <span className="w-1 h-5 bg-blue-500 rounded-full inline-block" />
+            Опис
+          </h2>
           <div>
             <FieldLabel>Опис (UA)</FieldLabel>
             <Controller
@@ -510,8 +522,11 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
         </div>
 
         {/* Зручності */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b pb-3">Зручності</h2>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
+            <span className="w-1 h-5 bg-purple-500 rounded-full inline-block" />
+            Зручності
+          </h2>
           <FeatureTab
             selectedFeatures={selectedFeatures ?? []}
             predefinedFeatures={featureOptions ?? PROPERTY_FEATURES.map((f) => ({ id: f.value, value: f.value, labelUk: f.labelUk, labelEn: f.labelEn }))}
@@ -522,8 +537,11 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
         </div>
 
         {/* Фото */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <h2 className="text-base font-semibold text-navy-900 border-b pb-3 mb-5">Фото</h2>
+        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200">
+          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 mb-5 flex items-center gap-2">
+            <span className="w-1 h-5 bg-orange-500 rounded-full inline-block" />
+            Фото
+          </h2>
           {propertyId === "new" && (
             <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-3 rounded-lg mb-4">
               Спочатку збережіть нерухомість (натисніть «Створити»), потім додайте фото.

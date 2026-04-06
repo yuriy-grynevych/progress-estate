@@ -49,7 +49,7 @@ export default function FeaturedCard({ property, locale }: FeaturedCardProps) {
           )}
 
           {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5">
             {fresh && (
               <span className="flex items-center gap-1 text-xs font-bold bg-emerald-500 text-white px-2.5 py-1 rounded-lg">
                 <Sparkles className="w-3 h-3" /> {isUk ? "НОВИНКА" : "NEW"}
