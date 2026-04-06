@@ -104,36 +104,40 @@ export default async function ListingsPage({
               ({total})
             </span>
           </h1>
-          <FilterBar locale={locale} searchParams={searchParams} />
-          {properties.length === 0 ? (
-            <div className="text-center py-20 text-gray-500">
-              <p className="text-lg font-medium">
-                {isUk ? "Оголошень не знайдено" : "No properties found"}
-              </p>
-              <p className="text-sm mt-1">
-                {isUk
-                  ? "Спробуйте змінити параметри пошуку"
-                  : "Try adjusting your search parameters"}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {properties.map((property) => (
-                  <PropertyCard
-                    key={property.id}
-                    property={property}
-                    locale={locale}
-                  />
-                ))}
-              </div>
-              {totalPages > 1 && (
-                <div className="mt-8">
-                  <Pagination currentPage={page} totalPages={totalPages} />
+          <div className="flex flex-col lg:flex-row gap-8">
+            <FilterBar locale={locale} searchParams={searchParams} />
+            <div className="flex-1 min-w-0">
+              {properties.length === 0 ? (
+                <div className="text-center py-20 text-gray-500">
+                  <p className="text-lg font-medium">
+                    {isUk ? "Оголошень не знайдено" : "No properties found"}
+                  </p>
+                  <p className="text-sm mt-1">
+                    {isUk
+                      ? "Спробуйте змінити параметри пошуку"
+                      : "Try adjusting your search parameters"}
+                  </p>
                 </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {properties.map((property) => (
+                      <PropertyCard
+                        key={property.id}
+                        property={property}
+                        locale={locale}
+                      />
+                    ))}
+                  </div>
+                  {totalPages > 1 && (
+                    <div className="mt-8">
+                      <Pagination currentPage={page} totalPages={totalPages} />
+                    </div>
+                  )}
+                </>
               )}
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </main>
       <Footer locale={locale} />
