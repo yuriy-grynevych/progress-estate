@@ -2,18 +2,19 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import ContactForm from "@/components/property/ContactForm";
 import { Phone, Mail, MapPin, Instagram } from "lucide-react";
-import { COMPANY } from "@/lib/constants";
+import { getCompanySettings } from "@/lib/company";
 import { setRequestLocale } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
-export default function ContactPage({
+export default async function ContactPage({
   params: { locale },
 }: {
   params: { locale: string };
 }) {
   setRequestLocale(locale);
   const isUk = locale === "uk";
+  const COMPANY = await getCompanySettings();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -67,7 +68,7 @@ export default function ContactPage({
               </div>
             </div>
 
-            <ContactForm propertyId="" propertyTitle="" locale={locale} />
+            <ContactForm propertyId="" propertyTitle="" locale={locale} companyPhone={COMPANY.phone} companyEmail={COMPANY.email} />
           </div>
         </div>
       </main>

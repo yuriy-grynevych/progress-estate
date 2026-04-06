@@ -23,11 +23,15 @@ export default function ContactForm({
   propertyTitle,
   locale,
   agent,
+  companyPhone,
+  companyEmail,
 }: {
   propertyId: string;
   propertyTitle: string;
   locale: string;
   agent?: Agent | null;
+  companyPhone?: string;
+  companyEmail?: string;
 }) {
   const isUk = locale === "uk";
   const { toast } = useToast();
@@ -69,8 +73,8 @@ export default function ContactForm({
 
   // Use agent contact info if available, otherwise company defaults
   const displayName = agent?.name ?? COMPANY.name ?? "Житлова компанія Progress";
-  const displayPhone = agent?.phone ?? COMPANY.phone;
-  const displayEmail = agent?.email ?? COMPANY.email;
+  const displayPhone = agent?.phone ?? companyPhone ?? COMPANY.phone;
+  const displayEmail = agent?.email ?? companyEmail ?? COMPANY.email;
   const displayPhoto = agent?.photoUrl ?? null;
 
   return (
