@@ -2,9 +2,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { COMPANY } from "@/lib/constants";
 import FeaturesManager from "@/components/admin/FeaturesManager";
 import DistrictsManager from "@/components/admin/DistrictsManager";
+import CompanySettingsForm from "@/components/admin/CompanySettingsForm";
+import { getCompanySettings } from "@/lib/company";
 
 async function getDistricts() {
   try {
@@ -21,38 +22,23 @@ export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   if ((session?.user as any)?.role !== "ADMIN") redirect("/admin");
 
-  const [features, districts] = await Promise.all([
+  const [features, districts, company] = await Promise.all([
     prisma.feature.findMany({ orderBy: { order: "asc" } }),
     getDistricts(),
+    getCompanySettings(),
   ]);
 
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       <h1 className="text-2xl font-bold text-navy-900 mb-6">Налаштування</h1>
 
-      {/* Company info (read-only) */}
+      {/* Company settings — editable */}
       <div className="bg-white rounded-2xl p-6 shadow-sm">
-        <h2 className="font-semibold text-navy-900 mb-4">Контактні дані компанії</h2>
-        <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4">
-          Редагуються у файлі <code className="font-mono">lib/constants.ts</code>
+        <h2 className="font-semibold text-navy-900 mb-1">Контактні дані компанії</h2>
+        <p className="text-xs text-gray-400 mb-5">
+          Відображаються на сайті у футері, навбарі та сторінці контактів.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            { label: "Телефон", value: COMPANY.phone },
-            { label: "Email", value: COMPANY.email },
-            { label: "Адреса", value: COMPANY.address },
-            { label: "Instagram", value: COMPANY.instagram },
-          ].map(({ label, value }) => (
-            <div key={label}>
-              <label className="text-xs font-medium text-gray-500 block mb-1">{label}</label>
-              <input
-                readOnly
-                defaultValue={value}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 text-gray-500"
-              />
-            </div>
-          ))}
-        </div>
+        <CompanySettingsForm initial={company} />
       </div>
 
       {/* Features manager */}

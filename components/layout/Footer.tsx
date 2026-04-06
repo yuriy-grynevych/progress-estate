@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Home, Instagram, Mail, Phone, MapPin } from "lucide-react";
-import { COMPANY } from "@/lib/constants";
+import { getCompanySettings } from "@/lib/company";
 
-export default function Footer({ locale }: { locale: string }) {
+export default async function Footer({ locale }: { locale: string }) {
   const year = new Date().getFullYear();
   const isUk = locale === "uk";
+  const COMPANY = await getCompanySettings();
 
   return (
     <footer className="bg-black text-white">
