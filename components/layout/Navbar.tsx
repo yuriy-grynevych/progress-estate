@@ -24,8 +24,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [logoVisible, setLogoVisible] = useState(false);
   const [company, setCompany] = useState<CompanyData>({
-    phone: company.phone, email: COMPANY.email, address: COMPANY.address,
-    instagram: company.instagram, facebook: COMPANY.facebook ?? "",
+    phone: COMPANY.phone, email: COMPANY.email, address: COMPANY.address,
+    instagram: COMPANY.instagram, facebook: COMPANY.facebook ?? "",
   });
   const isUk = locale === "uk";
 
