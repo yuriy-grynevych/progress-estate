@@ -110,9 +110,9 @@ export default async function AdminPropertiesPage({
               <div className="flex flex-col sm:flex-row">
 
                 {/* Main photo */}
-                <div className="relative sm:w-52 aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100 overflow-hidden">
+                <div className="relative sm:w-72 aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100 overflow-hidden">
                   {mainImg ? (
-                    <Image src={mainImg.url} alt={property.titleUk} fill className="object-cover" sizes="208px" />
+                    <Image src={mainImg.url} alt={property.titleUk} fill className="object-cover" sizes="288px" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
                       <ImageOff className="w-8 h-8" />
@@ -133,7 +133,7 @@ export default async function AdminPropertiesPage({
 
                 {/* Thumbs 2×2 */}
                 {thumbs.length > 0 && (
-                  <div className="hidden sm:grid grid-cols-2 w-24 gap-0.5 flex-shrink-0 bg-gray-100">
+                  <div className="hidden sm:grid grid-cols-2 w-32 gap-0.5 flex-shrink-0 bg-gray-100">
                     {[0,1,2,3].map((i) => thumbs[i] ? (
                       <div key={i} className="relative aspect-square overflow-hidden">
                         <Image src={thumbs[i].url} alt="" fill className="object-cover" sizes="48px" />
