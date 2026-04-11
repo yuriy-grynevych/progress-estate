@@ -33,10 +33,11 @@ export default function PropertyGallery({
           onClick={() => setLightbox(true)}
         >
           <Image
+            key={current}
             src={images[current].url}
             alt={`${title} - ${current + 1}`}
             fill
-            className="object-cover"
+            className="object-cover animate-kenburns"
             priority
           />
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">

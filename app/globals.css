@@ -8,6 +8,17 @@
   }
 }
 
+@keyframes kenburns {
+  0%   { transform: scale(1)    translateX(0)      translateY(0); }
+  25%  { transform: scale(1.08) translateX(-1%)    translateY(-1%); }
+  75%  { transform: scale(1.12) translateX(1%)     translateY(0.5%); }
+  100% { transform: scale(1.06) translateX(-0.5%)  translateY(1%); }
+}
+
+.animate-kenburns {
+  animation: kenburns 8s ease-in-out infinite alternate;
+}
+
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
