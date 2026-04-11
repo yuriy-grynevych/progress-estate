@@ -11,11 +11,15 @@ export default function HeroSection() {
 
   return (
     <section className="relative min-h-screen flex flex-col bg-black">
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url("/hero-bg.jpg")` }}
+      <video
+        className="absolute inset-0 w-full h-full object-cover"
+        src="/hero-progress.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
       />
-      <div className="absolute inset-0 bg-black/60" />
+      <div className="absolute inset-0 bg-black/55" />
 
       {/* Logo — pinned just below navbar */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-32 pb-0">
