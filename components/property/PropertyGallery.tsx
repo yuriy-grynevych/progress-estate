@@ -4,6 +4,10 @@ import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import type { PropertyImage } from "@prisma/client";
 
+function isVideo(url: string) {
+  return /\.(mp4|webm|mov)$/i.test(url);
+}
+
 export default function PropertyGallery({
   images,
   title,
@@ -32,14 +36,26 @@ export default function PropertyGallery({
           className="relative aspect-[16/9] rounded-xl overflow-hidden cursor-pointer group bg-gray-100"
           onClick={() => setLightbox(true)}
         >
-          <Image
-            key={current}
-            src={images[current].url}
-            alt={`${title} - ${current + 1}`}
-            fill
-            className="object-cover animate-kenburns"
-            priority
-          />
+          {isVideo(images[current].url) ? (
+            <video
+              key={current}
+              src={images[current].url}
+              className="w-full h-full object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
+            />
+          ) : (
+            <Image
+              key={current}
+              src={images[current].url}
+              alt={`${title} - ${current + 1}`}
+              fill
+              className="object-cover animate-kenburns"
+              priority
+            />
+          )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
             <Expand className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
@@ -108,13 +124,24 @@ export default function PropertyGallery({
             className="relative w-full max-w-4xl max-h-[80vh] mx-16"
             onClick={(e) => e.stopPropagation()}
           >
-            <Image
-              src={images[current].url}
-              alt={title}
-              width={1200}
-              height={800}
-              className="object-contain max-h-[80vh] mx-auto"
-            />
+            {isVideo(images[current].url) ? (
+              <video
+                src={images[current].url}
+                className="max-h-[80vh] mx-auto"
+                controls
+                autoPlay
+                muted
+                playsInline
+              />
+            ) : (
+              <Image
+                src={images[current].url}
+                alt={title}
+                width={1200}
+                height={800}
+                className="object-contain max-h-[80vh] mx-auto"
+              />
+            )}
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); next(); }}

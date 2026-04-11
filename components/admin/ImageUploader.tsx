@@ -19,8 +19,12 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Upload, X, GripVertical, Star } from "lucide-react";
+import { Upload, X, GripVertical, Star, Video } from "lucide-react";
 import Image from "next/image";
+
+function isVideo(url: string) {
+  return url.endsWith(".mp4") || url.endsWith(".webm") || url.endsWith(".mov");
+}
 
 interface UploadedImage {
   id: string;
@@ -54,7 +58,14 @@ function SortableImage({
 
   return (
     <div ref={setNodeRef} style={style} className="relative group aspect-video rounded-xl overflow-hidden border-2 border-gray-200 bg-gray-50">
-      <Image src={image.url} alt="" fill className="object-cover" sizes="200px" />
+      {isVideo(image.url) ? (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 gap-1">
+          <Video className="w-8 h-8 text-white/60" />
+          <span className="text-white/50 text-xs">відео</span>
+        </div>
+      ) : (
+        <Image src={image.url} alt="" fill className="object-cover" sizes="200px" />
+      )}
 
       {/* Drag handle */}
       <div
@@ -147,7 +158,10 @@ export default function ImageUploader({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp"] },
+    accept: {
+      "image/*": [".jpg", ".jpeg", ".png", ".webp"],
+      "video/mp4": [".mp4"],
+    },
     multiple: true,
   });
 
@@ -197,7 +211,7 @@ export default function ImageUploader({
             ? "Відпустіть файли тут"
             : "Перетягніть фото або клікніть для вибору"}
         </p>
-        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP – конвертуємо в .webp</p>
+        <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP або MP4 (відео до 100MB)</p>
       </div>
 
       {/* Images grid */}

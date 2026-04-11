@@ -2,46 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
+import { randomUUID } from "crypto";
 
-async function uploadToCloudinary(buffer: Buffer, folder: string): Promise<string> {
-  const base64 = buffer.toString("base64");
-  const dataUri = `data:image/jpeg;base64,${base64}`;
-
-  const formData = new FormData();
-  formData.append("file", dataUri);
-  formData.append("upload_preset", "unsigned_preset");
-  formData.append("folder", folder);
-
-  // Use signed upload instead
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME!;
-  const apiKey = process.env.CLOUDINARY_API_KEY!;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET!;
-  const timestamp = Math.floor(Date.now() / 1000);
-
-  const signString = `folder=${folder}&timestamp=${timestamp}${apiSecret}`;
-  const crypto = await import("crypto");
-  const signature = crypto.createHash("sha1").update(signString).digest("hex");
-
-  const fd = new FormData();
-  fd.append("file", dataUri);
-  fd.append("folder", folder);
-  fd.append("timestamp", String(timestamp));
-  fd.append("api_key", apiKey);
-  fd.append("signature", signature);
-
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-    method: "POST",
-    body: fd,
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Cloudinary error: ${err}`);
-  }
-
-  const data = await res.json();
-  return data.secure_url as string;
-}
+const ALLOWED_IMAGES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
+const ALLOWED_VIDEOS = ["video/mp4", "video/quicktime", "video/webm"];
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -54,16 +22,30 @@ export async function POST(req: NextRequest) {
   if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
   if (!propertyId) return NextResponse.json({ error: "No propertyId" }, { status: 400 });
 
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/heic"];
-  if (!allowedTypes.includes(file.type)) {
+  const isVideo = ALLOWED_VIDEOS.includes(file.type);
+  const isImage = ALLOWED_IMAGES.includes(file.type);
+
+  if (!isImage && !isVideo) {
     return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
   }
-  if (file.size > 10 * 1024 * 1024) {
-    return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
+
+  const maxSize = isVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+  if (file.size > maxSize) {
+    return NextResponse.json(
+      { error: `File too large (max ${isVideo ? "100MB" : "10MB"})` },
+      { status: 400 }
+    );
   }
 
+  const ext = isVideo ? "mp4" : file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+  const filename = `${randomUUID()}.${ext}`;
+  const uploadDir = join(process.cwd(), "public", "uploads", propertyId);
+
+  await mkdir(uploadDir, { recursive: true });
   const buffer = Buffer.from(await file.arrayBuffer());
-  const url = await uploadToCloudinary(buffer, `properties/${propertyId}`);
+  await writeFile(join(uploadDir, filename), buffer);
+
+  const url = `/uploads/${propertyId}/${filename}`;
 
   const existingCount = await prisma.propertyImage.count({ where: { propertyId } });
   const image = await prisma.propertyImage.create({
@@ -86,23 +68,11 @@ export async function DELETE(req: NextRequest) {
   const image = await prisma.propertyImage.findUnique({ where: { id: imageId } });
   if (!image) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Delete from Cloudinary
+  // Delete local file
   try {
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME!;
-    const apiKey = process.env.CLOUDINARY_API_KEY!;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET!;
-    const publicId = image.url.split("/upload/")[1]?.replace(/\.[^.]+$/, "");
-    if (publicId) {
-      const timestamp = Math.floor(Date.now() / 1000);
-      const crypto = await import("crypto");
-      const signature = crypto.createHash("sha1").update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`).digest("hex");
-      const fd = new FormData();
-      fd.append("public_id", publicId);
-      fd.append("timestamp", String(timestamp));
-      fd.append("api_key", apiKey);
-      fd.append("signature", signature);
-      await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, { method: "POST", body: fd });
-    }
+    const { unlink } = await import("fs/promises");
+    const filePath = join(process.cwd(), "public", image.url);
+    await unlink(filePath);
   } catch {}
 
   await prisma.propertyImage.delete({ where: { id: imageId } });
