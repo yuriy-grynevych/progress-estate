@@ -8,6 +8,11 @@ const inter = Inter({ subsets: ["latin", "cyrillic"] });
 export const metadata: Metadata = {
   title: "Житлова компанія Progress | Нерухомість в Івано-Франківську",
   description: "Купівля, продаж та оренда нерухомості в Івано-Франківську та регіоні",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
