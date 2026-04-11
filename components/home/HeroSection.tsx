@@ -15,7 +15,6 @@ export default function HeroSection() {
         className="absolute inset-0 w-full h-full object-cover"
         src="/hero-progress.mp4"
         autoPlay
-        loop
         muted
         playsInline
       />
