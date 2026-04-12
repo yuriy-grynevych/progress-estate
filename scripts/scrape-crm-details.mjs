@@ -122,13 +122,14 @@ async function main() {
         continue;
       }
 
+      const updateData = {};
+      if (gasType)        updateData.gasType = gasType;
+      if (renovationType) updateData.renovationType = renovationType;
+      if (wallType)       updateData.wallType = wallType;
+
       await prisma.property.update({
         where: { id: prop.id },
-        data: {
-          ...(gasType        && { gasType }),
-          ...(renovationType && { renovationType }),
-          ...(wallType       && { wallType }),
-        } as any,
+        data: updateData,
       });
 
       updated++;
