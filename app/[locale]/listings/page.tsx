@@ -27,6 +27,9 @@ interface SearchParams {
   developer?: string;
   complex?: string;
   search?: string;
+  renovationType?: string;
+  wallType?: string;
+  gasType?: string;
   page?: string;
   sort?: string;
   [key: string]: string | undefined;
@@ -69,6 +72,9 @@ async function getProperties(sp: SearchParams) {
     ...(sp.govProgram && { features: { has: sp.govProgram } }),
     ...(sp.street && { address: { contains: sp.street, mode: "insensitive" } }),
     ...(sp.complex && { titleUk: { contains: sp.complex, mode: "insensitive" } }),
+    ...(sp.renovationType && { renovationType: sp.renovationType } as any),
+    ...(sp.wallType && { wallType: sp.wallType } as any),
+    ...(sp.gasType && { gasType: sp.gasType } as any),
   };
 
   // AND-combine text search conditions that each use OR internally

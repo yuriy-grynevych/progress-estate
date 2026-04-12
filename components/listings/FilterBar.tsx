@@ -72,6 +72,28 @@ const GOV_PROGRAMS = [
   { value: "ukrgasbank",     uk: "УкрГазБанк",        en: "UkrGasBank" },
 ];
 
+const RENOVATION_TYPES = [
+  { value: "Без ремонту",      uk: "Без ремонту",      en: "No renovation" },
+  { value: "Чорнова",          uk: "Чорнова",           en: "Shell" },
+  { value: "Косметичний",      uk: "Косметичний",       en: "Cosmetic" },
+  { value: "Євроремонт",       uk: "Євроремонт",        en: "Euro renovation" },
+  { value: "Авторський дизайн", uk: "Авторський дизайн", en: "Designer" },
+];
+
+const WALL_TYPES = [
+  { value: "Цегляний",   uk: "Цегляний",    en: "Brick" },
+  { value: "Панельний",  uk: "Панельний",   en: "Panel" },
+  { value: "Монолітний", uk: "Монолітний",  en: "Monolith" },
+  { value: "Газобетон",  uk: "Газобетон",   en: "Aerated concrete" },
+  { value: "Дерев'яний", uk: "Дерев'яний",  en: "Wooden" },
+];
+
+const GAS_TYPES = [
+  { value: "Є",          uk: "Є",           en: "Available" },
+  { value: "Немає",      uk: "Немає",       en: "No gas" },
+  { value: "Підключений", uk: "Підключений", en: "Connected" },
+];
+
 export default function FilterBar({ locale, searchParams }: FilterBarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -86,6 +108,10 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
   const [floorMax, setFloorMax] = useState(searchParams.floorMax ?? "");
   const [developer, setDeveloper] = useState(searchParams.developer ?? "");
   const [complex, setComplex] = useState(searchParams.complex ?? "");
+
+  const renovationType = searchParams.renovationType ?? "";
+  const wallType       = searchParams.wallType ?? "";
+  const gasType        = searchParams.gasType ?? "";
 
   const buildParams = (overrides: Record<string, string | null>) => {
     const params = new URLSearchParams(
@@ -145,6 +171,18 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
   const govLabel = govProgram
     ? (GOV_PROGRAMS.find(g => g.value === govProgram)?.[isUk ? "uk" : "en"] ?? (isUk ? "Держпрограми" : "Gov. Programs"))
     : (isUk ? "Держпрограми" : "Gov. Programs");
+
+  const renovationLabel = renovationType
+    ? (RENOVATION_TYPES.find(r => r.value === renovationType)?.[isUk ? "uk" : "en"] ?? (isUk ? "Ремонт" : "Renovation"))
+    : (isUk ? "Ремонт" : "Renovation");
+
+  const wallLabel = wallType
+    ? (WALL_TYPES.find(w => w.value === wallType)?.[isUk ? "uk" : "en"] ?? (isUk ? "Тип стін" : "Wall type"))
+    : (isUk ? "Тип стін" : "Wall type");
+
+  const gasLabel = gasType
+    ? (GAS_TYPES.find(g => g.value === gasType)?.[isUk ? "uk" : "en"] ?? (isUk ? "Газ" : "Gas"))
+    : (isUk ? "Газ" : "Gas");
 
   const sortLabel =
     searchParams.sort === "price_asc"    ? (isUk ? "Ціна ↑"   : "Price ↑")   :
@@ -302,6 +340,51 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
             {GOV_PROGRAMS.map((g) => (
               <button key={g.value} onClick={() => { set("govProgram", g.value); close(); }}
                 className={cn("w-full text-left px-4 py-2 text-sm hover:bg-gray-50", govProgram === g.value && "font-semibold text-gold-500")}>
+                {isUk ? g.uk : g.en}
+              </button>
+            ))}
+          </>)}
+        </DropFilter>
+
+        {/* Ремонт */}
+        <DropFilter label={renovationLabel} active={!!renovationType}>
+          {(close) => (<>
+            <button onClick={() => { set("renovationType", null); close(); }} className={cn("w-full text-left px-4 py-2 text-sm hover:bg-gray-50", !renovationType && "font-semibold")}>
+              {isUk ? "Будь-який" : "Any"}
+            </button>
+            {RENOVATION_TYPES.map((r) => (
+              <button key={r.value} onClick={() => { set("renovationType", r.value); close(); }}
+                className={cn("w-full text-left px-4 py-2 text-sm hover:bg-gray-50", renovationType === r.value && "font-semibold text-gold-500")}>
+                {isUk ? r.uk : r.en}
+              </button>
+            ))}
+          </>)}
+        </DropFilter>
+
+        {/* Тип стін */}
+        <DropFilter label={wallLabel} active={!!wallType}>
+          {(close) => (<>
+            <button onClick={() => { set("wallType", null); close(); }} className={cn("w-full text-left px-4 py-2 text-sm hover:bg-gray-50", !wallType && "font-semibold")}>
+              {isUk ? "Будь-який" : "Any"}
+            </button>
+            {WALL_TYPES.map((w) => (
+              <button key={w.value} onClick={() => { set("wallType", w.value); close(); }}
+                className={cn("w-full text-left px-4 py-2 text-sm hover:bg-gray-50", wallType === w.value && "font-semibold text-gold-500")}>
+                {isUk ? w.uk : w.en}
+              </button>
+            ))}
+          </>)}
+        </DropFilter>
+
+        {/* Газ */}
+        <DropFilter label={gasLabel} active={!!gasType}>
+          {(close) => (<>
+            <button onClick={() => { set("gasType", null); close(); }} className={cn("w-full text-left px-4 py-2 text-sm hover:bg-gray-50", !gasType && "font-semibold")}>
+              {isUk ? "Будь-який" : "Any"}
+            </button>
+            {GAS_TYPES.map((g) => (
+              <button key={g.value} onClick={() => { set("gasType", g.value); close(); }}
+                className={cn("w-full text-left px-4 py-2 text-sm hover:bg-gray-50", gasType === g.value && "font-semibold text-gold-500")}>
                 {isUk ? g.uk : g.en}
               </button>
             ))}
