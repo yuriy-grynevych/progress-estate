@@ -13,6 +13,38 @@ import { setRequestLocale } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
+function formatDescription(text: string): string {
+  if (!text) return "";
+  // If already HTML (contains tags), return as-is
+  if (/<[a-z][\s\S]*>/i.test(text)) return text;
+
+  // Split into segments by bullet character
+  const parts = text.split("•");
+  if (parts.length <= 1) {
+    // No bullets — just convert newlines to <br>
+    return `<p>${text.replace(/\n/g, "<br>")}</p>`;
+  }
+
+  let html = "";
+  // First segment before any bullet: intro paragraph(s)
+  const intro = parts[0].trim();
+  if (intro) {
+    html += intro
+      .split(/\n+/)
+      .filter(Boolean)
+      .map((p) => `<p>${p.trim()}</p>`)
+      .join("");
+  }
+
+  // Remaining segments are bullet items — group into a single <ul>
+  const items = parts.slice(1).map((s) => s.trim()).filter(Boolean);
+  if (items.length > 0) {
+    html += `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+  }
+
+  return html;
+}
+
 async function getProperty(slug: string) {
   const property = await prisma.property.findUnique({
     where: { slug },
@@ -221,7 +253,7 @@ export default async function PropertyPage({
                   </h2>
                   <div
                     className="prose prose-sm max-w-none text-gray-600"
-                    dangerouslySetInnerHTML={{ __html: description }}
+                    dangerouslySetInnerHTML={{ __html: formatDescription(description) }}
                   />
                 </div>
               )}
