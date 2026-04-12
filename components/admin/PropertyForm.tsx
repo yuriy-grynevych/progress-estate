@@ -33,6 +33,11 @@ const schema = z.object({
   floor: z.coerce.number().optional().nullable(),
   totalFloors: z.coerce.number().optional().nullable(),
   yearBuilt: z.coerce.number().optional().nullable(),
+  kitchenSqm: z.coerce.number().optional().nullable(),
+  gasType: z.string().optional().nullable(),
+  renovationType: z.string().optional().nullable(),
+  wallType: z.string().optional().nullable(),
+  houseNumber: z.string().optional().nullable(),
   district: z.string().optional(),
   address: z.string().optional(),
   latitude: z.coerce.number().optional().nullable(),
@@ -242,6 +247,11 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
       floor: initialData?.floor ?? null,
       totalFloors: initialData?.totalFloors ?? null,
       yearBuilt: initialData?.yearBuilt ?? null,
+      kitchenSqm: (initialData as any)?.kitchenSqm ?? null,
+      gasType: (initialData as any)?.gasType ?? "",
+      renovationType: (initialData as any)?.renovationType ?? "",
+      wallType: (initialData as any)?.wallType ?? "",
+      houseNumber: (initialData as any)?.houseNumber ?? "",
       district: initialData?.district ?? "",
       address: initialData?.address ?? "",
       latitude: initialData?.latitude ?? null,
@@ -426,6 +436,47 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             <div>
               <FieldLabel>Рік побудови</FieldLabel>
               <Input type="number" {...register("yearBuilt")} placeholder="2020" />
+            </div>
+            <div>
+              <FieldLabel>Площа кухні (м²)</FieldLabel>
+              <Input type="number" step="0.1" {...register("kitchenSqm")} placeholder="10" />
+            </div>
+            <div>
+              <FieldLabel>Номер будинку</FieldLabel>
+              <Input {...register("houseNumber")} placeholder="15a" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <FieldLabel>Ремонт</FieldLabel>
+              <Select {...register("renovationType")}>
+                <option value="">— Не вказано —</option>
+                <option value="Без ремонту">Без ремонту</option>
+                <option value="Чорнова">Чорнова</option>
+                <option value="Косметичний">Косметичний</option>
+                <option value="Євроремонт">Євроремонт</option>
+                <option value="Авторський дизайн">Авторський дизайн</option>
+              </Select>
+            </div>
+            <div>
+              <FieldLabel>Тип стін</FieldLabel>
+              <Select {...register("wallType")}>
+                <option value="">— Не вказано —</option>
+                <option value="Цегляний">Цегляний</option>
+                <option value="Панельний">Панельний</option>
+                <option value="Монолітний">Монолітний</option>
+                <option value="Газобетон">Газобетон</option>
+                <option value="Дерев'яний">Дерев&apos;яний</option>
+              </Select>
+            </div>
+            <div>
+              <FieldLabel>Газ</FieldLabel>
+              <Select {...register("gasType")}>
+                <option value="">— Не вказано —</option>
+                <option value="Є">Є</option>
+                <option value="Немає">Немає</option>
+                <option value="Підключений">Підключений</option>
+              </Select>
             </div>
           </div>
         </div>

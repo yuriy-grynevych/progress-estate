@@ -84,6 +84,11 @@ model Property {
   floor         Int?
   totalFloors   Int?
   yearBuilt     Int?
+  kitchenSqm    Float?
+  gasType       String?
+  renovationType String?
+  wallType      String?
+  houseNumber   String?
   city          String        @default("Івано-Франківськ")
   district      String?
   address       String?

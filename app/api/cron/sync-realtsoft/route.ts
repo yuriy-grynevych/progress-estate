@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
       latitude: offer.latitude,
       longitude: offer.longitude,
       features: offer.isNewBuilding ? ["new_building"] : [],
+      kitchenSqm: offer.kitchenSqm,
     };
 
     if (!existing) {

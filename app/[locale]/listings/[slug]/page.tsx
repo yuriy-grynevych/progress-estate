@@ -7,7 +7,7 @@ import PropertyMap from "@/components/property/PropertyMap";
 import ContactForm from "@/components/property/ContactForm";
 import { formatPrice, getPropertyTypeLabel, getListingTypeLabel } from "@/lib/utils";
 import { PROPERTY_FEATURES } from "@/lib/constants";
-import { Bed, Bath, Maximize2, Layers, Calendar, MapPin, Home } from "lucide-react";
+import { Bed, Bath, Maximize2, Layers, Calendar, MapPin, Home, Flame, Wrench, Building2, ChefHat } from "lucide-react";
 import type { PropertyImage } from "@prisma/client";
 import { setRequestLocale } from "next-intl/server";
 
@@ -76,37 +76,57 @@ export default async function PropertyPage({
   const description = isUk ? property.descriptionUk : property.descriptionEn;
 
   const specs = [
-    property.areaSqm && {
+    property.areaSqm != null && {
       icon: <Maximize2 className="w-4 h-4" />,
       label: isUk ? "Площа" : "Area",
       value: `${property.areaSqm} м²`,
     },
-    property.rooms && {
+    (property as any).kitchenSqm != null && {
+      icon: <ChefHat className="w-4 h-4" />,
+      label: isUk ? "Кухня" : "Kitchen",
+      value: `${(property as any).kitchenSqm} м²`,
+    },
+    property.rooms != null && {
       icon: <Home className="w-4 h-4" />,
       label: isUk ? "Кімнати" : "Rooms",
       value: property.rooms,
     },
-    property.bedrooms && {
+    property.bedrooms != null && {
       icon: <Bed className="w-4 h-4" />,
       label: isUk ? "Спальні" : "Bedrooms",
       value: property.bedrooms,
     },
-    property.bathrooms && {
+    property.bathrooms != null && {
       icon: <Bath className="w-4 h-4" />,
       label: isUk ? "Санвузли" : "Bathrooms",
       value: property.bathrooms,
     },
-    property.floor && {
+    property.floor != null && {
       icon: <Layers className="w-4 h-4" />,
       label: isUk ? "Поверх" : "Floor",
       value: property.totalFloors
         ? `${property.floor} / ${property.totalFloors}`
         : property.floor,
     },
-    property.yearBuilt && {
+    property.yearBuilt != null && {
       icon: <Calendar className="w-4 h-4" />,
       label: isUk ? "Рік будівлі" : "Year built",
       value: property.yearBuilt,
+    },
+    (property as any).renovationType && {
+      icon: <Wrench className="w-4 h-4" />,
+      label: isUk ? "Ремонт" : "Renovation",
+      value: (property as any).renovationType,
+    },
+    (property as any).wallType && {
+      icon: <Building2 className="w-4 h-4" />,
+      label: isUk ? "Тип стін" : "Wall type",
+      value: (property as any).wallType,
+    },
+    (property as any).gasType && {
+      icon: <Flame className="w-4 h-4" />,
+      label: isUk ? "Газ" : "Gas",
+      value: (property as any).gasType,
     },
   ].filter(Boolean) as { icon: React.ReactNode; label: string; value: string | number }[];
 
@@ -149,10 +169,10 @@ export default async function PropertyPage({
                       </span>
                     </div>
                     <h1 className="text-2xl font-bold text-navy-900">{title}</h1>
-                    {property.address && (
+                    {(property.address || property.district) && (
                       <div className="flex items-center gap-1.5 mt-1 text-gray-500 text-sm">
-                        <MapPin className="w-4 h-4" />
-                        {property.address}
+                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                        {[property.district, property.address].filter(Boolean).join(", ")}
                       </div>
                     )}
                   </div>

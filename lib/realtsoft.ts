@@ -21,6 +21,7 @@ export type RealtsoftOffer = {
   longitude: number | null;
   images: string[];
   isNewBuilding: boolean;
+  kitchenSqm: number | null;
 };
 
 function mapContractType(type: string): "SALE" | "RENT" {
@@ -91,6 +92,7 @@ export async function fetchRealtsoftOffers(): Promise<RealtsoftOffer[]> {
       longitude: null,
       images,
       isNewBuilding: false,
+      kitchenSqm: a.kitchen_area ? Number(a.kitchen_area) : null,
     };
   });
 }
