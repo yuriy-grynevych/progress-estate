@@ -14,13 +14,26 @@ export const LISTING_TYPES = [
 export const CURRENCIES = ["UAH", "USD", "EUR"] as const;
 
 export const DISTRICTS_IF = [
-  { value: "center", labelUk: "Центр", labelEn: "Center" },
-  { value: "pasichna", labelUk: "Пасічна", labelEn: "Pasichna" },
-  { value: "bam", labelUk: "БАМ", labelEn: "BAM" },
-  { value: "pozytron", labelUk: "Позитрон", labelEn: "Pozytron" },
-  { value: "kalinivka", labelUk: "Калинівка", labelEn: "Kalinivka" },
-  { value: "khimik", labelUk: "Хімік", labelEn: "Khimik" },
-  { value: "nova_skvaryava", labelUk: "Нова Скварява", labelEn: "Nova Skvaryava" },
+  { value: "Центр",               labelUk: "Центр",               labelEn: "Center" },
+  { value: "Княгинин",            labelUk: "Княгинин",            labelEn: "Knyahynyn" },
+  { value: "Пасічна",             labelUk: "Пасічна",             labelEn: "Pasichna" },
+  { value: "Набережна",           labelUk: "Набережна",           labelEn: "Naberezhna" },
+  { value: "Каскад",              labelUk: "Каскад",              labelEn: "Kaskad" },
+  { value: "Бам",                 labelUk: "БАМ",                 labelEn: "BAM" },
+  { value: "Угорники",            labelUk: "Угорники",            labelEn: "Uhornyki" },
+  { value: "Вовчинець",           labelUk: "Вовчинець",           labelEn: "Vovchynets" },
+  { value: "Позитрон",            labelUk: "Позитрон",            labelEn: "Pozytron" },
+  { value: "Опришівці",           labelUk: "Опришівці",           labelEn: "Opryshivtsi" },
+  { value: "Набережна Княгинин",  labelUk: "Набережна Княгинин",  labelEn: "Naberezhna Knyahynyn" },
+  { value: "Брати",               labelUk: "Брати",               labelEn: "Braty" },
+  { value: "Майзлі",              labelUk: "Майзлі",              labelEn: "Maizli" },
+  { value: "Вокзал",              labelUk: "Вокзал",              labelEn: "Railway station" },
+  { value: "Гірка",               labelUk: "Гірка",               labelEn: "Hirka" },
+  { value: "Рінь",                labelUk: "Рінь",                labelEn: "Rin" },
+  { value: "Будівельників",       labelUk: "Будівельників",       labelEn: "Budivelnykiv" },
+  { value: "Микитинці",           labelUk: "Микитинці",           labelEn: "Mykytyntsi" },
+  { value: "Чукалівка",           labelUk: "Чукалівка",           labelEn: "Chukalivka" },
+  { value: "Калинова Слобода",    labelUk: "Калинова Слобода",    labelEn: "Kalynova Sloboda" },
 ] as const;
 
 export const PROPERTY_FEATURES = [
