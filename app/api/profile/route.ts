@@ -31,6 +31,7 @@ async function uploadAvatarToCloudinary(buffer: Buffer, userId: string): Promise
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   phone: z.string().optional(),
+  instagram: z.string().optional().nullable(),
   telegramChatId: z.string().optional().nullable(),
   currentPassword: z.string().optional(),
   newPassword: z.string().min(6).optional(),
@@ -45,7 +46,7 @@ export async function PATCH(req: NextRequest) {
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { name, phone, telegramChatId, currentPassword, newPassword } = parsed.data;
+  const { name, phone, instagram, telegramChatId, currentPassword, newPassword } = parsed.data;
 
   // Password change requires current password verification
   if (newPassword) {
@@ -60,10 +61,11 @@ export async function PATCH(req: NextRequest) {
     data: {
       ...(name !== undefined && { name }),
       ...(phone !== undefined && { phone }),
+      ...(instagram !== undefined && { instagram }),
       ...(telegramChatId !== undefined && { telegramChatId }),
       ...(newPassword && { password: await bcrypt.hash(newPassword, 10) }),
     },
-    select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true, role: true, telegramChatId: true },
+    select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true, role: true, telegramChatId: true, instagram: true },
   });
 
   return NextResponse.json(updated);

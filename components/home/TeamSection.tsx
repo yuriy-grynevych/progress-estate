@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Phone } from "lucide-react";
+import { Phone, Instagram } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
 // Maps email → local photo path (from /public/team/)
@@ -34,7 +34,7 @@ export default async function TeamSection({ locale }: TeamSectionProps) {
 
   const employees = await prisma.user.findMany({
     where: { role: { in: ["EMPLOYEE", "ADMIN"] } },
-    select: { name: true, email: true, phone: true, photoUrl: true },
+    select: { name: true, email: true, phone: true, photoUrl: true, instagram: true },
     orderBy: { name: "asc" },
   });
 
@@ -76,6 +76,17 @@ export default async function TeamSection({ locale }: TeamSectionProps) {
                   >
                     <Phone className="w-3 h-3 flex-shrink-0" />
                     {phone}
+                  </a>
+                )}
+                {member.instagram && (
+                  <a
+                    href={`https://instagram.com/${member.instagram.replace(/^@/, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gold-500 transition-colors"
+                  >
+                    <Instagram className="w-3 h-3 flex-shrink-0" />
+                    {member.instagram.startsWith("@") ? member.instagram : `@${member.instagram}`}
                   </a>
                 )}
               </div>

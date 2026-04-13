@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Camera, Copy, Check, Save, Key, Send } from "lucide-react";
+import { Camera, Copy, Check, Save, Key, Send, Instagram } from "lucide-react";
 import Image from "next/image";
 
 interface UserProfile {
@@ -13,6 +13,7 @@ interface UserProfile {
   agentToken: string;
   role: string;
   telegramChatId: string | null;
+  instagram: string | null;
 }
 
 export default function ProfileEditor({ user }: { user: UserProfile }) {
@@ -20,6 +21,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
   const [name, setName] = useState(user.name ?? "");
   const [phone, setPhone] = useState(user.phone ?? "");
   const [telegramChatId, setTelegramChatId] = useState(user.telegramChatId ?? "");
+  const [instagram, setInstagram] = useState(user.instagram ?? "");
   const [telegramSaved, setTelegramSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -54,7 +56,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
     const res = await fetch("/api/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone }),
+      body: JSON.stringify({ name, phone, instagram: instagram || null }),
     });
     if (res.ok) {
       const updated = await res.json();
@@ -169,6 +171,18 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
                 placeholder="+380..."
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Instagram</label>
+            <div className="relative">
+              <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                value={instagram}
+                onChange={(e) => setInstagram(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
+                placeholder="@username"
               />
             </div>
           </div>

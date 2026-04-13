@@ -24,6 +24,7 @@ model User {
   photoUrl       String?
   agentToken     String   @unique @default(cuid())
   telegramChatId String?
+  instagram      String?
   role           UserRole @default(EMPLOYEE)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
