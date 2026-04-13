@@ -241,6 +241,7 @@ model ChatMessage {
   id            String   @id @default(cuid())
   senderId      String
   sender        User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId    String?  // null = general channel, userId = DM
   content       String
   type          String   @default("text") // "text" | "file" | "property"
   fileUrl       String?
@@ -250,6 +251,7 @@ model ChatMessage {
   createdAt     DateTime @default(now())
 
   @@index([createdAt])
+  @@index([senderId, receiverId])
   @@map("chat_messages")
 }
 
