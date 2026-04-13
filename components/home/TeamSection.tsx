@@ -61,7 +61,7 @@ export default async function TeamSection({ locale }: TeamSectionProps) {
                     src={photo}
                     alt={member.name ?? ""}
                     fill
-                    className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                    className="object-cover object-[center_20%] group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   />
                 </div>

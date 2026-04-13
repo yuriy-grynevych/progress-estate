@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminMobileHeader from "@/components/admin/AdminMobileHeader";
 import SessionProvider from "@/components/admin/SessionProvider";
+import ChatPanel from "@/components/admin/ChatPanel";
 import type { UserRole } from "@prisma/client";
 
 export const metadata = {
@@ -33,6 +34,7 @@ export default async function AdminLayout({
           <AdminMobileHeader role={role} />
           <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
+        <ChatPanel />
       </div>
     </SessionProvider>
   );

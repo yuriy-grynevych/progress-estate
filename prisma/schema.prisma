@@ -31,6 +31,7 @@ model User {
   assignedProperties Property[]
   referredInquiries  Inquiry[]  @relation("ReferredBy")
   contacts           Contact[]
+  sentMessages       ChatMessage[]
 
   @@map("users")
 }
@@ -231,6 +232,25 @@ model District {
   order   Int    @default(0)
 
   @@map("districts")
+}
+
+// ──────────────────────────────────────────────
+// INTERNAL CHAT
+// ──────────────────────────────────────────────
+model ChatMessage {
+  id            String   @id @default(cuid())
+  senderId      String
+  sender        User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content       String
+  type          String   @default("text") // "text" | "file" | "property"
+  fileUrl       String?
+  fileName      String?
+  propertySlug  String?
+  propertyTitle String?
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("chat_messages")
 }
 
 // ──────────────────────────────────────────────
