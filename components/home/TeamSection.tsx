@@ -33,7 +33,7 @@ export default async function TeamSection({ locale }: TeamSectionProps) {
   const isUk = locale === "uk";
 
   const employees = await prisma.user.findMany({
-    where: { role: "EMPLOYEE" },
+    where: { role: { in: ["EMPLOYEE", "ADMIN"] } },
     select: { name: true, email: true, phone: true, photoUrl: true },
     orderBy: { name: "asc" },
   });
