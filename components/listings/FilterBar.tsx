@@ -73,25 +73,23 @@ const GOV_PROGRAMS = [
 ];
 
 const RENOVATION_TYPES = [
-  { value: "Без ремонту",      uk: "Без ремонту",      en: "No renovation" },
-  { value: "Чорнова",          uk: "Чорнова",           en: "Shell" },
-  { value: "Косметичний",      uk: "Косметичний",       en: "Cosmetic" },
-  { value: "Євроремонт",       uk: "Євроремонт",        en: "Euro renovation" },
+  { value: "Сирець",           uk: "Сирець",           en: "Shell" },
+  { value: "Житловий стан",    uk: "Житловий стан",    en: "Liveable" },
+  { value: "Євроремонт",       uk: "Євроремонт",       en: "Euro renovation" },
   { value: "Авторський дизайн", uk: "Авторський дизайн", en: "Designer" },
 ];
 
 const WALL_TYPES = [
-  { value: "Цегляний",   uk: "Цегляний",    en: "Brick" },
-  { value: "Панельний",  uk: "Панельний",   en: "Panel" },
-  { value: "Монолітний", uk: "Монолітний",  en: "Monolith" },
-  { value: "Газобетон",  uk: "Газобетон",   en: "Aerated concrete" },
-  { value: "Дерев'яний", uk: "Дерев'яний",  en: "Wooden" },
+  { value: "Цегла",    uk: "Цегла",    en: "Brick" },
+  { value: "Моноліт",  uk: "Моноліт",  en: "Monolith" },
+  { value: "Панель",   uk: "Панель",   en: "Panel" },
 ];
 
 const GAS_TYPES = [
-  { value: "Є",          uk: "Є",           en: "Available" },
-  { value: "Немає",      uk: "Немає",       en: "No gas" },
-  { value: "Підключений", uk: "Підключений", en: "Connected" },
+  { value: "Індивідуальне газове", uk: "Індивідуальне газове", en: "Individual gas" },
+  { value: "Дахова котельня",      uk: "Дахова котельня",      en: "Roof boiler" },
+  { value: "Центральне",           uk: "Центральне",           en: "Central heating" },
+  { value: "Електрика",            uk: "Електрика",            en: "Electric" },
 ];
 
 export default function FilterBar({ locale, searchParams }: FilterBarProps) {

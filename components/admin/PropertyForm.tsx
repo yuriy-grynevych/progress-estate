@@ -451,9 +451,8 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
               <FieldLabel>Ремонт</FieldLabel>
               <Select {...register("renovationType")}>
                 <option value="">— Не вказано —</option>
-                <option value="Без ремонту">Без ремонту</option>
-                <option value="Чорнова">Чорнова</option>
-                <option value="Косметичний">Косметичний</option>
+                <option value="Сирець">Сирець</option>
+                <option value="Житловий стан">Житловий стан</option>
                 <option value="Євроремонт">Євроремонт</option>
                 <option value="Авторський дизайн">Авторський дизайн</option>
               </Select>
@@ -462,20 +461,19 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
               <FieldLabel>Тип стін</FieldLabel>
               <Select {...register("wallType")}>
                 <option value="">— Не вказано —</option>
-                <option value="Цегляний">Цегляний</option>
-                <option value="Панельний">Панельний</option>
-                <option value="Монолітний">Монолітний</option>
-                <option value="Газобетон">Газобетон</option>
-                <option value="Дерев'яний">Дерев&apos;яний</option>
+                <option value="Цегла">Цегла</option>
+                <option value="Моноліт">Моноліт</option>
+                <option value="Панель">Панель</option>
               </Select>
             </div>
             <div>
-              <FieldLabel>Газ</FieldLabel>
+              <FieldLabel>Газ / опалення</FieldLabel>
               <Select {...register("gasType")}>
                 <option value="">— Не вказано —</option>
-                <option value="Є">Є</option>
-                <option value="Немає">Немає</option>
-                <option value="Підключений">Підключений</option>
+                <option value="Індивідуальне газове">Індивідуальне газове</option>
+                <option value="Дахова котельня">Дахова котельня</option>
+                <option value="Центральне">Центральне</option>
+                <option value="Електрика">Електрика</option>
               </Select>
             </div>
           </div>
