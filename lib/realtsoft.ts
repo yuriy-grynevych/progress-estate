@@ -1,11 +1,9 @@
-import { XMLParser } from "fast-xml-parser";
-
-const FEED_URL = "https://crm-progress.realtsoft.net/feed/xml?id=4";
+const FEED_URL = "https://crm-progress.realtsoft.net/feed/json?id=4";
 
 export type RealtsoftOffer = {
   internalId: string;
   type: "SALE" | "RENT";
-  propertyType: "APARTMENT" | "HOUSE" | "COMMERCIAL" | "LAND";
+  propertyType: "APARTMENT" | "HOUSE" | "COMMERCIAL" | "LAND" | "OFFICE";
   titleUk: string;
   descriptionUk: string;
   price: number;
@@ -24,24 +22,25 @@ export type RealtsoftOffer = {
   kitchenSqm: number | null;
 };
 
-function mapContractType(type: string): "SALE" | "RENT" {
-  const t = type.toLowerCase();
-  if (t.includes("аренд") || t.includes("оренд")) return "RENT";
+function mapDeal(deal: any): "SALE" | "RENT" {
+  const name: string = deal?.name ?? "";
+  if (name.toLowerCase().includes("оренд") || name.toLowerCase().includes("аренд")) return "RENT";
   return "SALE";
 }
 
-function mapRealtyType(type: string): "APARTMENT" | "HOUSE" | "COMMERCIAL" | "LAND" {
-  const t = type.toLowerCase();
-  if (t.includes("кварт")) return "APARTMENT";
-  if (t.includes("дом") || t.includes("будин") || t.includes("котедж")) return "HOUSE";
-  if (t.includes("земл") || t.includes("ділянк")) return "LAND";
-  if (t.includes("комерц") || t.includes("офіс") || t.includes("магаз")) return "COMMERCIAL";
+function mapRealtyType(rt: any): "APARTMENT" | "HOUSE" | "COMMERCIAL" | "LAND" | "OFFICE" {
+  const name: string = rt?.name?.toLowerCase() ?? "";
+  if (name.includes("кварт")) return "APARTMENT";
+  if (name.includes("будин") || name.includes("дом") || name.includes("котедж") || name.includes("вілл")) return "HOUSE";
+  if (name.includes("земл") || name.includes("ділянк")) return "LAND";
+  if (name.includes("офіс")) return "OFFICE";
+  if (name.includes("комерц") || name.includes("магаз") || name.includes("склад")) return "COMMERCIAL";
   return "APARTMENT";
 }
 
-function parseCurrency(cur: string): string {
-  if (cur === "$" || cur.toLowerCase() === "usd") return "USD";
-  if (cur === "€" || cur.toLowerCase() === "eur") return "EUR";
+function mapCurrency(cur: string): string {
+  if (cur === "USD" || cur === "$") return "USD";
+  if (cur === "EUR" || cur === "€") return "EUR";
   return "UAH";
 }
 
@@ -49,50 +48,36 @@ export async function fetchRealtsoftOffers(): Promise<RealtsoftOffer[]> {
   const res = await fetch(FEED_URL, { next: { revalidate: 0 } });
   if (!res.ok) throw new Error(`Realtsoft feed error: ${res.status}`);
 
-  const xml = await res.text();
+  const data = await res.json();
+  const estates: any[] = data.estates ?? [];
 
-  const parser = new XMLParser({
-    ignoreAttributes: false,
-    attributeNamePrefix: "@_",
-    removeNSPrefix: true,
-    isArray: (name) => name === "image" || name === "announcement",
-  });
-
-  const parsed = parser.parse(xml);
-  const feed = parsed["page"] ?? Object.values(parsed).find((v: any) => v?.announcements);
-  const announcements = feed?.announcements?.announcement ?? [];
-
-  return (announcements as any[]).map((a: any, index: number): RealtsoftOffer => {
-    const internalId = a.agency_code ? String(a.agency_code) : String(index + 1);
-    const images: string[] = Array.isArray(a.images?.image)
-      ? a.images.image
-      : a.images?.image
-      ? [a.images.image]
-      : [];
-
-    const street = a.street ?? "";
-    const address = street ? `${street}` : null;
+  return estates.map((e: any): RealtsoftOffer => {
+    const loc = e.location ?? {};
+    const street = loc.street?.name ?? null;
+    const district = loc.district?.name ?? null;
+    const city = loc.city?.name ?? "Івано-Франківськ";
+    const address = street || null;
 
     return {
-      internalId,
-      type: mapContractType(a.contract_type ?? ""),
-      propertyType: mapRealtyType(a.realty_type ?? ""),
-      titleUk: a.title ?? `${a.realty_type ?? "Нерухомість"}, ${a.city ?? ""}`,
-      descriptionUk: a.text ?? "",
-      price: Number(a.price ?? 0),
-      currency: parseCurrency(a.currency ?? ""),
-      areaSqm: Number(a.total_area ?? 0),
-      rooms: a.room_count ? Number(a.room_count) : null,
-      floor: a.floor ? Number(a.floor) : null,
-      totalFloors: a.floor_count ? Number(a.floor_count) : null,
-      city: a.city ?? "Івано-Франківськ",
-      district: a.district || a.microdistrict || null,
+      internalId: String(e.article ?? e.id),
+      type: mapDeal(e.deal),
+      propertyType: mapRealtyType(e.realty_type),
+      titleUk: e.title ?? `${e.realty_type?.name ?? "Нерухомість"}, ${city}`,
+      descriptionUk: e.description ?? "",
+      price: Number(e.price?.value ?? 0),
+      currency: mapCurrency(e.price?.currency ?? ""),
+      areaSqm: Number(e.area_total ?? 0),
+      rooms: e.room_count ? Number(e.room_count) : null,
+      floor: e.floor ? Number(e.floor) : null,
+      totalFloors: e.total_floors ? Number(e.total_floors) : null,
+      city,
+      district,
       address,
-      latitude: a.lat ? Number(a.lat) : null,
-      longitude: a.lng ? Number(a.lng) : (a.lon ? Number(a.lon) : null),
-      images,
-      isNewBuilding: false,
-      kitchenSqm: a.kitchen_area ? Number(a.kitchen_area) : null,
+      latitude: loc.map_lat ? Number(loc.map_lat) : null,
+      longitude: loc.map_lng ? Number(loc.map_lng) : null,
+      images: Array.isArray(e.images) ? e.images : [],
+      isNewBuilding: e.is_new_building === 1 || e.is_new_building === true,
+      kitchenSqm: e.area_kitchen ? Number(e.area_kitchen) : null,
     };
   });
 }

@@ -1,26 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { fetchRealtsoftOffers } from "@/lib/realtsoft";
-import { slugify } from "@/lib/utils";
 
 const CRON_SECRET = process.env.CRON_SECRET ?? "";
 const RS_PREFIX = "rs-";
-
-async function geocode(street: string | null, district: string | null, city: string): Promise<{ lat: number; lng: number } | null> {
-  const parts = [street, district, city, "Ukraine"].filter(Boolean).join(", ");
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(parts)}`,
-      { headers: { "User-Agent": "progress-estate/1.0 (info@progressestate.com.ua)" } }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.length === 0) return null;
-    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-  } catch {
-    return null;
-  }
-}
 
 export async function GET(req: NextRequest) {
   const auth = req.headers.get("authorization");
@@ -43,27 +26,6 @@ export async function GET(req: NextRequest) {
       include: { images: true },
     });
 
-    // Geocode if feed has no coords and DB doesn't have them yet
-    let latitude = offer.latitude;
-    let longitude = offer.longitude;
-    if (latitude === null || longitude === null) {
-      const existingCoords = existing
-        ? { lat: existing.latitude, lng: existing.longitude }
-        : null;
-      if (existingCoords?.lat && existingCoords?.lng) {
-        latitude = existingCoords.lat;
-        longitude = existingCoords.lng;
-      } else {
-        const geo = await geocode(offer.address, offer.district, offer.city);
-        if (geo) {
-          latitude = geo.lat;
-          longitude = geo.lng;
-        }
-        // Nominatim rate limit: 1 req/sec
-        await new Promise((r) => setTimeout(r, 1100));
-      }
-    }
-
     const data = {
       titleUk: offer.titleUk,
       titleEn: offer.titleUk,
@@ -81,8 +43,8 @@ export async function GET(req: NextRequest) {
       city: offer.city,
       district: offer.district,
       address: offer.address,
-      latitude,
-      longitude,
+      latitude: offer.latitude,
+      longitude: offer.longitude,
       features: offer.isNewBuilding ? ["new_building"] : [],
       kitchenSqm: offer.kitchenSqm,
     };
@@ -108,7 +70,6 @@ export async function GET(req: NextRequest) {
         data,
       });
 
-      // Odśwież zdjęcia tylko jeśli się zmieniły
       const existingUrls = existing.images.map((img) => img.url).sort();
       const newUrls = [...offer.images].sort();
       const imagesChanged = JSON.stringify(existingUrls) !== JSON.stringify(newUrls);
@@ -131,10 +92,7 @@ export async function GET(req: NextRequest) {
 
   // Dezaktywuj oferty które zniknęły z feeda
   const toDeactivate = await prisma.property.findMany({
-    where: {
-      slug: { startsWith: RS_PREFIX },
-      status: "ACTIVE",
-    },
+    where: { slug: { startsWith: RS_PREFIX }, status: "ACTIVE" },
     select: { slug: true },
   });
 
