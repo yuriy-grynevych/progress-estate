@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import PropertyGallery from "@/components/property/PropertyGallery";
 import PropertyMap from "@/components/property/PropertyMap";
 import ContactForm from "@/components/property/ContactForm";
+import SimilarProperties from "@/components/property/SimilarProperties";
 import { formatPrice, getPropertyTypeLabel, getListingTypeLabel } from "@/lib/utils";
 import { PROPERTY_FEATURES } from "@/lib/constants";
 import { Bed, Bath, Maximize2, Layers, Calendar, MapPin, Home, Flame, Wrench, Building2, ChefHat } from "lucide-react";
@@ -66,6 +67,21 @@ async function getProperty(slug: string) {
   return property;
 }
 
+async function getSimilarProperties(id: string, type: string, listingType: string, price: number) {
+  return prisma.property.findMany({
+    where: {
+      id: { not: id },
+      type: type as any,
+      listingType: listingType as any,
+      status: "ACTIVE",
+      price: { gte: price * 0.75, lte: price * 1.25 },
+    },
+    include: { images: { where: { isPrimary: true }, take: 1 } },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+  });
+}
+
 async function getAgentByToken(token: string) {
   return prisma.user.findUnique({
     where: { agentToken: token },
@@ -98,10 +114,12 @@ export default async function PropertyPage({
   const property = await getProperty(slug);
   if (!property) notFound();
 
-  // Token overrides assigned agent; fallback to assigned agent
-  const agent = searchParams.t
-    ? await getAgentByToken(searchParams.t)
-    : property.assignedUser ?? null;
+  const [agent, similar] = await Promise.all([
+    searchParams.t
+      ? getAgentByToken(searchParams.t)
+      : Promise.resolve(property.assignedUser ?? null),
+    getSimilarProperties(property.id, property.type, property.listingType, Number(property.price)),
+  ]);
 
   const isUk = locale === "uk";
   const title = isUk ? property.titleUk : property.titleEn;
@@ -302,6 +320,12 @@ export default async function PropertyPage({
             </div>
           </div>
         </div>
+        {/* Similar listings */}
+        {similar.length > 0 && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+            <SimilarProperties properties={similar} locale={locale} />
+          </div>
+        )}
       </main>
       <Footer locale={locale} />
     </div>

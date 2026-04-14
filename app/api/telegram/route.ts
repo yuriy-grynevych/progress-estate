@@ -38,25 +38,34 @@ async function saveContact(name: string, phone: string, chatHistory: { role: str
   });
 }
 
-async function getAIReply(userMessage: string): Promise<string> {
+const typeLabels: Record<string, string> = {
+  APARTMENT: "Квартира", HOUSE: "Будинок", COMMERCIAL: "Комерція",
+  LAND: "Земля", OFFICE: "Офіс",
+};
+
+async function getAIReply(
+  userMessage: string,
+  history: { role: string; content: string }[]
+): Promise<string> {
   const properties = await prisma.property.findMany({
     where: { status: "ACTIVE" },
     select: {
       titleUk: true, price: true, currency: true,
       areaSqm: true, rooms: true, district: true,
-      listingType: true, slug: true,
+      listingType: true, type: true, slug: true,
     },
     orderBy: { createdAt: "desc" },
-    take: 15,
+    take: 60,
   });
 
   const listingsText = properties.length === 0
     ? "Наразі немає активних оголошень."
     : properties.map((p) => {
-        const type = p.listingType === "SALE" ? "Продаж" : "Оренда";
+        const listType = p.listingType === "SALE" ? "Продаж" : "Оренда";
+        const propType = typeLabels[p.type] ?? p.type;
         const area = p.areaSqm ? `${p.areaSqm}м²` : "";
         const rooms = p.rooms ? `${p.rooms}кімн.` : "";
-        return `• ${p.titleUk} — ${type}, ${[area, rooms, p.district].filter(Boolean).join(", ")}, ${p.price} ${p.currency}`;
+        return `• ${p.titleUk} — ${propType}, ${listType}, ${[area, rooms, p.district].filter(Boolean).join(", ")}, ${p.price} ${p.currency}`;
       }).join("\n");
 
   const systemPrompt = `Ти — досвідчений AI-асистент агентства нерухомості Житлова компанія Progress з Івано-Франківська. Спілкуєшся через Telegram.
@@ -66,12 +75,22 @@ async function getAIReply(userMessage: string): Promise<string> {
 Актуальні оголошення:
 ${listingsText}
 
+Пошук за категорією — ОБОВ'ЯЗКОВО:
+- Якщо клієнт питає про квартиру — рекомендуй лише "Квартира"
+- Якщо будинок — лише "Будинок"
+- Якщо оренда — лише "Оренда", якщо купівля — лише "Продаж"
+- Якщо 1-кімнатну — лише "1кімн.", 2-кімнатну — "2кімн." тощо
+- Якщо за бюджетом — фільтруй за ціною зі списку
+- Якщо немає підходящих — чесно скажи і запропонуй залишити контакт
+
 Правила:
 - Завжди відповідай українською
 - Відповіді корисні та конкретні (3-5 речень)
 - Будь дружнім та природнім
-- КОЛИ пропонуєш зв'язатися з агентом або коли клієнт питає про перегляд чи деталі — замість "зателефонуйте нам" пиши: "Або просто напишіть своє ім'я та номер телефону прямо тут — і ми самі зателефонуємо вам у зручний час 📞"
+- КОЛИ клієнт питає про перегляд чи деталі — пиши: "Або просто напишіть своє ім'я та номер телефону прямо тут — і ми самі зателефонуємо вам у зручний час 📞"
 - Ніколи не кажи просто "зателефонуйте" без пропозиції залишити контакт тут`;
+
+  const recentHistory = history.slice(-8);
 
   const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
@@ -83,9 +102,10 @@ ${listingsText}
       model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: systemPrompt },
+        ...recentHistory,
         { role: "user", content: userMessage },
       ],
-      max_tokens: 400,
+      max_tokens: 500,
       temperature: 0.7,
     }),
   });
@@ -204,8 +224,8 @@ export async function POST(req: NextRequest) {
   // ── Regular AI reply ──────────────────────────────────
   try {
     const history = chatHistories.get(chatId) ?? [];
+    const reply = await getAIReply(text, history);
     history.push({ role: "user", content: text });
-    const reply = await getAIReply(text);
     history.push({ role: "assistant", content: reply });
     chatHistories.set(chatId, history.slice(-20));
     await sendMessage(chatId, reply);

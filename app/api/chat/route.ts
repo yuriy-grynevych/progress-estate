@@ -55,6 +55,14 @@ ${listings}
 - Рекомендувати конкретні оголошення зі списку вище
 - Давати чесні поради щодо того, на що звертати увагу
 
+Пошук за категорією — ОБОВ'ЯЗКОВО:
+- Якщо клієнт питає про квартиру — рекомендуй лише тип "Квартира"
+- Якщо питає про будинок — лише "Будинок"
+- Якщо питає оренду — лише "Оренда", якщо купівлю — лише "Продаж"
+- Якщо питає 1-кімнатну — лише з "1кімн.", 2-кімнатну — "2кімн." тощо
+- Якщо питає за бюджетом (наприклад "до 50 000$") — фільтруй за ціною
+- Якщо немає підходящих варіантів у списку — чесно скажи і запропонуй залишити контакт
+
 Коли клієнт хоче домовитись про перегляд, торгуватись або потребує особистої допомоги — замість "зателефонуйте нам" пиши:
 "Просто залиште своє ім'я та номер телефону прямо тут у чаті — і ми самі зателефонуємо у зручний для вас час 📞"
 
@@ -81,19 +89,25 @@ export async function POST(req: NextRequest) {
       listingType: true, type: true, slug: true,
     },
     orderBy: { createdAt: "desc" },
-    take: 20,
+    take: 60,
   });
+
+  const typeLabels: Record<string, string> = {
+    APARTMENT: "Квартира", HOUSE: "Будинок", COMMERCIAL: "Комерція",
+    LAND: "Земля", OFFICE: "Офіс",
+  };
 
   const isEn = locale === "en";
   const listingsText = properties.length === 0
     ? (isEn ? "No active listings at the moment." : "Наразі немає активних оголошень.")
     : properties.map((p) => {
         const title = isEn ? p.titleEn : p.titleUk;
-        const type = isEn ? p.listingType : (p.listingType === "SALE" ? "Продаж" : "Оренда");
+        const listType = isEn ? p.listingType : (p.listingType === "SALE" ? "Продаж" : "Оренда");
+        const propType = isEn ? p.type : (typeLabels[p.type] ?? p.type);
         const area = p.areaSqm ? `${p.areaSqm}м²` : "";
         const rooms = p.rooms ? `${p.rooms}кімн.` : "";
         const location = p.address ?? p.district ?? "";
-        return `• [PROP:${p.slug}] ${title} — ${type}, ${[area, rooms, location].filter(Boolean).join(", ")}, ${p.price} ${p.currency}`;
+        return `• [PROP:${p.slug}] ${title} — ${propType}, ${listType}, ${[area, rooms, location].filter(Boolean).join(", ")}, ${p.price} ${p.currency}`;
       }).join("\n");
 
   const history = messages.slice(-10);
