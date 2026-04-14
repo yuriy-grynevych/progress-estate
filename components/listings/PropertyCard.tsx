@@ -47,6 +47,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
           <div className="relative sm:w-[42%] aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100 overflow-hidden">
             {mainImage ? (
               <Image
+                key={mainImage.url}
                 src={mainImage.url}
                 alt={title}
                 fill
@@ -90,6 +91,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
               return img ? (
                 <div key={i} className="relative aspect-square overflow-hidden bg-gray-200">
                   <Image
+                    key={img.url}
                     src={img.url}
                     alt={`${title} ${i + 2}`}
                     fill
