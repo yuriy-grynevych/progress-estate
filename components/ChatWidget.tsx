@@ -66,6 +66,31 @@ const UI = {
   },
 };
 
+function renderText(content: string, suggestions: PropertySuggestion[] | undefined, locale: string) {
+  const parts = content.split(/\[PROP:([a-z0-9\-]+)\]/g);
+  if (parts.length === 1) return <span className="whitespace-pre-wrap">{content}</span>;
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (i % 2 === 0) return <span key={i} className="whitespace-pre-wrap">{part}</span>;
+        const slug = part;
+        const suggestion = suggestions?.find((s) => s.slug === slug);
+        const title = suggestion?.title ?? slug;
+        return (
+          <Link
+            key={i}
+            href={`/${locale}/listings/${slug}`}
+            target="_blank"
+            className="inline-flex items-center gap-0.5 text-gold-600 hover:text-gold-700 underline underline-offset-2 font-medium"
+          >
+            {title} →
+          </Link>
+        );
+      })}
+    </>
+  );
+}
+
 export default function ChatWidget() {
   const pathname = usePathname();
   const locale = pathname?.startsWith("/en") ? "en" : "uk";
@@ -286,7 +311,7 @@ export default function ChatWidget() {
                         : "bg-white text-gray-800 shadow-sm rounded-bl-sm"
                     }`}
                   >
-                    {msg.content}
+                    {renderText(msg.content, msg.suggestions, locale)}
                   </div>
 
                   {/* Property suggestion cards */}

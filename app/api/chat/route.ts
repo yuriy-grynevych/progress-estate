@@ -206,14 +206,13 @@ export async function POST(req: NextRequest) {
     reply = choice?.message?.content ?? (isEn ? "Sorry, try again." : "Вибачте, спробуйте ще раз.");
   }
 
-  // Extract [PROP:slug] tags → suggestion cards
+  // Extract [PROP:slug] tags — keep them in text for link rendering in widget
   const propRegex = /\[PROP:([a-z0-9\-]+)\]/g;
   const slugsFound: string[] = [];
   let propMatch: RegExpExecArray | null;
   while ((propMatch = propRegex.exec(reply)) !== null) {
     slugsFound.push(propMatch[1]);
   }
-  reply = reply.replace(propRegex, "");
 
   let suggestions: object[] = [];
   if (slugsFound.length > 0) {
