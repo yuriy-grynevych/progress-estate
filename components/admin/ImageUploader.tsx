@@ -21,6 +21,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Upload, X, GripVertical, Star, Video } from "lucide-react";
 import Image from "next/image";
+import { isExternalImage } from "@/lib/cloudinary";
 
 function isVideo(url: string) {
   return url.endsWith(".mp4") || url.endsWith(".webm") || url.endsWith(".mov");
@@ -64,7 +65,7 @@ function SortableImage({
           <span className="text-white/50 text-xs">відео</span>
         </div>
       ) : (
-        <Image src={image.url} alt="" fill className="object-cover" sizes="200px" />
+        <Image src={image.url} alt="" fill className="object-cover" sizes="200px" quality={60} unoptimized={isExternalImage(image.url)} loading="lazy" />
       )}
 
       {/* Drag handle */}

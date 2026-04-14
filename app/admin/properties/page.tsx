@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
+import { isExternalImage } from "@/lib/cloudinary";
 import DeletePropertyButton from "@/components/admin/DeletePropertyButton";
 import ToggleStatusButton from "@/components/admin/ToggleStatusButton";
 import CopyAgentLinkButton from "@/components/admin/CopyAgentLinkButton";
@@ -112,7 +113,7 @@ export default async function AdminPropertiesPage({
                 {/* Main photo */}
                 <div className="relative sm:w-72 aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100 overflow-hidden">
                   {mainImg ? (
-                    <Image src={mainImg.url} alt={property.titleUk} fill className="object-cover" sizes="288px" />
+                    <Image src={mainImg.url} alt={property.titleUk} fill className="object-cover" sizes="288px" quality={65} unoptimized={isExternalImage(mainImg.url)} loading="lazy" placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
                       <ImageOff className="w-8 h-8" />
@@ -136,7 +137,7 @@ export default async function AdminPropertiesPage({
                   <div className="hidden sm:grid grid-cols-2 w-32 gap-0.5 flex-shrink-0 bg-gray-100">
                     {[0,1,2,3].map((i) => thumbs[i] ? (
                       <div key={i} className="relative aspect-square overflow-hidden">
-                        <Image src={thumbs[i].url} alt="" fill className="object-cover" sizes="48px" />
+                        <Image src={thumbs[i].url} alt="" fill className="object-cover" sizes="48px" quality={40} unoptimized={isExternalImage(thumbs[i].url)} loading="lazy" />
                       </div>
                     ) : <div key={i} className="aspect-square bg-gray-50" />)}
                   </div>
