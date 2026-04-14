@@ -54,6 +54,10 @@ export default function PropertyGallery({
               fill
               className="object-cover animate-kenburns"
               priority
+              quality={70}
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 900px"
+              placeholder="blur"
+              blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
             />
           )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -96,6 +100,8 @@ export default function PropertyGallery({
                   width={64}
                   height={48}
                   className="object-cover w-full h-full"
+                  quality={40}
+                  loading="lazy"
                 />
               </button>
             ))}
@@ -140,6 +146,8 @@ export default function PropertyGallery({
                 width={1200}
                 height={800}
                 className="object-contain max-h-[80vh] mx-auto"
+                quality={90}
+                priority
               />
             )}
           </div>

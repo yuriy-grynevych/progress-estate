@@ -52,6 +52,10 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 640px) 100vw, 40vw"
+                quality={65}
+                loading="lazy"
+                placeholder="blur"
+                blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-300 gap-2">
@@ -91,6 +95,8 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
                     fill
                     className="object-cover hover:scale-105 transition-transform duration-300"
                     sizes="10vw"
+                    quality={45}
+                    loading="lazy"
                   />
                 </div>
               ) : (
