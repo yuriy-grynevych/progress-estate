@@ -43,61 +43,89 @@ const typeLabels: Record<string, string> = {
   LAND: "Земля", OFFICE: "Офіс",
 };
 
+const searchTool = {
+  type: "function",
+  function: {
+    name: "search_properties",
+    description: "Шукає нерухомість за фільтрами. Викликай при будь-якому питанні про тип, кімнати, ціну або тип угоди.",
+    parameters: {
+      type: "object",
+      properties: {
+        type: { type: "string", enum: ["APARTMENT", "HOUSE", "COMMERCIAL", "LAND", "OFFICE"] },
+        listingType: { type: "string", enum: ["SALE", "RENT"] },
+        rooms: { type: "integer" },
+        priceMin: { type: "number" },
+        priceMax: { type: "number" },
+        district: { type: "string" },
+      },
+    },
+  },
+};
+
+async function runSearch(args: {
+  type?: string; listingType?: string; rooms?: number;
+  priceMin?: number; priceMax?: number; district?: string;
+}): Promise<string> {
+  const results = await prisma.property.findMany({
+    where: {
+      status: "ACTIVE",
+      ...(args.type && { type: args.type as any }),
+      ...(args.listingType && { listingType: args.listingType as any }),
+      ...(args.rooms && { rooms: args.rooms }),
+      ...((args.priceMin || args.priceMax) && {
+        price: {
+          ...(args.priceMin && { gte: args.priceMin }),
+          ...(args.priceMax && { lte: args.priceMax }),
+        },
+      }),
+      ...(args.district && { district: { contains: args.district, mode: "insensitive" as const } }),
+    },
+    select: {
+      slug: true, titleUk: true, price: true, currency: true,
+      areaSqm: true, rooms: true, district: true, listingType: true, type: true,
+    },
+    orderBy: { createdAt: "desc" },
+    take: 8,
+  });
+
+  if (results.length === 0) return "Не знайдено оголошень за вашими критеріями.";
+
+  return results.map((p) => {
+    const listType = p.listingType === "SALE" ? "Продаж" : "Оренда";
+    const propType = typeLabels[p.type] ?? p.type;
+    const area = p.areaSqm ? `${p.areaSqm}м²` : "";
+    const rooms = p.rooms ? `${p.rooms}кімн.` : "";
+    const url = `https://progress-estate.com.ua/uk/listings/${p.slug}`;
+    return `• ${p.titleUk} — ${propType}, ${listType}, ${[area, rooms, p.district].filter(Boolean).join(", ")}, ${p.price} ${p.currency}\n  🔗 ${url}`;
+  }).join("\n");
+}
+
 async function getAIReply(
   userMessage: string,
   history: { role: string; content: string }[]
 ): Promise<string> {
-  const properties = await prisma.property.findMany({
-    where: { status: "ACTIVE" },
-    select: {
-      titleUk: true, price: true, currency: true,
-      areaSqm: true, rooms: true, district: true,
-      listingType: true, type: true, slug: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: 60,
-  });
-
-  const listingsText = properties.length === 0
-    ? "Наразі немає активних оголошень."
-    : properties.map((p) => {
-        const listType = p.listingType === "SALE" ? "Продаж" : "Оренда";
-        const propType = typeLabels[p.type] ?? p.type;
-        const area = p.areaSqm ? `${p.areaSqm}м²` : "";
-        const rooms = p.rooms ? `${p.rooms}кімн.` : "";
-        return `• ${p.titleUk} — ${propType}, ${listType}, ${[area, rooms, p.district].filter(Boolean).join(", ")}, ${p.price} ${p.currency}`;
-      }).join("\n");
-
   const systemPrompt = `Ти — досвідчений AI-асистент агентства нерухомості Житлова компанія Progress з Івано-Франківська. Спілкуєшся через Telegram.
 
 Контакти: тел. +380 67 123 45 67, email: info@progressestate.com.ua
 
-Актуальні оголошення:
-${listingsText}
-
-Пошук за категорією — ОБОВ'ЯЗКОВО:
-- Якщо клієнт питає про квартиру — рекомендуй лише "Квартира"
-- Якщо будинок — лише "Будинок"
-- Якщо оренда — лише "Оренда", якщо купівля — лише "Продаж"
-- Якщо 1-кімнатну — лише "1кімн.", 2-кімнатну — "2кімн." тощо
-- Якщо за бюджетом — фільтруй за ціною зі списку
-- Якщо немає підходящих — чесно скажи і запропонуй залишити контакт
+Використовуй інструмент search_properties ЗАВЖДИ коли клієнт питає про:
+- тип нерухомості (квартира, будинок, офіс, комерція...)
+- кількість кімнат (1-кімнатна, 2-кімнатна...)
+- оренду або купівлю/продаж
+- бюджет або ціну
+- район міста
+Якщо немає підходящих — чесно скажи і запропонуй залишити контакт.
 
 Правила:
-- Завжди відповідай українською
-- Відповіді корисні та конкретні (3-5 речень)
+- Завжди відповідай українською, лаконічно (3-5 речень)
 - Будь дружнім та природнім
-- КОЛИ клієнт питає про перегляд чи деталі — пиши: "Або просто напишіть своє ім'я та номер телефону прямо тут — і ми самі зателефонуємо вам у зручний час 📞"
-- Ніколи не кажи просто "зателефонуйте" без пропозиції залишити контакт тут`;
+- Коли клієнт хоче перегляд або особисту допомогу — пиши: "Напишіть своє ім'я та номер телефону прямо тут — і ми самі зателефонуємо у зручний час 📞"`;
 
   const recentHistory = history.slice(-8);
 
-  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  const res1 = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${GROQ_API_KEY}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
     body: JSON.stringify({
       model: "llama-3.3-70b-versatile",
       messages: [
@@ -105,14 +133,45 @@ ${listingsText}
         ...recentHistory,
         { role: "user", content: userMessage },
       ],
-      max_tokens: 500,
+      tools: [searchTool],
+      tool_choice: "auto",
+      max_tokens: 600,
       temperature: 0.7,
     }),
   });
 
-  if (!res.ok) return "Вибачте, сталася помилка. Спробуйте ще раз.";
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content ?? "Вибачте, не вдалося отримати відповідь.";
+  if (!res1.ok) return "Вибачте, сталася помилка. Спробуйте ще раз.";
+  const data1 = await res1.json();
+  const choice = data1.choices?.[0];
+
+  if (choice?.finish_reason === "tool_calls" && choice.message?.tool_calls?.length > 0) {
+    const toolCall = choice.message.tool_calls[0];
+    const args = JSON.parse(toolCall.function.arguments ?? "{}");
+    const searchResult = await runSearch(args);
+
+    const res2 = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${GROQ_API_KEY}` },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...recentHistory,
+          { role: "user", content: userMessage },
+          choice.message,
+          { role: "tool", tool_call_id: toolCall.id, content: searchResult },
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!res2.ok) return "Вибачте, сталася помилка.";
+    const data2 = await res2.json();
+    return data2.choices?.[0]?.message?.content ?? "Вибачте, не вдалося отримати відповідь.";
+  }
+
+  return choice?.message?.content ?? "Вибачте, не вдалося отримати відповідь.";
 }
 
 export async function POST(req: NextRequest) {
