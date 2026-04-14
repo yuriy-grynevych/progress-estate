@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { randomUUID } from "crypto";
+import sharp from "sharp";
 
 const ALLOWED_IMAGES = ["image/jpeg", "image/png", "image/webp", "image/heic"];
 const ALLOWED_VIDEOS = ["video/mp4", "video/quicktime", "video/webm"];
@@ -37,15 +38,26 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const ext = isVideo ? "mp4" : file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-  const filename = `${randomUUID()}.${ext}`;
   const uploadDir = join(process.cwd(), "public", "uploads", propertyId);
-
   await mkdir(uploadDir, { recursive: true });
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(join(uploadDir, filename), buffer);
 
-  const url = `/uploads/${propertyId}/${filename}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  let filename: string;
+  let url: string;
+
+  if (isVideo) {
+    filename = `${randomUUID()}.mp4`;
+    await writeFile(join(uploadDir, filename), buffer);
+  } else {
+    filename = `${randomUUID()}.webp`;
+    const compressed = await sharp(buffer)
+      .resize({ width: 1600, withoutEnlargement: true })
+      .webp({ quality: 82 })
+      .toBuffer();
+    await writeFile(join(uploadDir, filename), compressed);
+  }
+
+  url = `/uploads/${propertyId}/${filename}`;
 
   const existingCount = await prisma.propertyImage.count({ where: { propertyId } });
   const image = await prisma.propertyImage.create({

@@ -54,7 +54,7 @@ export default function PropertyGallery({
               fill
               className="object-cover animate-kenburns"
               priority
-              quality={70}
+              quality={55}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 900px"
               placeholder="blur"
               blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
@@ -100,7 +100,7 @@ export default function PropertyGallery({
                   width={64}
                   height={48}
                   className="object-cover w-full h-full"
-                  quality={40}
+                  quality={20}
                   loading="lazy"
                 />
               </button>

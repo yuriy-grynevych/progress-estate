@@ -53,7 +53,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 640px) 100vw, 40vw"
-                quality={65}
+                quality={45}
                 loading="lazy"
                 placeholder="blur"
                 blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
@@ -97,7 +97,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
                     fill
                     className="object-cover hover:scale-105 transition-transform duration-300"
                     sizes="10vw"
-                    quality={45}
+                    quality={25}
                     loading="lazy"
                   />
                 </div>
