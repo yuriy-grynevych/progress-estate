@@ -5,6 +5,7 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminMobileHeader from "@/components/admin/AdminMobileHeader";
 import SessionProvider from "@/components/admin/SessionProvider";
 import ChatPanel from "@/components/admin/ChatPanel";
+import NextTopLoader from "nextjs-toploader";
 import type { UserRole } from "@prisma/client";
 
 export const metadata = {
@@ -23,6 +24,7 @@ export default async function AdminLayout({
 
   return (
     <SessionProvider session={session}>
+      <NextTopLoader color="#D4A017" height={3} showSpinner={false} />
       <div className="flex h-screen bg-gray-100 overflow-hidden">
         {/* Sidebar – desktop */}
         <aside className="hidden lg:flex lg:flex-col w-64 flex-shrink-0">
