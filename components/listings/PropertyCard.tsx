@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ImageOff, Sparkles, Flame } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import { cloudinaryUrl, isCloudinary } from "@/lib/cloudinary";
+import { cloudinaryUrl, isExternalImage } from "@/lib/cloudinary";
 import type { PropertyWithImages } from "@/types";
 
 function isNew(d: Date | string) {
@@ -54,7 +54,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 640px) 100vw, 40vw"
-                unoptimized={isCloudinary(mainImage.url)}
+                unoptimized={isExternalImage(mainImage.url)}
                 quality={45}
                 loading="lazy"
                 placeholder="blur"
@@ -99,7 +99,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
                     fill
                     className="object-cover hover:scale-105 transition-transform duration-300"
                     sizes="10vw"
-                    unoptimized={isCloudinary(img.url)}
+                    unoptimized={isExternalImage(img.url)}
                     quality={25}
                     loading="lazy"
                   />

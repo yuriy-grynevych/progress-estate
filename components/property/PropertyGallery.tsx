@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, Expand } from "lucide-react";
-import { cloudinaryUrl, isCloudinary } from "@/lib/cloudinary";
+import { cloudinaryUrl, isExternalImage } from "@/lib/cloudinary";
 import type { PropertyImage } from "@prisma/client";
 
 function isVideo(url: string) {
@@ -57,7 +57,7 @@ export default function PropertyGallery({
               priority
               quality={55}
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 900px"
-              unoptimized={isCloudinary(images[current].url)}
+              unoptimized={isExternalImage(images[current].url)}
               placeholder="blur"
               blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
             />
@@ -102,7 +102,7 @@ export default function PropertyGallery({
                   width={64}
                   height={48}
                   className="object-cover w-full h-full"
-                  unoptimized={isCloudinary(img.url)}
+                  unoptimized={isExternalImage(img.url)}
                   quality={20}
                   loading="lazy"
                 />
@@ -149,7 +149,7 @@ export default function PropertyGallery({
                 width={1200}
                 height={800}
                 className="object-contain max-h-[80vh] mx-auto"
-                unoptimized={isCloudinary(images[current].url)}
+                unoptimized={isExternalImage(images[current].url)}
                 quality={90}
                 priority
               />

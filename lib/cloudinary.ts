@@ -1,6 +1,8 @@
+const CLOUD_NAME = "dkecfgzdb";
+
 /**
- * Transforms a Cloudinary URL by inserting transformation params.
- * For local /uploads/ paths, returns the original URL untouched.
+ * For Cloudinary upload URLs — inserts transform params.
+ * For all other URLs (S3, local) — returns as-is.
  */
 export function cloudinaryUrl(
   url: string,
@@ -13,14 +15,16 @@ export function cloudinaryUrl(
   return url.replace("/upload/", `/upload/${parts.join(",")}/`);
 }
 
-export function isCloudinary(url: string): boolean {
-  return url.includes("res.cloudinary.com");
+/**
+ * Returns true for external URLs (S3, Cloudinary etc.).
+ * These should be served directly — no Next.js re-processing.
+ */
+export function isExternalImage(url: string): boolean {
+  return url.startsWith("http://") || url.startsWith("https://");
 }
 
 /**
  * Extracts Cloudinary public_id from a secure_url.
- * e.g. https://res.cloudinary.com/xxx/image/upload/v123/properties/abc/uuid.webp
- *   → properties/abc/uuid
  */
 export function extractPublicId(url: string): string {
   const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.[^.]+$/);
