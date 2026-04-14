@@ -15,11 +15,13 @@ import {
   Users,
   UserCircle,
   BookUser,
+  MapPin,
 } from "lucide-react";
 
 const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/properties", label: "Нерухомість", icon: Building2 },
+  { href: "/admin/map", label: "Карта", icon: MapPin },
   { href: "/admin/inquiries", label: "Запити", icon: MessageSquare },
   { href: "/admin/contacts", label: "Контакти", icon: BookUser },
   { href: "/admin/testimonials", label: "Відгуки", icon: Star },
@@ -31,6 +33,7 @@ const adminNavItems = [
 const employeeNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/properties", label: "Нерухомість", icon: Building2 },
+  { href: "/admin/map", label: "Карта", icon: MapPin },
   { href: "/admin/inquiries", label: "Мої запити", icon: MessageSquare },
   { href: "/admin/contacts", label: "Контакти", icon: BookUser },
   { href: "/admin/profile", label: "Мій профіль", icon: UserCircle },

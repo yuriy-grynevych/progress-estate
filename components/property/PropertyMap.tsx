@@ -17,7 +17,6 @@ export default function PropertyMap({
     if (!mapRef.current || mapInstance.current) return;
 
     import("leaflet").then((L) => {
-      // Load Leaflet CSS dynamically
       if (!document.querySelector('link[href*="leaflet"]')) {
         const link = document.createElement("link");
         link.rel = "stylesheet";
@@ -54,12 +53,11 @@ export default function PropertyMap({
   }, [lat, lng, title]);
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm">
-      <h2 className="text-lg font-semibold text-navy-900 mb-4">Розташування</h2>
+    <div>
       <div
         ref={mapRef}
-        style={{ height: 280 }}
-        className="rounded-lg overflow-hidden"
+        style={{ height: 300 }}
+        className="rounded-xl overflow-hidden"
       />
       <a
         href={`https://www.google.com/maps?q=${lat},${lng}`}
