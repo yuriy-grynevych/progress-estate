@@ -1,4 +1,7 @@
-const FEED_URL = "https://crm-progress.realtsoft.net/feed/json?id=4";
+import { XMLParser } from "fast-xml-parser";
+
+const XML_FEED_URL = "https://crm-progress.realtsoft.net/feed/xml?id=4";
+const JSON_FEED_URL = "https://crm-progress.realtsoft.net/feed/json?id=4";
 
 export type RealtsoftOffer = {
   internalId: string;
@@ -22,62 +25,103 @@ export type RealtsoftOffer = {
   kitchenSqm: number | null;
 };
 
-function mapDeal(deal: any): "SALE" | "RENT" {
-  const name: string = deal?.name ?? "";
-  if (name.toLowerCase().includes("оренд") || name.toLowerCase().includes("аренд")) return "RENT";
+function mapContractType(type: string): "SALE" | "RENT" {
+  const t = type.toLowerCase();
+  if (t.includes("аренд") || t.includes("оренд")) return "RENT";
   return "SALE";
 }
 
-function mapRealtyType(rt: any): "APARTMENT" | "HOUSE" | "COMMERCIAL" | "LAND" | "OFFICE" {
-  const name: string = rt?.name?.toLowerCase() ?? "";
-  if (name.includes("кварт")) return "APARTMENT";
-  if (name.includes("будин") || name.includes("дом") || name.includes("котедж") || name.includes("вілл")) return "HOUSE";
-  if (name.includes("земл") || name.includes("ділянк")) return "LAND";
-  if (name.includes("офіс")) return "OFFICE";
-  if (name.includes("комерц") || name.includes("магаз") || name.includes("склад")) return "COMMERCIAL";
+function mapRealtyType(type: string): "APARTMENT" | "HOUSE" | "COMMERCIAL" | "LAND" | "OFFICE" {
+  const t = type.toLowerCase();
+  if (t.includes("кварт")) return "APARTMENT";
+  if (t.includes("дом") || t.includes("будин") || t.includes("котедж") || t.includes("вілл")) return "HOUSE";
+  if (t.includes("земл") || t.includes("ділянк")) return "LAND";
+  if (t.includes("офіс")) return "OFFICE";
+  if (t.includes("комерц") || t.includes("магаз") || t.includes("склад")) return "COMMERCIAL";
   return "APARTMENT";
 }
 
-function mapCurrency(cur: string): string {
-  if (cur === "USD" || cur === "$") return "USD";
-  if (cur === "EUR" || cur === "€") return "EUR";
+function parseCurrency(cur: string): string {
+  if (cur === "$" || cur.toLowerCase() === "usd") return "USD";
+  if (cur === "€" || cur.toLowerCase() === "eur") return "EUR";
   return "UAH";
 }
 
+/** Fetch lat/lng map from JSON feed: { articleId -> { lat, lng } } */
+async function fetchJsonCoords(): Promise<Map<string, { lat: number; lng: number }>> {
+  const map = new Map<string, { lat: number; lng: number }>();
+  try {
+    const res = await fetch(JSON_FEED_URL, { next: { revalidate: 0 } });
+    if (!res.ok) return map;
+    const data = await res.json();
+    for (const e of (data.estates ?? [])) {
+      const lat = e.location?.map_lat;
+      const lng = e.location?.map_lng;
+      if (lat && lng) {
+        map.set(String(e.article), { lat: Number(lat), lng: Number(lng) });
+      }
+    }
+  } catch {
+    // JSON feed is optional — ignore errors
+  }
+  return map;
+}
+
 export async function fetchRealtsoftOffers(): Promise<RealtsoftOffer[]> {
-  const res = await fetch(FEED_URL, { next: { revalidate: 0 } });
-  if (!res.ok) throw new Error(`Realtsoft feed error: ${res.status}`);
+  const [xmlRes, jsonCoords] = await Promise.all([
+    fetch(XML_FEED_URL, { next: { revalidate: 0 } }),
+    fetchJsonCoords(),
+  ]);
 
-  const data = await res.json();
-  const estates: any[] = data.estates ?? [];
+  if (!xmlRes.ok) throw new Error(`Realtsoft XML feed error: ${xmlRes.status}`);
 
-  return estates.map((e: any): RealtsoftOffer => {
-    const loc = e.location ?? {};
-    const street = loc.street?.name ?? null;
-    const district = loc.district?.name ?? null;
-    const city = loc.city?.name ?? "Івано-Франківськ";
+  const xml = await xmlRes.text();
+
+  const parser = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: "@_",
+    removeNSPrefix: true,
+    isArray: (name) => name === "image" || name === "announcement",
+  });
+
+  const parsed = parser.parse(xml);
+  const feed = parsed["page"] ?? Object.values(parsed).find((v: any) => v?.announcements);
+  const announcements = feed?.announcements?.announcement ?? [];
+
+  return (announcements as any[]).map((a: any, index: number): RealtsoftOffer => {
+    const internalId = a.agency_code ? String(a.agency_code) : String(index + 1);
+    const images: string[] = Array.isArray(a.images?.image)
+      ? a.images.image
+      : a.images?.image
+      ? [a.images.image]
+      : [];
+
+    const street = a.street ?? "";
     const address = street || null;
 
+    // Use coordinates from JSON feed if available
+    const coords = jsonCoords.get(internalId);
+
     return {
-      internalId: String(e.article ?? e.id),
-      type: mapDeal(e.deal),
-      propertyType: mapRealtyType(e.realty_type),
-      titleUk: e.title ?? `${e.realty_type?.name ?? "Нерухомість"}, ${city}`,
-      descriptionUk: e.description ?? "",
-      price: Number(e.price?.value ?? 0),
-      currency: mapCurrency(e.price?.currency ?? ""),
-      areaSqm: Number(e.area_total ?? 0),
-      rooms: e.room_count ? Number(e.room_count) : null,
-      floor: e.floor ? Number(e.floor) : null,
-      totalFloors: e.total_floors ? Number(e.total_floors) : null,
-      city,
-      district,
+      internalId,
+      type: mapContractType(a.contract_type ?? ""),
+      propertyType: mapRealtyType(a.realty_type ?? ""),
+      titleUk: a.title ?? `${a.realty_type ?? "Нерухомість"}, ${a.city ?? ""}`,
+      descriptionUk: a.text ?? "",
+      price: Number(a.price ?? 0),
+      currency: parseCurrency(a.currency ?? ""),
+      areaSqm: Number(a.total_area ?? 0),
+      rooms: a.room_count ? Number(a.room_count) : null,
+      floor: a.floor ? Number(a.floor) : null,
+      totalFloors: a.floor_count ? Number(a.floor_count) : null,
+      city: a.city ?? "Івано-Франківськ",
+      district: a.district || a.microdistrict || null,
       address,
-      latitude: loc.map_lat ? Number(loc.map_lat) : null,
-      longitude: loc.map_lng ? Number(loc.map_lng) : null,
-      images: Array.isArray(e.images) ? e.images : [],
-      isNewBuilding: e.is_new_building === 1 || e.is_new_building === true,
-      kitchenSqm: e.area_kitchen ? Number(e.area_kitchen) : null,
+      latitude: coords?.lat ?? null,
+      longitude: coords?.lng ?? null,
+      images,
+      isNewBuilding: false,
+      kitchenSqm: a.kitchen_area ? Number(a.kitchen_area) : null,
     };
   });
 }

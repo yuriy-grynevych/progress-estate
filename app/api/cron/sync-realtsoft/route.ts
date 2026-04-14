@@ -43,8 +43,9 @@ export async function GET(req: NextRequest) {
       city: offer.city,
       district: offer.district,
       address: offer.address,
-      latitude: offer.latitude,
-      longitude: offer.longitude,
+      // Preserve existing DB coords if feed doesn't provide new ones
+      latitude: offer.latitude ?? existing?.latitude ?? null,
+      longitude: offer.longitude ?? existing?.longitude ?? null,
       features: offer.isNewBuilding ? ["new_building"] : [],
       kitchenSqm: offer.kitchenSqm,
     };
