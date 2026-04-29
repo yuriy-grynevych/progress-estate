@@ -7,7 +7,15 @@ import DeletePropertyButton from "@/components/admin/DeletePropertyButton";
 import ToggleStatusButton from "@/components/admin/ToggleStatusButton";
 import CopyAgentLinkButton from "@/components/admin/CopyAgentLinkButton";
 import AdminPropertyGallery from "@/components/admin/AdminPropertyGallery";
-import { PlusCircle, Eye, Pencil, Sparkles } from "lucide-react";
+import { PlusCircle, Eye, Pencil } from "lucide-react";
+
+const TYPE_LABELS: Record<string, string> = {
+  APARTMENT: "Квартира",
+  HOUSE: "Будинок",
+  COMMERCIAL: "Комерція",
+  LAND: "Земля",
+  OFFICE: "Офіс",
+};
 
 async function getProperties(search?: string, role?: string, userId?: string) {
   const searchWhere = search
@@ -124,7 +132,7 @@ export default async function AdminPropertiesPage({
               }`}
             >
               <div className="flex flex-col sm:flex-row">
-                {/* Gallery (client component — handles lightbox) */}
+                {/* Gallery */}
                 <AdminPropertyGallery
                   images={property.images}
                   title={property.titleUk}
@@ -132,61 +140,79 @@ export default async function AdminPropertiesPage({
                   isRent={isRent}
                 />
 
-                {/* Info */}
-                <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                {/* Info — styl katalogu klienta */}
+                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between min-w-0">
                   <div>
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <Link
-                        href={`/uk/listings/${property.slug}`}
-                        target="_blank"
-                        className="font-semibold text-navy-900 hover:text-gold-500 transition line-clamp-2 text-sm leading-snug"
-                      >
-                        {property.titleUk}
-                      </Link>
-
-                      {/* Price + change */}
-                      <div className="flex-shrink-0 text-right">
-                        <div className="text-base font-bold text-navy-900 whitespace-nowrap">
-                          {formatPrice(currPrice, property.currency)}
+                    {/* Price */}
+                    <div className="mb-2">
+                      <div className="text-2xl sm:text-3xl font-bold text-navy-900 leading-tight">
+                        {formatPrice(currPrice, property.currency)}
+                      </div>
+                      {priceChanged && (
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-sm font-semibold text-gray-400">Зміна ціни</span>
+                          <span className={`text-sm font-bold ${priceDrop ? "text-green-600" : "text-red-500"}`}>
+                            {priceDrop ? "↓ −" : "↑ +"}
+                            {formatPrice(priceDiff, property.currency)}
+                          </span>
                         </div>
-                        {priceChanged && (
-                          <div>
-                            <div className="text-base font-bold text-gray-400 whitespace-nowrap">
-                              Зміна ціни
-                            </div>
-                            <div
-                              className={`text-sm font-bold whitespace-nowrap ${
-                                priceDrop ? "text-green-600" : "text-red-500"
-                              }`}
-                            >
-                              {priceDrop ? "↓ −" : "↑ +"}
-                              {formatPrice(priceDiff, property.currency)}
-                            </div>
-                          </div>
-                        )}
+                      )}
+                    </div>
+
+                    {/* Title */}
+                    <Link
+                      href={`/uk/listings/${property.slug}`}
+                      target="_blank"
+                      className="block text-base sm:text-lg font-semibold text-gold-500 hover:text-gold-600 transition line-clamp-2 leading-snug mb-3"
+                    >
+                      {property.titleUk}
+                    </Link>
+
+                    {/* Details grid */}
+                    <div className="grid grid-cols-3 gap-x-3 gap-y-3 mb-3">
+                      <div>
+                        <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Площа</p>
+                        <p className="text-sm font-bold text-navy-900">{property.areaSqm}м²</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">К-сть кімнат</p>
+                        <p className="text-sm font-bold text-navy-900">{property.rooms ?? "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Поверх</p>
+                        <p className="text-sm font-bold text-navy-900">
+                          {property.floor && property.totalFloors
+                            ? `${property.floor}/${property.totalFloors}`
+                            : "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Район</p>
+                        <p className="text-sm font-bold text-navy-900 truncate">{property.district ?? "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Вулиця</p>
+                        <p className="text-sm font-bold text-navy-900 truncate">
+                          {property.address ? property.address.split(",")[0] : "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Тип</p>
+                        <p className="text-sm font-bold text-navy-900">{TYPE_LABELS[property.type] ?? property.type}</p>
                       </div>
                     </div>
 
-                    <p className="text-xs text-gray-400 mb-1">
-                      {property.address ?? property.district ?? "—"}
-                      {property.areaSqm ? ` · ${property.areaSqm} м²` : ""}
-                      {property.rooms ? ` · ${property.rooms} кімн.` : ""}
-                      {property.floor && property.totalFloors
-                        ? ` · ${property.floor}/${property.totalFloors} пов.`
-                        : ""}
-                    </p>
-
                     {/* Dates */}
-                    <p className="text-[10px] text-gray-400">
+                    <p className="text-[11px] text-gray-400">
                       {fmtDate(property.createdAt)}
                       {editedLater && (
-                        <> · <span className="text-gray-400">ред. {fmtDate(property.updatedAt)}</span></>
+                        <> · <span>ред. {fmtDate(property.updatedAt)}</span></>
                       )}
                     </p>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-gray-50 flex-wrap">
-                    {/* Status + agent */}
+                  {/* Bottom: status + actions */}
+                  <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-gray-100 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">
                       {canEdit ? (
                         <ToggleStatusButton
@@ -216,7 +242,6 @@ export default async function AdminPropertiesPage({
                       </span>
                     </div>
 
-                    {/* Actions */}
                     <div className="flex items-center gap-2">
                       <Link
                         href={`/uk/listings/${property.slug}`}

@@ -48,11 +48,11 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
 
   return (
     <>
-      {/* Gallery row */}
-      <div className="flex flex-shrink-0">
-        {/* Main image */}
+      {/* Gallery — fills full card height */}
+      <div className="flex flex-shrink-0 sm:self-stretch">
+        {/* Main image — no fixed aspect ratio on desktop, fills height */}
         <div
-          className="relative w-[240px] sm:w-[360px] aspect-[4/3] flex-shrink-0 bg-gray-100 overflow-hidden cursor-pointer"
+          className="relative w-[260px] sm:w-[360px] aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100 overflow-hidden cursor-pointer"
           onClick={() => mainImg && openAt(mainImg)}
         >
           {mainImg ? (
@@ -61,26 +61,27 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
               alt={title}
               fill
               className="object-cover"
-              sizes="(max-width: 640px) 240px, 360px"
-              quality={65}
+              sizes="(max-width: 640px) 260px, 360px"
+              quality={70}
               unoptimized={isExternalImage(mainImg.url)}
               loading="lazy"
               placeholder="blur"
               blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw=="
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <div className="absolute inset-0 flex items-center justify-center text-gray-300">
               <ImageOff className="w-10 h-10" />
             </div>
           )}
+          {/* Badges */}
           <div className="absolute top-2 left-2 flex flex-col gap-1">
             {isNew && (
-              <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full">
+              <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full shadow">
                 <Sparkles className="w-2.5 h-2.5" /> НОВИНКА
               </span>
             )}
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+              className={`text-[10px] font-bold px-2 py-0.5 rounded-full shadow ${
                 isRent ? "bg-navy-700 text-white" : "bg-gold-400 text-white"
               }`}
             >
@@ -89,31 +90,30 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
           </div>
         </div>
 
-        {/* Thumbnails 2×2 */}
+        {/* Thumbnails — 2×2 grid, fills full card height */}
         {thumbs.length > 0 && (
-          <div className="hidden sm:grid grid-cols-2 w-[144px] gap-0.5 flex-shrink-0 bg-gray-100">
-            {[0, 1, 2, 3].map((i) =>
-              thumbs[i] ? (
-                <div
-                  key={i}
-                  className="relative aspect-square overflow-hidden cursor-pointer"
-                  onClick={() => openAt(thumbs[i])}
-                >
-                  <Image
-                    src={thumbs[i].url}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="72px"
-                    quality={40}
-                    unoptimized={isExternalImage(thumbs[i].url)}
-                    loading="lazy"
-                  />
-                </div>
-              ) : (
-                <div key={i} className="aspect-square bg-gray-50" />
-              )
-            )}
+          <div
+            className="hidden sm:grid grid-cols-2 w-[148px] flex-shrink-0 gap-0.5 bg-gray-100 self-stretch"
+            style={{ gridTemplateRows: `repeat(${Math.min(Math.ceil(thumbs.length / 2), 2)}, 1fr)` }}
+          >
+            {thumbs.map((thumb, i) => (
+              <div
+                key={i}
+                className="relative overflow-hidden cursor-pointer"
+                onClick={() => openAt(thumb)}
+              >
+                <Image
+                  src={thumb.url}
+                  alt=""
+                  fill
+                  className="object-cover hover:opacity-90 transition"
+                  sizes="74px"
+                  quality={45}
+                  unoptimized={isExternalImage(thumb.url)}
+                  loading="lazy"
+                />
+              </div>
+            ))}
           </div>
         )}
       </div>
