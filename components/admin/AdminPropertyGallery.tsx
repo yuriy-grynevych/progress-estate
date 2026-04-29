@@ -51,7 +51,7 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
   return (
     <>
       {/* Gallery — fills grid cell completely */}
-      <div className={`grid w-full h-full min-h-[220px] ${thumbs.length > 0 ? "sm:grid-cols-[62%_38%]" : ""}`}>
+      <div className={`grid w-full h-full min-h-[175px] ${thumbs.length > 0 ? "sm:grid-cols-[62%_38%]" : ""}`}>
         {/* Main image — fills its grid cell */}
         <div
           className="relative overflow-hidden cursor-pointer bg-gray-100"

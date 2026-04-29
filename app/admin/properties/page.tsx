@@ -103,7 +103,7 @@ export default async function AdminPropertiesPage({
       </form>
 
       {/* Cards */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {properties.length === 0 && (
           <div className="text-center py-16 text-gray-400 bg-white rounded-2xl">
             Нерухомість не знайдена
@@ -141,11 +141,11 @@ export default async function AdminPropertiesPage({
                 />
 
                 {/* Info — styl katalogu klienta */}
-                <div className="p-4 sm:p-5 flex flex-col justify-between min-w-0">
+                <div className="p-3 sm:p-4 flex flex-col justify-between min-w-0">
                   <div>
                     {/* Price */}
-                    <div className="mb-2">
-                      <div className="text-2xl sm:text-3xl font-bold text-navy-900 leading-tight">
+                    <div className="mb-1">
+                      <div className="text-xl sm:text-2xl font-bold text-navy-900 leading-tight">
                         {formatPrice(currPrice, property.currency)}
                       </div>
                       {priceChanged && (
@@ -163,24 +163,24 @@ export default async function AdminPropertiesPage({
                     <Link
                       href={`/uk/listings/${property.slug}`}
                       target="_blank"
-                      className="block text-base sm:text-lg font-semibold text-gold-500 hover:text-gold-600 transition line-clamp-2 leading-snug mb-3"
+                      className="block text-sm sm:text-base font-semibold text-gold-500 hover:text-gold-600 transition line-clamp-1 leading-snug mb-2"
                     >
                       {property.titleUk}
                     </Link>
 
                     {/* Details grid */}
-                    <div className="grid grid-cols-3 gap-x-3 gap-y-3 mb-3">
+                    <div className="grid grid-cols-3 gap-x-2 gap-y-1.5 mb-2">
                       <div>
                         <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Площа</p>
-                        <p className="text-sm font-bold text-navy-900">{property.areaSqm}м²</p>
+                        <p className="text-xs font-bold text-navy-900">{property.areaSqm}м²</p>
                       </div>
                       <div>
                         <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">К-сть кімнат</p>
-                        <p className="text-sm font-bold text-navy-900">{property.rooms ?? "—"}</p>
+                        <p className="text-xs font-bold text-navy-900">{property.rooms ?? "—"}</p>
                       </div>
                       <div>
                         <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Поверх</p>
-                        <p className="text-sm font-bold text-navy-900">
+                        <p className="text-xs font-bold text-navy-900">
                           {property.floor && property.totalFloors
                             ? `${property.floor}/${property.totalFloors}`
                             : "—"}
@@ -188,31 +188,31 @@ export default async function AdminPropertiesPage({
                       </div>
                       <div>
                         <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Район</p>
-                        <p className="text-sm font-bold text-navy-900 truncate">{property.district ?? "—"}</p>
+                        <p className="text-xs font-bold text-navy-900 truncate">{property.district ?? "—"}</p>
                       </div>
                       <div>
                         <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Вулиця</p>
-                        <p className="text-sm font-bold text-navy-900 truncate">
+                        <p className="text-xs font-bold text-navy-900 truncate">
                           {property.address ? property.address.split(",")[0] : "—"}
                         </p>
                       </div>
                       <div>
                         <p className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Тип</p>
-                        <p className="text-sm font-bold text-navy-900">{TYPE_LABELS[property.type] ?? property.type}</p>
+                        <p className="text-xs font-bold text-navy-900">{TYPE_LABELS[property.type] ?? property.type}</p>
                       </div>
                     </div>
 
                     {/* Dates */}
-                    <p className="text-[11px] text-gray-400">
-                      {fmtDate(property.createdAt)}
+                    <p className="text-[10px] text-gray-400 leading-relaxed">
+                      <span className="font-medium text-gray-500">Додано:</span> {fmtDate(property.createdAt)}
                       {editedLater && (
-                        <> · <span>ред. {fmtDate(property.updatedAt)}</span></>
+                        <> · <span className="font-medium text-gray-500">Ред.:</span> {fmtDate(property.updatedAt)}</>
                       )}
                     </p>
                   </div>
 
                   {/* Bottom: status + actions */}
-                  <div className="flex items-center justify-between gap-3 mt-3 pt-3 border-t border-gray-100 flex-wrap">
+                  <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">
                       {canEdit ? (
                         <ToggleStatusButton
