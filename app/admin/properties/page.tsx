@@ -131,7 +131,7 @@ export default async function AdminPropertiesPage({
                 isOwn ? "border-gold-200" : "border-gray-100"
               }`}
             >
-              <div className="flex flex-col sm:grid sm:grid-cols-[46%_54%]">
+              <div className="flex flex-col sm:grid sm:grid-cols-[55%_45%]">
                 {/* Gallery */}
                 <AdminPropertyGallery
                   images={property.images}
