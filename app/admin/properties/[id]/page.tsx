@@ -53,7 +53,7 @@ export default async function EditPropertyPage({
         type: property.type,
         listingType: property.listingType,
         status: property.status,
-        price: Number(property.price),
+        price: parseFloat(property.price.toString()),
         currency: property.currency,
         areaSqm: property.areaSqm,
         rooms: property.rooms,

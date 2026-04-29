@@ -390,7 +390,7 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <FieldLabel required>Ціна</FieldLabel>
-              <Input type="number" {...register("price")} placeholder="50000" />
+              <Input type="number" {...register("price", { valueAsNumber: true })} placeholder="50000" />
               {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
             </div>
             <div>
@@ -437,7 +437,7 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div>
               <FieldLabel required>Площа (м²)</FieldLabel>
-              <Input type="number" step="0.1" {...register("areaSqm")} placeholder="65" />
+              <Input type="number" step="0.1" {...register("areaSqm", { valueAsNumber: true })} placeholder="65" />
               {errors.areaSqm && <p className="text-red-500 text-xs mt-1">{errors.areaSqm.message}</p>}
             </div>
             <div>
