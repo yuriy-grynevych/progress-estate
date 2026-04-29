@@ -150,11 +150,10 @@ export default async function AdminPropertiesPage({
                         {formatPrice(currPrice, property.currency)}
                       </div>
                       {priceChanged && (
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-sm font-semibold text-gray-400">Зміна ціни</span>
-                          <span className={`text-sm font-bold ${priceDrop ? "text-green-600" : "text-red-500"}`}>
-                            {priceDrop ? "↓ −" : "↑ +"}
-                            {formatPrice(priceDiff, property.currency)}
+                        <div className={`flex items-center gap-1.5 mt-0.5 ${priceDrop ? "text-green-600" : "text-red-500"}`}>
+                          <span className="text-base font-extrabold uppercase tracking-wide">Зміна ціни</span>
+                          <span className="text-base font-extrabold">
+                            {priceDrop ? "↓ −" : "↑ +"}{formatPrice(priceDiff, property.currency)}
                           </span>
                         </div>
                       )}
