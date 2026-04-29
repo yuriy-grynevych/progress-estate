@@ -45,17 +45,22 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       ? body.assignedUserId || null
       : undefined;
 
+  const agentComments = Array.isArray(body.agentComments) ? body.agentComments : undefined;
+
   // Build audit diff
   const existing = await prisma.property.findUnique({ where: { id: params.id } });
-  const changes: Record<string, { from: unknown; to: unknown }> = {};
+  const changes: Record<string, { from: string; to: string }> = {};
   const tracked = ["titleUk", "titleEn", "price", "status", "listingType", "type", "district", "address", "areaSqm", "rooms", "floor", "assignedUserId"] as const;
   for (const key of tracked) {
     const oldVal = existing?.[key];
     const newVal = key === "assignedUserId" ? (assignedUserId !== undefined ? assignedUserId : oldVal) : (parsed.data as any)[key];
     if (newVal !== undefined && String(oldVal) !== String(newVal)) {
-      changes[key] = { from: oldVal, to: newVal };
+      changes[key] = { from: String(oldVal ?? ""), to: String(newVal ?? "") };
     }
   }
+
+  // Track previous price when price changes
+  const priceChanged = existing && String(existing.price) !== String(parsed.data.price);
 
   const [property] = await prisma.$transaction([
     prisma.property.update({
@@ -63,6 +68,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       data: {
         ...parsed.data,
         ...(assignedUserId !== undefined && { assignedUserId }),
+        ...(agentComments !== undefined && { agentComments }),
+        ...(priceChanged && { previousPrice: existing!.price }),
       } as any,
       include: { images: true },
     }),

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { MessageSquarePlus } from "lucide-react";
 import dynamic from "next/dynamic";
 import {
   PROPERTY_TYPES,
@@ -70,12 +71,24 @@ interface FeatureOption {
   labelEn: string;
 }
 
+interface AgentComment {
+  text: string;
+  author: string;
+  createdAt: string;
+}
+
 interface PropertyFormProps {
-  initialData?: Partial<FormData> & { id?: string; images?: PropertyImage[]; assignedUserId?: string | null };
+  initialData?: Partial<FormData> & {
+    id?: string;
+    images?: PropertyImage[];
+    assignedUserId?: string | null;
+    agentComments?: AgentComment[];
+  };
   employees?: Employee[];
   featureOptions?: FeatureOption[];
   role?: "ADMIN" | "EMPLOYEE";
   currentUserId?: string;
+  currentUserName?: string;
 }
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
@@ -213,12 +226,16 @@ function FeatureTab({
   );
 }
 
-export default function PropertyForm({ initialData, employees = [], featureOptions, role = "EMPLOYEE", currentUserId }: PropertyFormProps) {
+export default function PropertyForm({ initialData, employees = [], featureOptions, role = "EMPLOYEE", currentUserId, currentUserName }: PropertyFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [propertyId, setPropertyId] = useState(initialData?.id ?? "new");
   const [images, setImages] = useState<PropertyImage[]>(initialData?.images ?? []);
+  const [comments, setComments] = useState<AgentComment[]>(
+    (initialData?.agentComments as AgentComment[]) ?? []
+  );
+  const [commentInput, setCommentInput] = useState("");
 
   const isEdit = Boolean(initialData?.id);
 
@@ -266,6 +283,16 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
 
   const selectedFeatures = watch("features");
 
+  function addComment() {
+    const text = commentInput.trim();
+    if (!text) return;
+    setComments((prev) => [
+      ...prev,
+      { text, author: currentUserName ?? "", createdAt: new Date().toISOString() },
+    ]);
+    setCommentInput("");
+  }
+
   function toggleFeature(value: string) {
     const current = selectedFeatures ?? [];
     if (current.includes(value)) {
@@ -284,7 +311,7 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, agentComments: comments }),
     });
 
     if (res.ok) {
@@ -583,6 +610,72 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             onAdd={(val) => setValue("features", [...(selectedFeatures ?? []), val] as any)}
             onRemoveCustom={(val) => setValue("features", (selectedFeatures ?? []).filter((f) => f !== val) as any)}
           />
+        </div>
+
+        {/* Коментарі агента */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200">
+          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 mb-5 flex items-center gap-2">
+            <span className="w-1 h-5 bg-indigo-500 rounded-full inline-block" />
+            Коментарі агента
+          </h2>
+
+          {comments.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {comments.map((c, i) => (
+                <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm text-gray-800 whitespace-pre-wrap">{c.text}</p>
+                    {(c.author || c.createdAt) && (
+                      <p className="text-[11px] text-gray-400 mt-1">
+                        {c.author}
+                        {c.author && c.createdAt ? " · " : ""}
+                        {c.createdAt
+                          ? new Date(c.createdAt).toLocaleDateString("uk-UA", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : ""}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setComments((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="text-gray-300 hover:text-red-400 transition text-lg leading-none flex-shrink-0"
+                    title="Видалити коментар"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex gap-2 items-end">
+            <textarea
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault();
+                  addComment();
+                }
+              }}
+              placeholder="Додати коментар..."
+              rows={2}
+              className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 resize-none"
+            />
+            <button
+              type="button"
+              onClick={addComment}
+              disabled={!commentInput.trim()}
+              className="flex items-center gap-1.5 px-4 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-black/90 transition disabled:opacity-40 self-end"
+            >
+              <MessageSquarePlus className="w-4 h-4" />
+              +1
+            </button>
+          </div>
         </div>
 
         {/* Фото */}

@@ -2,13 +2,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
-import { isExternalImage } from "@/lib/cloudinary";
 import DeletePropertyButton from "@/components/admin/DeletePropertyButton";
 import ToggleStatusButton from "@/components/admin/ToggleStatusButton";
 import CopyAgentLinkButton from "@/components/admin/CopyAgentLinkButton";
-import { PlusCircle, Eye, Pencil, ImageOff, Sparkles } from "lucide-react";
+import AdminPropertyGallery from "@/components/admin/AdminPropertyGallery";
+import { PlusCircle, Eye, Pencil, Sparkles } from "lucide-react";
 
 async function getProperties(search?: string, role?: string, userId?: string) {
   const searchWhere = search
@@ -22,7 +21,7 @@ async function getProperties(search?: string, role?: string, userId?: string) {
 
   const properties = await prisma.property.findMany({
     where: searchWhere,
-    orderBy: { createdAt: "desc" },
+    orderBy: { updatedAt: "desc" },
     include: {
       images: { orderBy: { order: "asc" as const }, take: 5 },
       assignedUser: { select: { id: true, name: true, email: true } },
@@ -39,6 +38,10 @@ async function getProperties(search?: string, role?: string, userId?: string) {
 
 function isNew(createdAt: Date) {
   return Date.now() - new Date(createdAt).getTime() < 4 * 24 * 60 * 60 * 1000;
+}
+
+function fmtDate(d: Date) {
+  return new Date(d).toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export default async function AdminPropertiesPage({
@@ -101,67 +104,84 @@ export default async function AdminPropertiesPage({
         {properties.map((property) => {
           const isOwn = property.assignedUserId === userId;
           const canEdit = role === "ADMIN" || isOwn;
-          const mainImg = property.images.find((i) => i.isPrimary) ?? property.images[0];
-          const thumbs = property.images.filter((i) => i !== mainImg).slice(0, 4);
           const newProperty = isNew(property.createdAt);
           const isRent = property.listingType === "RENT";
 
+          const currPrice = Number(property.price);
+          const prevPrice = property.previousPrice ? Number(property.previousPrice) : null;
+          const priceChanged = prevPrice !== null && prevPrice !== currPrice;
+          const priceDrop = priceChanged && currPrice < prevPrice!;
+          const priceDiff = priceChanged ? Math.abs(currPrice - prevPrice!) : 0;
+
+          const editedLater =
+            new Date(property.updatedAt).getTime() - new Date(property.createdAt).getTime() > 60_000;
+
           return (
-            <div key={property.id} className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition overflow-hidden ${isOwn ? "border-gold-200" : "border-gray-100"}`}>
+            <div
+              key={property.id}
+              className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition overflow-hidden ${
+                isOwn ? "border-gold-200" : "border-gray-100"
+              }`}
+            >
               <div className="flex flex-col sm:flex-row">
-
-                {/* Main photo */}
-                <div className="relative sm:w-72 aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100 overflow-hidden">
-                  {mainImg ? (
-                    <Image src={mainImg.url} alt={property.titleUk} fill className="object-cover" sizes="288px" quality={65} unoptimized={isExternalImage(mainImg.url)} loading="lazy" placeholder="blur" blurDataURL="data:image/gif;base64,R0lGODlhAQABAIAAAMLCwgAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      <ImageOff className="w-8 h-8" />
-                    </div>
-                  )}
-                  {/* Badges */}
-                  <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    {newProperty && (
-                      <span className="flex items-center gap-1 text-[10px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full">
-                        <Sparkles className="w-2.5 h-2.5" /> НОВИНКА
-                      </span>
-                    )}
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isRent ? "bg-navy-700 text-white" : "bg-gold-400 text-white"}`}>
-                      {isRent ? "ОРЕНДА" : "ПРОДАЖ"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Thumbs 2×2 */}
-                {thumbs.length > 0 && (
-                  <div className="hidden sm:grid grid-cols-2 w-32 gap-0.5 flex-shrink-0 bg-gray-100">
-                    {[0,1,2,3].map((i) => thumbs[i] ? (
-                      <div key={i} className="relative aspect-square overflow-hidden">
-                        <Image src={thumbs[i].url} alt="" fill className="object-cover" sizes="48px" quality={40} unoptimized={isExternalImage(thumbs[i].url)} loading="lazy" />
-                      </div>
-                    ) : <div key={i} className="aspect-square bg-gray-50" />)}
-                  </div>
-                )}
+                {/* Gallery (client component — handles lightbox) */}
+                <AdminPropertyGallery
+                  images={property.images}
+                  title={property.titleUk}
+                  isNew={newProperty}
+                  isRent={isRent}
+                />
 
                 {/* Info */}
                 <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
                   <div>
                     <div className="flex items-start justify-between gap-2 mb-1">
-                      <Link href={`/uk/listings/${property.slug}`} target="_blank" className="font-semibold text-navy-900 hover:text-gold-500 transition line-clamp-2 text-sm leading-snug">
+                      <Link
+                        href={`/uk/listings/${property.slug}`}
+                        target="_blank"
+                        className="font-semibold text-navy-900 hover:text-gold-500 transition line-clamp-2 text-sm leading-snug"
+                      >
                         {property.titleUk}
                       </Link>
-                      <span className="text-base font-bold text-navy-900 whitespace-nowrap flex-shrink-0">
-                        {formatPrice(Number(property.price), property.currency)}
-                      </span>
+
+                      {/* Price + change */}
+                      <div className="flex-shrink-0 text-right">
+                        <div className="text-base font-bold text-navy-900 whitespace-nowrap">
+                          {formatPrice(currPrice, property.currency)}
+                        </div>
+                        {priceChanged && (
+                          <div>
+                            <div className="text-base font-bold text-gray-400 whitespace-nowrap">
+                              Зміна ціни
+                            </div>
+                            <div
+                              className={`text-sm font-bold whitespace-nowrap ${
+                                priceDrop ? "text-green-600" : "text-red-500"
+                              }`}
+                            >
+                              {priceDrop ? "↓ −" : "↑ +"}
+                              {formatPrice(priceDiff, property.currency)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-xs text-gray-400 mb-2">
+
+                    <p className="text-xs text-gray-400 mb-1">
                       {property.address ?? property.district ?? "—"}
                       {property.areaSqm ? ` · ${property.areaSqm} м²` : ""}
                       {property.rooms ? ` · ${property.rooms} кімн.` : ""}
-                      {property.floor && property.totalFloors ? ` · ${property.floor}/${property.totalFloors} пов.` : ""}
+                      {property.floor && property.totalFloors
+                        ? ` · ${property.floor}/${property.totalFloors} пов.`
+                        : ""}
                     </p>
+
+                    {/* Dates */}
                     <p className="text-[10px] text-gray-400">
-                      {new Date(property.createdAt).toLocaleDateString("uk-UA", { day: "numeric", month: "long", year: "numeric" })}
+                      {fmtDate(property.createdAt)}
+                      {editedLater && (
+                        <> · <span className="text-gray-400">ред. {fmtDate(property.updatedAt)}</span></>
+                      )}
                     </p>
                   </div>
 
@@ -169,12 +189,25 @@ export default async function AdminPropertiesPage({
                     {/* Status + agent */}
                     <div className="flex items-center gap-2 flex-wrap">
                       {canEdit ? (
-                        <ToggleStatusButton id={property.id} field="status" currentValue={property.status} isFeatured={property.isFeatured} />
+                        <ToggleStatusButton
+                          id={property.id}
+                          field="status"
+                          currentValue={property.status}
+                          isFeatured={property.isFeatured}
+                        />
                       ) : (
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">{property.status}</span>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
+                          {property.status}
+                        </span>
                       )}
                       {property.assignedUser && (
-                        <span className={`text-xs px-2 py-1 rounded-lg ${isOwn ? "bg-gold-100 text-gold-600 font-medium" : "bg-gray-100 text-gray-500"}`}>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-lg ${
+                            isOwn
+                              ? "bg-gold-100 text-gold-600 font-medium"
+                              : "bg-gray-100 text-gray-500"
+                          }`}
+                        >
                           {property.assignedUser.name ?? property.assignedUser.email}
                         </span>
                       )}
@@ -185,15 +218,28 @@ export default async function AdminPropertiesPage({
 
                     {/* Actions */}
                     <div className="flex items-center gap-2">
-                      <Link href={`/uk/listings/${property.slug}`} target="_blank" className="text-gray-400 hover:text-navy-900 transition p-1.5 rounded-lg hover:bg-gray-100" title="Переглянути на сайті">
+                      <Link
+                        href={`/uk/listings/${property.slug}`}
+                        target="_blank"
+                        className="text-gray-400 hover:text-navy-900 transition p-1.5 rounded-lg hover:bg-gray-100"
+                        title="Переглянути на сайті"
+                      >
                         <Eye className="w-4 h-4" />
                       </Link>
                       {currentUser?.agentToken && (
-                        <CopyAgentLinkButton slug={property.slug} locale="uk" agentToken={currentUser.agentToken} />
+                        <CopyAgentLinkButton
+                          slug={property.slug}
+                          locale="uk"
+                          agentToken={currentUser.agentToken}
+                        />
                       )}
                       {canEdit && (
                         <>
-                          <Link href={`/admin/properties/${property.id}`} className="text-gray-400 hover:text-navy-900 transition p-1.5 rounded-lg hover:bg-gray-100" title="Редагувати">
+                          <Link
+                            href={`/admin/properties/${property.id}`}
+                            className="text-gray-400 hover:text-navy-900 transition p-1.5 rounded-lg hover:bg-gray-100"
+                            title="Редагувати"
+                          >
                             <Pencil className="w-4 h-4" />
                           </Link>
                           {role === "ADMIN" && <DeletePropertyButton id={property.id} />}

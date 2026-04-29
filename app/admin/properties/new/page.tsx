@@ -12,6 +12,7 @@ export default async function NewPropertyPage() {
   const session = await getServerSession(authOptions);
   const role = (session?.user as any)?.role as "ADMIN" | "EMPLOYEE" ?? "EMPLOYEE";
   const currentUserId = (session?.user as any)?.id as string;
+  const currentUserName = (session?.user as any)?.name ?? (session?.user as any)?.email ?? "";
 
   const [employees, featureOptions] = await Promise.all([
     role === "ADMIN"
@@ -26,6 +27,7 @@ export default async function NewPropertyPage() {
       featureOptions={featureOptions}
       role={role}
       currentUserId={currentUserId}
+      currentUserName={currentUserName}
     />
   );
 }

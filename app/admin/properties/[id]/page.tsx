@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import PropertyForm from "@/components/admin/PropertyForm";
 import PropertyAuditLog from "@/components/admin/PropertyAuditLog";
 import PropertyOwnerSection from "@/components/admin/PropertyOwnerSection";
+import OlxPublishButton from "@/components/admin/OlxPublishButton";
 
 export const metadata = {
   title: "Редагування | Admin",
@@ -18,6 +19,7 @@ export default async function EditPropertyPage({
   const session = await getServerSession(authOptions);
   const role = (session?.user as any)?.role as "ADMIN" | "EMPLOYEE" ?? "EMPLOYEE";
   const currentUserId = (session?.user as any)?.id as string;
+  const currentUserName = (session?.user as any)?.name ?? (session?.user as any)?.email ?? "";
 
   const property = await prisma.property.findUnique({
     where: { id },
@@ -69,6 +71,7 @@ export default async function EditPropertyPage({
         features: property.features,
         isFeatured: property.isFeatured,
         assignedUserId: property.assignedUserId,
+        agentComments: (property.agentComments as any) ?? [],
         images: property.images.map((img) => ({
           id: img.id,
           url: img.url,
@@ -79,6 +82,7 @@ export default async function EditPropertyPage({
       featureOptions={featureOptions}
       role={role}
       currentUserId={currentUserId}
+      currentUserName={currentUserName}
     />
     {/* Owner section — visible to admin and assigned agent */}
     {(role === "ADMIN" || property.assignedUserId === currentUserId) && (
@@ -86,6 +90,16 @@ export default async function EditPropertyPage({
         <PropertyOwnerSection
           propertyId={property.id}
           currentOwner={property.ownerContact ?? null}
+        />
+      </div>
+    )}
+    {/* OLX publish */}
+    {(role === "ADMIN" || property.assignedUserId === currentUserId) && (
+      <div className="max-w-5xl mx-auto px-4 pb-4">
+        <OlxPublishButton
+          propertyId={property.id}
+          initialAdId={property.olxAdId ?? null}
+          initialPublishedAt={property.olxPublishedAt ?? null}
         />
       </div>
     )}
