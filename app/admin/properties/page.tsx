@@ -131,7 +131,7 @@ export default async function AdminPropertiesPage({
                 isOwn ? "border-gold-200" : "border-gray-100"
               }`}
             >
-              <div className="flex flex-col sm:flex-row">
+              <div className="flex flex-col sm:grid sm:grid-cols-[46%_54%]">
                 {/* Gallery */}
                 <AdminPropertyGallery
                   images={property.images}
@@ -141,7 +141,7 @@ export default async function AdminPropertiesPage({
                 />
 
                 {/* Info — styl katalogu klienta */}
-                <div className="flex-1 p-4 sm:p-5 flex flex-col justify-between min-w-0">
+                <div className="p-4 sm:p-5 flex flex-col justify-between min-w-0">
                   <div>
                     {/* Price */}
                     <div className="mb-2">

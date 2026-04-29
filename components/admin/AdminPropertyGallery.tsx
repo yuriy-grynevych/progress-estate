@@ -46,13 +46,15 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
     setTouchStart(null);
   }
 
+  const thumbRows = Math.min(Math.ceil(thumbs.length / 2), 2);
+
   return (
     <>
-      {/* Gallery — fills full card height */}
-      <div className="flex flex-shrink-0 sm:self-stretch">
-        {/* Main image — no fixed aspect ratio on desktop, fills height */}
+      {/* Gallery — fills grid cell completely */}
+      <div className={`grid w-full h-full min-h-[220px] ${thumbs.length > 0 ? "sm:grid-cols-[62%_38%]" : ""}`}>
+        {/* Main image — fills its grid cell */}
         <div
-          className="relative w-[260px] sm:w-[360px] aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100 overflow-hidden cursor-pointer"
+          className="relative overflow-hidden cursor-pointer bg-gray-100"
           onClick={() => mainImg && openAt(mainImg)}
         >
           {mainImg ? (
@@ -61,7 +63,7 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
               alt={title}
               fill
               className="object-cover"
-              sizes="(max-width: 640px) 260px, 360px"
+              sizes="50vw"
               quality={70}
               unoptimized={isExternalImage(mainImg.url)}
               loading="lazy"
@@ -90,11 +92,11 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
           </div>
         </div>
 
-        {/* Thumbnails — 2×2 grid, fills full card height */}
+        {/* Thumbnails 2×2 — 38% of gallery width (grid column), fills full height */}
         {thumbs.length > 0 && (
           <div
-            className="hidden sm:grid grid-cols-2 w-[148px] flex-shrink-0 gap-0.5 bg-gray-100 self-stretch"
-            style={{ gridTemplateRows: `repeat(${Math.min(Math.ceil(thumbs.length / 2), 2)}, 1fr)` }}
+            className="hidden sm:grid grid-cols-2 gap-0.5 bg-gray-100"
+            style={{ gridTemplateRows: `repeat(${thumbRows}, 1fr)` }}
           >
             {thumbs.map((thumb, i) => (
               <div
@@ -107,7 +109,7 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
                   alt=""
                   fill
                   className="object-cover hover:opacity-90 transition"
-                  sizes="74px"
+                  sizes="15vw"
                   quality={45}
                   unoptimized={isExternalImage(thumb.url)}
                   loading="lazy"
