@@ -7,6 +7,7 @@ import DeletePropertyButton from "@/components/admin/DeletePropertyButton";
 import ToggleStatusButton from "@/components/admin/ToggleStatusButton";
 import CopyAgentLinkButton from "@/components/admin/CopyAgentLinkButton";
 import AdminPropertyGallery from "@/components/admin/AdminPropertyGallery";
+import AgentCommentsToggle from "@/components/admin/AgentCommentsToggle";
 import { PlusCircle, Eye, Pencil } from "lucide-react";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -209,6 +210,7 @@ export default async function AdminPropertiesPage({
                         <> · <span className="font-medium text-gray-500">Ред.:</span> {fmtDate(property.updatedAt)}</>
                       )}
                     </p>
+                    <AgentCommentsToggle comments={(property.agentComments as any) ?? []} />
                   </div>
 
                   {/* Bottom: status + actions */}
