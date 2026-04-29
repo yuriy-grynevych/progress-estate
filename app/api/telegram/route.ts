@@ -11,11 +11,17 @@ interface SessionWaitingPhone { step: "waiting_phone"; name: string; history: { 
 const sessions = new Map<number, SessionWaitingName | SessionWaitingPhone>();
 const chatHistories = new Map<number, { role: string; content: string }[]>();
 
-async function sendMessage(chatId: number | string, text: string) {
+async function sendMessage(
+  chatId: number | string,
+  text: string,
+  buttons?: { text: string; url?: string; callback_data?: string }[][]
+) {
+  const body: Record<string, unknown> = { chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true };
+  if (buttons?.length) body.reply_markup = { inline_keyboard: buttons };
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: chatId, text, parse_mode: "HTML" }),
+    body: JSON.stringify(body),
   });
 }
 
@@ -183,6 +189,55 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
+
+  // ── callback_query (inline keyboard buttons) ─────────────────────
+  const callbackQuery = body?.callback_query;
+  if (callbackQuery) {
+    const cbChatId: number = callbackQuery.message?.chat?.id;
+    const data: string = callbackQuery.data ?? "";
+    const messageId: number = callbackQuery.message?.message_id;
+
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackQuery.id }),
+    });
+
+    if (data.startsWith("done_")) {
+      const contactId = data.replace("done_", "");
+      try {
+        await prisma.contact.update({
+          where: { id: contactId },
+          data: { followUpAt: null, followUpSent: false },
+        });
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageReplyMarkup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: cbChatId, message_id: messageId, reply_markup: { inline_keyboard: [] } }),
+        });
+        await sendMessage(String(cbChatId), "✅ Нагадування виконано і знято!");
+      } catch {}
+    } else if (data.startsWith("snooze_")) {
+      const contactId = data.replace("snooze_", "");
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      try {
+        await prisma.contact.update({
+          where: { id: contactId },
+          data: { followUpAt: tomorrow, followUpSent: false },
+        });
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageReplyMarkup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: cbChatId, message_id: messageId, reply_markup: { inline_keyboard: [] } }),
+        });
+        await sendMessage(String(cbChatId), `⏰ Нагадування відкладено на завтра (${tomorrow.toLocaleDateString("uk-UA")}).`);
+      } catch {}
+    }
+
+    return NextResponse.json({ ok: true });
+  }
+
   const message = body?.message;
   if (!message) return NextResponse.json({ ok: true });
 
@@ -236,14 +291,30 @@ export async function POST(req: NextRequest) {
     });
 
     if (contacts.length === 0) {
-      await sendMessage(chatId, "✅ Немає нагадувань на найближчі 7 днів!");
+      await sendMessage(chatId, "✅ Немає нагадувань на найближчі 7 днів!\n\n<i>Додайте дату в картці контакту на сайті.</i>");
     } else {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
       const lines = contacts.map((c) => {
-        const date = c.followUpAt!.toLocaleDateString("uk-UA");
+        const d = c.followUpAt!;
+        const isOverdue = d < todayStart;
+        const isToday = d >= todayStart && d < new Date(todayStart.getTime() + 86400000);
+        const dateStr = d.toLocaleDateString("uk-UA", { day: "numeric", month: "long" });
+        const flag = isOverdue ? "🔴" : isToday ? "🟡" : "🟢";
         const typeLabel = c.type === "CLIENT" ? "Клієнт" : "Власник";
-        return `• <b>${c.name}</b> (${typeLabel}) — ${date}${c.phone ? `\n  📞 ${c.phone}` : ""}${c.notes ? `\n  💬 ${c.notes.slice(0, 60)}` : ""}`;
+        const parts = [`${flag} <b>${c.name}</b>  <i>${typeLabel}</i>  — ${dateStr}`];
+        if (c.phone) parts.push(`   📞 <code>${c.phone}</code>`);
+        if (c.notes) parts.push(`   💬 ${c.notes.slice(0, 50)}`);
+        return parts.join("\n");
       });
-      await sendMessage(chatId, `📋 <b>Ваші нагадування:</b>\n\n${lines.join("\n\n")}`);
+
+      const APP_URL = process.env.NEXTAUTH_URL ?? "https://progress-estate.com.ua";
+      await sendMessage(
+        chatId,
+        `📋 <b>Нагадування на 7 днів (${contacts.length}):</b>\n\n${lines.join("\n\n")}`,
+        [[{ text: "📂 Відкрити всі в CRM", url: `${APP_URL}/admin/reminders` }]]
+      );
     }
     return NextResponse.json({ ok: true });
   }

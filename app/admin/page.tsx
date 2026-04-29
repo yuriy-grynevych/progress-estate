@@ -3,7 +3,22 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
-import { Building2, MessageSquare, Eye, Star, Sparkles, ImageOff } from "lucide-react";
+import { Building2, MessageSquare, Eye, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone } from "lucide-react";
+
+async function getTodayReminders(role: string, userId: string) {
+  const now = new Date();
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const where =
+    role === "ADMIN"
+      ? { followUpAt: { not: null, lte: todayEnd } }
+      : { followUpAt: { not: null, lte: todayEnd }, assignedUserId: userId };
+  return prisma.contact.findMany({
+    where,
+    orderBy: { followUpAt: "asc" },
+    take: 5,
+    select: { id: true, name: true, phone: true, type: true, followUpAt: true },
+  });
+}
 
 async function getStats(role: string, userId: string) {
   const propertyWhere = role === "ADMIN" ? {} : { assignedUserId: userId };
@@ -75,8 +90,10 @@ export default async function AdminDashboard() {
   const role = (session?.user as any)?.role as string ?? "EMPLOYEE";
   const userId = (session?.user as any)?.id as string;
 
-  const { activeProperties, totalProperties, newInquiries, totalViews, recentInquiries, recentProperties } =
-    await getStats(role, userId);
+  const [
+    { activeProperties, totalProperties, newInquiries, totalViews, recentInquiries, recentProperties },
+    todayReminders,
+  ] = await Promise.all([getStats(role, userId), getTodayReminders(role, userId)]);
 
   const isNew = (d: Date) => Date.now() - new Date(d).getTime() < 4 * 24 * 60 * 60 * 1000;
 
@@ -197,6 +214,50 @@ export default async function AdminDashboard() {
           ))}
         </div>
       </div>
+
+      {/* Reminders widget */}
+      {todayReminders.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-amber-500" />
+              <h2 className="font-semibold text-navy-900">Нагадування на сьогодні</h2>
+              <span className="text-xs font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                {todayReminders.length}
+              </span>
+            </div>
+            <Link href="/admin/reminders" className="text-sm text-gold-500 hover:text-gold-600">
+              Всі →
+            </Link>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {todayReminders.map((c) => {
+              const isOverdue = new Date(c.followUpAt!) < new Date(new Date().setHours(0,0,0,0));
+              return (
+                <div key={c.id} className="px-6 py-3 flex items-center gap-3">
+                  {isOverdue
+                    ? <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                    : <Bell className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  }
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-navy-900">{c.name}</span>
+                    <span className={`ml-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      c.type === "CLIENT" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+                    }`}>
+                      {c.type === "CLIENT" ? "Клієнт" : "Власник"}
+                    </span>
+                  </div>
+                  {c.phone && (
+                    <a href={`tel:${c.phone}`} className="flex items-center gap-1 text-xs text-gray-400 hover:text-navy-900 transition flex-shrink-0">
+                      <Phone className="w-3 h-3" />{c.phone}
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import FeaturesManager from "@/components/admin/FeaturesManager";
 import DistrictsManager from "@/components/admin/DistrictsManager";
 import CompanySettingsForm from "@/components/admin/CompanySettingsForm";
+import EmailSettingsForm from "@/components/admin/EmailSettingsForm";
+import OlxSettingsForm from "@/components/admin/OlxSettingsForm";
 import { getCompanySettings } from "@/lib/company";
 
 async function getDistricts() {
@@ -57,6 +59,24 @@ export default async function SettingsPage() {
           Райони, які відображаються у пошуку та формі нерухомості.
         </p>
         <DistrictsManager initialDistricts={districts} />
+      </div>
+
+      {/* Email SMTP settings */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <h2 className="font-semibold text-navy-900 mb-1">Email (SMTP)</h2>
+        <p className="text-xs text-gray-400 mb-5">
+          Налаштування для надсилання листів клієнтам з CRM. Підтримує Gmail, Outlook, і будь-який SMTP.
+        </p>
+        <EmailSettingsForm />
+      </div>
+
+      {/* OLX integration settings */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <h2 className="font-semibold text-navy-900 mb-1">OLX інтеграція</h2>
+        <p className="text-xs text-gray-400 mb-5">
+          Підключіть OLX Partner API для публікації оголошень безпосередньо з картки нерухомості.
+        </p>
+        <OlxSettingsForm />
       </div>
 
       {/* Quick links */}
