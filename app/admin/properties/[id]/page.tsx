@@ -64,6 +64,8 @@ export default async function EditPropertyPage({
         yearBuilt: property.yearBuilt,
         district: property.district ?? "",
         address: property.address ?? "",
+        residentialComplex: (property as any).residentialComplex ?? "",
+        landmark: (property as any).landmark ?? "",
         latitude: property.latitude,
         longitude: property.longitude,
         descriptionUk: property.descriptionUk,

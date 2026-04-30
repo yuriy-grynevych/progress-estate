@@ -13,6 +13,7 @@ import {
   CURRENCIES,
   DISTRICTS_IF,
   PROPERTY_FEATURES,
+  RESIDENTIAL_COMPLEXES_IF,
 } from "@/lib/constants";
 import ImageUploader from "./ImageUploader";
 
@@ -39,6 +40,8 @@ const schema = z.object({
   renovationType: z.string().optional().nullable(),
   wallType: z.string().optional().nullable(),
   houseNumber: z.string().optional().nullable(),
+  residentialComplex: z.string().optional().nullable(),
+  landmark: z.string().optional().nullable(),
   district: z.string().optional(),
   address: z.string().optional(),
   latitude: z.number().nullable().optional(),
@@ -270,6 +273,8 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
       renovationType: (initialData as any)?.renovationType ?? "",
       wallType: (initialData as any)?.wallType ?? "",
       houseNumber: (initialData as any)?.houseNumber ?? "",
+      residentialComplex: (initialData as any)?.residentialComplex ?? "",
+      landmark: (initialData as any)?.landmark ?? "",
       district: initialData?.district ?? "",
       address: initialData?.address ?? "",
       latitude: initialData?.latitude ?? null,
@@ -577,6 +582,27 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
           <div>
             <FieldLabel>Адреса</FieldLabel>
             <Input {...register("address")} placeholder="вул. Незалежності, 15, Івано-Франківськ" />
+          </div>
+          <div>
+            <FieldLabel>Житловий комплекс</FieldLabel>
+            <input
+              {...register("residentialComplex")}
+              list="complexes-list"
+              placeholder="Назва ЖК або адреса..."
+              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 focus:border-navy-900"
+            />
+            <datalist id="complexes-list">
+              {RESIDENTIAL_COMPLEXES_IF.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
+          </div>
+          <div>
+            <FieldLabel>Орієнтир</FieldLabel>
+            <Input
+              {...register("landmark")}
+              placeholder="Поруч із ТЦ Атріум, навпроти ринку..."
+            />
           </div>
           <div>
             <FieldLabel>Місцезнаходження на карті</FieldLabel>

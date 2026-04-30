@@ -23,6 +23,8 @@ export const propertySchema = z.object({
   renovationType: z.string().optional().nullable(),
   wallType: z.string().optional().nullable(),
   houseNumber: z.string().optional().nullable(),
+  residentialComplex: z.string().optional().nullable(),
+  landmark: z.string().optional().nullable(),
   city: z.string().default("Івано-Франківськ"),
   district: z.string().optional().nullable(),
   address: z.string().optional().nullable(),

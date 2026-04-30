@@ -51,6 +51,35 @@ export const PROPERTY_FEATURES = [
   { value: "open_plan", labelUk: "Відкрите планування", labelEn: "Open Plan", icon: "layout" },
 ] as const;
 
+export const RESIDENTIAL_COMPLEXES_IF = [
+  "Атріум",
+  "Парковий квартал",
+  "Паркова Оселя",
+  "Містечко Лева",
+  "Greenville Park",
+  "Ренесанс",
+  "Новий Берег",
+  "Авалон",
+  "Дніпровський квартал",
+  "Містечко Янівське",
+  "Квартал Щасливий",
+  "Галицький Квартал",
+  "Ізумрудний",
+  "Panorama",
+  "Smart House",
+  "Вілла Флоренція",
+  "вул. Коновальця, 102",
+  "вул. Коновальця, 124",
+  "вул. Коновальця, 260",
+  "вул. Короля Данила, 11",
+  "вул. Ленкавського, 28а",
+  "вул. Сахарова, 29",
+  "вул. Хоткевича, 12",
+  "вул. Незалежності, 45",
+  "вул. Вовчинецька, 100",
+  "вул. Галицька, 37",
+] as const;
+
 export const SORT_OPTIONS = [
   { value: "createdAt_desc", labelUk: "Нові спочатку", labelEn: "Newest First" },
   { value: "price_asc", labelUk: "Ціна: зростання", labelEn: "Price: Low to High" },
