@@ -222,10 +222,9 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
       {/* ── ПРОДАЖ / ОРЕНДА / ПОДОБОВО ── */}
       <div className="flex gap-1.5 p-1 bg-gray-100 rounded-2xl">
         {[
-          { v: "",           uk: "Всі",      en: "All" },
-          { v: "SALE",       uk: "Продаж",   en: "Sale" },
-          { v: "RENT",       uk: "Оренда",   en: "Rent" },
-          { v: "DAILY_RENT", uk: "Подобово", en: "Daily" },
+          { v: "",     uk: "Всі",    en: "All" },
+          { v: "SALE", uk: "Продаж", en: "Sale" },
+          { v: "RENT", uk: "Оренда", en: "Rent" },
         ].map((o) => (
           <button key={o.v} onClick={() => set("listingType", o.v || null)}
             className={cn(
