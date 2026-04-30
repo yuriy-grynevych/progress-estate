@@ -231,7 +231,6 @@ function FeatureTab({
 export default function PropertyForm({ initialData, employees = [], featureOptions, role = "EMPLOYEE", currentUserId, currentUserName }: PropertyFormProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [translating, setTranslating] = useState(false);
   const [propertyId, setPropertyId] = useState(initialData?.id ?? "new");
   const [images, setImages] = useState<PropertyImage[]>(initialData?.images ?? []);
   const [comments, setComments] = useState<AgentComment[]>(
@@ -283,8 +282,6 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
     },
   });
 
-  const selectedFeatures = watch("features");
-
   function addComment() {
     const text = commentInput.trim();
     if (!text) return;
@@ -295,15 +292,6 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
     setCommentInput("");
   }
 
-  function toggleFeature(value: string) {
-    const current = selectedFeatures ?? [];
-    if (current.includes(value)) {
-      setValue("features", current.filter((f) => f !== value));
-    } else {
-      setValue("features", [...current, value]);
-    }
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function onSubmit(data: any) {
     setSaving(true);
@@ -311,8 +299,23 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
     const url = isEdit ? `/api/properties/${initialData!.id}` : "/api/properties";
 
     const toN = (v: unknown) => { const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
+
+    let descriptionEn = data.descriptionEn ?? "";
+    if (data.descriptionUk?.trim()) {
+      try {
+        const tr = await fetch("/api/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: data.descriptionUk }),
+        });
+        const trData = await tr.json();
+        if (trData.translated) descriptionEn = trData.translated;
+      } catch {}
+    }
+
     const body = {
       ...data,
+      descriptionEn,
       rooms: toN(data.rooms),
       bedrooms: toN(data.bedrooms),
       bathrooms: toN(data.bathrooms),
@@ -586,16 +589,6 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
               }}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <FieldLabel>Широта</FieldLabel>
-              <Input type="number" step="any" {...register("latitude")} placeholder="48.9226" />
-            </div>
-            <div>
-              <FieldLabel>Довгота</FieldLabel>
-              <Input type="number" step="any" {...register("longitude")} placeholder="24.7111" />
-            </div>
-          </div>
         </div>
 
         {/* Опис */}
@@ -612,54 +605,6 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
               render={({ field }) => <TiptapEditor value={field.value} onChange={field.onChange} />}
             />
           </div>
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <FieldLabel>Опис (EN)</FieldLabel>
-              <button
-                type="button"
-                disabled={translating}
-                onClick={async () => {
-                  const ukText = watch("descriptionUk");
-                  if (!ukText?.trim()) return alert("Спочатку заповніть опис українською.");
-                  setTranslating(true);
-                  try {
-                    const res = await fetch("/api/translate", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ text: ukText }),
-                    });
-                    const data = await res.json();
-                    if (data.translated) setValue("descriptionEn", data.translated);
-                  } finally {
-                    setTranslating(false);
-                  }
-                }}
-                className="text-xs px-3 py-1.5 bg-black text-white rounded-lg hover:bg-black/80 transition disabled:opacity-50 flex items-center gap-1.5"
-              >
-                {translating ? "Перекладаю…" : "🤖 Перекласти з UA"}
-              </button>
-            </div>
-            <Controller
-              name="descriptionEn"
-              control={control}
-              render={({ field }) => <TiptapEditor value={field.value} onChange={field.onChange} />}
-            />
-          </div>
-        </div>
-
-        {/* Зручності */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
-            <span className="w-1 h-5 bg-purple-500 rounded-full inline-block" />
-            Зручності
-          </h2>
-          <FeatureTab
-            selectedFeatures={selectedFeatures ?? []}
-            predefinedFeatures={featureOptions ?? PROPERTY_FEATURES.map((f) => ({ id: f.value, value: f.value, labelUk: f.labelUk, labelEn: f.labelEn }))}
-            onToggle={toggleFeature}
-            onAdd={(val) => setValue("features", [...(selectedFeatures ?? []), val] as any)}
-            onRemoveCustom={(val) => setValue("features", (selectedFeatures ?? []).filter((f) => f !== val) as any)}
-          />
         </div>
 
         {/* Коментарі агента */}

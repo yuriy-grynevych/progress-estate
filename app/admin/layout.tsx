@@ -27,7 +27,7 @@ export default async function AdminLayout({
       <NextTopLoader color="#D4A017" height={3} showSpinner={false} />
       <div className="flex h-screen bg-gray-100 overflow-hidden">
         {/* Sidebar – desktop */}
-        <aside className="hidden lg:flex lg:flex-col w-64 flex-shrink-0">
+        <aside className="hidden lg:flex lg:flex-col w-64 flex-shrink-0 overflow-y-auto">
           <AdminSidebar role={role} />
         </aside>
 
