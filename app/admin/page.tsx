@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
-import { Building2, MessageSquare, Eye, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone } from "lucide-react";
+import { Building2, MessageSquare, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone, Users, TrendingUp, Quote } from "lucide-react";
 
 async function getTodayReminders(role: string, userId: string) {
   const now = new Date();
@@ -22,17 +22,22 @@ async function getTodayReminders(role: string, userId: string) {
 
 async function getStats(role: string, userId: string) {
   const propertyWhere = role === "ADMIN" ? {} : { assignedUserId: userId };
-
   const inquiryWhere =
     role === "ADMIN"
       ? {}
       : { OR: [{ propertyId: null }, { property: { assignedUserId: userId } }] };
 
-  const [activeProperties, totalProperties, newInquiries, totalViews] = await Promise.all([
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+  const [activeProperties, totalProperties, newInquiries, totalContacts] = await Promise.all([
     prisma.property.count({ where: { ...propertyWhere, status: "ACTIVE" } }),
     prisma.property.count({ where: propertyWhere }),
     prisma.inquiry.count({ where: { ...inquiryWhere, status: "NEW" } }),
-    prisma.property.aggregate({ _sum: { viewCount: true }, where: propertyWhere }),
+    prisma.contact.count(
+      role === "ADMIN"
+        ? {}
+        : { where: { assignedUserId: userId } }
+    ),
   ]);
 
   const recentInquiries = await prisma.inquiry.findMany({
@@ -53,24 +58,29 @@ async function getStats(role: string, userId: string) {
     activeProperties,
     totalProperties,
     newInquiries,
-    totalViews: totalViews._sum.viewCount ?? 0,
+    totalContacts,
     recentInquiries,
     recentProperties,
   };
 }
 
+async function getTestimonialsForAdmin() {
+  const [total, published, recent] = await Promise.all([
+    prisma.testimonial.count(),
+    prisma.testimonial.count({ where: { isPublished: true } }),
+    prisma.testimonial.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 3,
+      select: { id: true, authorName: true, authorRole: true, contentUk: true, rating: true, isPublished: true },
+    }),
+  ]);
+  return { total, published, recent };
+}
+
 function StatCard({
-  icon,
-  label,
-  value,
-  href,
-  color,
+  icon, label, value, href, color,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  href: string;
-  color: string;
+  icon: React.ReactNode; label: string; value: number; href: string; color: string;
 }) {
   return (
     <Link href={href} className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition flex items-center gap-4">
@@ -91,9 +101,14 @@ export default async function AdminDashboard() {
   const userId = (session?.user as any)?.id as string;
 
   const [
-    { activeProperties, totalProperties, newInquiries, totalViews, recentInquiries, recentProperties },
+    { activeProperties, totalProperties, newInquiries, totalContacts, recentInquiries, recentProperties },
     todayReminders,
-  ] = await Promise.all([getStats(role, userId), getTodayReminders(role, userId)]);
+    testimonialsData,
+  ] = await Promise.all([
+    getStats(role, userId),
+    getTodayReminders(role, userId),
+    role === "ADMIN" ? getTestimonialsForAdmin() : Promise.resolve(null),
+  ]);
 
   const isNew = (d: Date) => Date.now() - new Date(d).getTime() < 4 * 24 * 60 * 60 * 1000;
 
@@ -125,11 +140,11 @@ export default async function AdminDashboard() {
           color="bg-blue-50"
         />
         <StatCard
-          icon={<Eye className="w-6 h-6 text-gold-600" />}
-          label="Загальні перегляди"
-          value={totalViews}
-          href="/admin/properties"
-          color="bg-gold-50"
+          icon={<Users className="w-6 h-6 text-emerald-600" />}
+          label={role === "ADMIN" ? "Контактів у базі" : "Мої контакти"}
+          value={totalContacts}
+          href="/admin/contacts"
+          color="bg-emerald-50"
         />
       </div>
 
@@ -141,32 +156,50 @@ export default async function AdminDashboard() {
             Всі →
           </Link>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+        <div className="divide-y divide-gray-50">
           {recentProperties.map((p) => {
             const img = p.images[0];
             const fresh = isNew(p.createdAt);
+            const isRent = p.listingType !== "SALE";
             return (
               <Link key={p.id} href={`/admin/properties/${p.id}`}
-                className="group flex gap-3 p-3 rounded-xl hover:bg-gray-50 transition border border-gray-100">
-                <div className="relative w-20 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+                className="group flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition">
+                {/* Thumbnail */}
+                <div className="relative w-16 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
                   {img ? (
-                    <Image src={img.url} alt={p.titleUk} fill className="object-cover" sizes="80px" />
+                    <Image src={img.url} alt={p.titleUk} fill className="object-cover" sizes="64px" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300">
-                      <ImageOff className="w-5 h-5" />
+                      <ImageOff className="w-4 h-4" />
                     </div>
                   )}
                 </div>
+                {/* Info */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-1 mb-0.5">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      isRent ? "bg-navy-100 text-navy-700" : "bg-gold-100 text-gold-700"
+                    }`}>
+                      {p.listingType === "SALE" ? "Продаж" : p.listingType === "RENT" ? "Оренда" : "Подобово"}
+                    </span>
                     {fresh && (
-                      <span className="flex items-center gap-0.5 text-[9px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full flex-shrink-0">
-                        <Sparkles className="w-2 h-2" />НОВИНКА
+                      <span className="flex items-center gap-0.5 text-[9px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-full">
+                        <Sparkles className="w-2 h-2" /> НОВЕ
                       </span>
                     )}
                   </div>
-                  <p className="text-sm font-medium text-navy-900 group-hover:text-gold-500 transition line-clamp-2 leading-snug">
+                  <p className="text-sm font-semibold text-navy-900 group-hover:text-gold-500 transition truncate leading-snug">
                     {p.titleUk}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {p.district && <span>{p.district} · </span>}
+                    {p.areaSqm}м²{p.rooms ? ` · ${p.rooms} кімн.` : ""}
+                  </p>
+                </div>
+                {/* Date + price */}
+                <div className="text-right flex-shrink-0">
+                  <p className="text-sm font-bold text-navy-900">
+                    {Number(p.price).toLocaleString("uk-UA")} {p.currency}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">
                     {new Date(p.createdAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
@@ -198,9 +231,7 @@ export default async function AdminDashboard() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm text-navy-900">{inq.name}</span>
-                  <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
-                    Нове
-                  </span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">Нове</span>
                 </div>
                 <p className="text-gray-500 text-xs truncate mt-0.5">{inq.message}</p>
                 {inq.property && (
@@ -214,6 +245,52 @@ export default async function AdminDashboard() {
           ))}
         </div>
       </div>
+
+      {/* Testimonials — ADMIN ONLY */}
+      {role === "ADMIN" && testimonialsData && (
+        <div className="bg-white rounded-2xl shadow-sm">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <Quote className="w-4 h-4 text-gold-500" />
+              <h2 className="font-semibold text-navy-900">Відгуки клієнтів</h2>
+              <span className="text-xs font-semibold bg-gold-100 text-gold-700 px-2 py-0.5 rounded-full">
+                {testimonialsData.published} опубл. / {testimonialsData.total} всього
+              </span>
+            </div>
+            <Link href="/admin/testimonials" className="text-sm text-gold-500 hover:text-gold-600">
+              Управляти →
+            </Link>
+          </div>
+          {testimonialsData.recent.length === 0 ? (
+            <p className="text-gray-400 text-sm px-6 py-4">Відгуків ще немає</p>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {testimonialsData.recent.map((t) => (
+                <div key={t.id} className="px-6 py-4 flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-gold-100 flex items-center justify-center flex-shrink-0 text-gold-700 font-bold text-sm">
+                    {t.authorName[0]?.toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-medium text-sm text-navy-900">{t.authorName}</span>
+                      {t.authorRole && <span className="text-xs text-gray-400">{t.authorRole}</span>}
+                      <span className="flex gap-0.5 ml-1">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={`w-3 h-3 ${i < t.rating ? "text-gold-400 fill-gold-400" : "text-gray-200 fill-gray-200"}`} />
+                        ))}
+                      </span>
+                      {!t.isPublished && (
+                        <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">Чернетка</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 line-clamp-2">{t.contentUk}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Reminders widget */}
       {todayReminders.length > 0 && (
@@ -261,32 +338,21 @@ export default async function AdminDashboard() {
 
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Link
-          href="/admin/properties/new"
-          className="bg-black text-white rounded-2xl p-5 hover:bg-black/90 transition"
-        >
+        <Link href="/admin/properties/new" className="bg-black text-white rounded-2xl p-5 hover:bg-black/90 transition">
           <Building2 className="w-6 h-6 mb-2" />
           <p className="font-semibold">Додати нерухомість</p>
           <p className="text-white/60 text-sm mt-0.5">Нове оголошення</p>
         </Link>
-        <Link
-          href="/admin/inquiries"
-          className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition"
-        >
+        <Link href="/admin/contacts" className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition">
+          <Users className="w-6 h-6 mb-2 text-navy-900" />
+          <p className="font-semibold text-navy-900">Контакти</p>
+          <p className="text-gray-400 text-sm mt-0.5">Клієнти та власники</p>
+        </Link>
+        <Link href="/admin/inquiries" className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition">
           <MessageSquare className="w-6 h-6 mb-2 text-navy-900" />
           <p className="font-semibold text-navy-900">Запити клієнтів</p>
           <p className="text-gray-400 text-sm mt-0.5">Переглянути всі</p>
         </Link>
-        {role === "ADMIN" && (
-          <Link
-            href="/admin/testimonials"
-            className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition"
-          >
-            <Star className="w-6 h-6 mb-2 text-navy-900" />
-            <p className="font-semibold text-navy-900">Відгуки</p>
-            <p className="text-gray-400 text-sm mt-0.5">Управляти відгуками</p>
-          </Link>
-        )}
       </div>
     </div>
   );

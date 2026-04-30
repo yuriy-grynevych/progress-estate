@@ -74,6 +74,7 @@ export const DISTRICTS_IF = [
   { value: "Микитинці",           labelUk: "Микитинці",           labelEn: "Mykytyntsi" },
   { value: "Чукалівка",           labelUk: "Чукалівка",           labelEn: "Chukalivka" },
   { value: "Калинова Слобода",    labelUk: "Калинова Слобода",    labelEn: "Kalynova Sloboda" },
+  { value: "Озеро",               labelUk: "Озеро",               labelEn: "Ozero" },
 ] as const;
 
 export const PROPERTY_FEATURES = [
