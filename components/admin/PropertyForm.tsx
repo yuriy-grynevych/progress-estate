@@ -618,7 +618,7 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             Локалізація
           </h2>
           <div>
-            <FieldLabel>Район</FieldLabel>
+            <FieldLabel required>Район</FieldLabel>
             <Select {...register("district")}>
               <option value="">— Не вказано —</option>
               {DISTRICTS_IF.map((d) => (
