@@ -615,12 +615,13 @@ export default function PropertyForm({
                   <Controller name="price" control={control}
                     render={({ field: { onChange, value, ref, name } }) => (
                       <Input type="number" name={name} ref={ref} value={value ?? ""} placeholder="50 000"
-                        className="flex-1"
                         onChange={(e) => { const v = parseFloat(e.target.value); onChange(isNaN(v) ? undefined : v); }} />
                     )} />
-                  <FSelect {...register("currency")} className="w-20">
-                    {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </FSelect>
+                  <div className="w-20 flex-shrink-0">
+                    <FSelect {...register("currency")}>
+                      {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </FSelect>
+                  </div>
                 </div>
                 {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message as string}</p>}
               </div>
