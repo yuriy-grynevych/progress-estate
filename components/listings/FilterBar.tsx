@@ -150,7 +150,7 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
   const extraActiveCount = [
     sp.areaMin, sp.areaMax, sp.floorMin, sp.floorMax, sp.developer,
     sp.complex, sp.district, sp.govProgram, sp.renovationType, sp.wallType,
-    sp.gasType, sp.search,
+    sp.gasType, sp.search, sp.type,
   ].filter(Boolean).length;
 
   const buildParams = (overrides: Record<string, string | null>) => {
@@ -237,27 +237,6 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
             {isUk ? o.uk : o.en}
           </button>
         ))}
-      </div>
-
-      {/* ── ТИП НЕРУХОМОСТІ ── */}
-      <div>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">
-          {isUk ? "Тип нерухомості" : "Property type"}
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          {PRIMARY_TYPES.map((pt) => (
-            <button key={pt.value}
-              onClick={() => set("type", propertyType === pt.value ? null : pt.value)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150",
-                propertyType === pt.value
-                  ? "bg-navy-900 text-white border-navy-900"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-navy-300 hover:text-navy-900"
-              )}>
-              {isUk ? pt.uk : pt.en}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* ── ЦІНА ── */}
@@ -396,6 +375,27 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
               </div>
             )}
           </Drop>
+
+          {/* Тип нерухомості */}
+          <div>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+              {isUk ? "Тип нерухомості" : "Property type"}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {PRIMARY_TYPES.map((pt) => (
+                <button key={pt.value}
+                  onClick={() => set("type", propertyType === pt.value ? null : pt.value)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-medium rounded-xl border transition-all duration-150",
+                    propertyType === pt.value
+                      ? "bg-navy-900 text-white border-navy-900"
+                      : "bg-white text-gray-600 border-gray-200 hover:border-navy-300 hover:text-navy-900"
+                  )}>
+                  {isUk ? pt.uk : pt.en}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Район */}
           <Drop label={districtLabel} active={!!district}>
