@@ -1,14 +1,54 @@
+export const PROPERTY_CATEGORIES = [
+  { value: "RESIDENTIAL", labelUk: "Житлова нерухомість" },
+  { value: "COMMERCIAL",  labelUk: "Комерційна нерухомість" },
+  { value: "LAND",        labelUk: "Земельні ділянки" },
+] as const;
+
 export const PROPERTY_TYPES = [
-  { value: "APARTMENT", labelUk: "Квартира", labelEn: "Apartment" },
-  { value: "HOUSE", labelUk: "Будинок", labelEn: "House" },
-  { value: "COMMERCIAL", labelUk: "Комерція", labelEn: "Commercial" },
-  { value: "LAND", labelUk: "Земля", labelEn: "Land" },
-  { value: "OFFICE", labelUk: "Офіс", labelEn: "Office" },
+  // Житлова
+  { value: "APARTMENT",         labelUk: "Квартира",                 labelEn: "Apartment",          category: "RESIDENTIAL" },
+  { value: "ROOM",              labelUk: "Кімната",                  labelEn: "Room",                category: "RESIDENTIAL" },
+  { value: "HOUSE",             labelUk: "Будинок",                  labelEn: "House",               category: "RESIDENTIAL" },
+  { value: "APARTMENT_PREMIUM", labelUk: "Апартаменти",              labelEn: "Apartments",          category: "RESIDENTIAL" },
+  { value: "VILLA",             labelUk: "Вілла",                    labelEn: "Villa",               category: "RESIDENTIAL" },
+  { value: "PENTHOUSE",         labelUk: "Пентхаус",                 labelEn: "Penthouse",           category: "RESIDENTIAL" },
+  { value: "TOWNHOUSE",         labelUk: "Таунхаус",                 labelEn: "Townhouse",           category: "RESIDENTIAL" },
+  { value: "DUPLEX",            labelUk: "Дуплекс",                  labelEn: "Duplex",              category: "RESIDENTIAL" },
+  // Комерційна
+  { value: "OFFICE",            labelUk: "Офіс",                     labelEn: "Office",              category: "COMMERCIAL" },
+  { value: "RETAIL",            labelUk: "Торгівельна площа",        labelEn: "Retail",              category: "COMMERCIAL" },
+  { value: "WAREHOUSE",         labelUk: "Складське приміщення",     labelEn: "Warehouse",           category: "COMMERCIAL" },
+  { value: "INDUSTRIAL",        labelUk: "Виробниче приміщення",     labelEn: "Industrial",          category: "COMMERCIAL" },
+  { value: "FOOD_SERVICE",      labelUk: "Об'єкт харчування",        labelEn: "Food Service",        category: "COMMERCIAL" },
+  { value: "SERVICE_OBJECT",    labelUk: "Об'єкт послуг",            labelEn: "Service Object",      category: "COMMERCIAL" },
+  { value: "SHOP",              labelUk: "Магазин",                  labelEn: "Shop",                category: "COMMERCIAL" },
+  { value: "HOTEL_ROOM",        labelUk: "Готельний номер",          labelEn: "Hotel Room",          category: "COMMERCIAL" },
+  { value: "WHOLE_BUILDING",    labelUk: "Ціла будівля",             labelEn: "Whole Building",      category: "COMMERCIAL" },
+  { value: "COMMERCIAL",        labelUk: "Комерція (інше)",          labelEn: "Commercial",          category: "COMMERCIAL" },
+  { value: "GARAGE",            labelUk: "Гараж",                    labelEn: "Garage",              category: "COMMERCIAL" },
+  { value: "PARKING",           labelUk: "Паркування",               labelEn: "Parking",             category: "COMMERCIAL" },
+  // Земельні
+  { value: "LAND",              labelUk: "Земельна ділянка",         labelEn: "Land",                category: "LAND" },
+  { value: "LAND_INDIVIDUAL",   labelUk: "Земля (інд. будівництво)", labelEn: "Land (Individual)",   category: "LAND" },
+  { value: "LAND_GARDEN",       labelUk: "Земля (сад/город)",        labelEn: "Land (Garden)",       category: "LAND" },
+  { value: "LAND_FARM",         labelUk: "Земля (сільгосп)",         labelEn: "Land (Farm)",         category: "LAND" },
+  { value: "LAND_COMMERCIAL",   labelUk: "Земля (комерційна)",       labelEn: "Land (Commercial)",   category: "LAND" },
 ] as const;
 
 export const LISTING_TYPES = [
-  { value: "SALE", labelUk: "Продаж", labelEn: "For Sale" },
-  { value: "RENT", labelUk: "Оренда", labelEn: "For Rent" },
+  { value: "SALE",       labelUk: "Продаж",   labelEn: "For Sale" },
+  { value: "RENT",       labelUk: "Оренда",   labelEn: "For Rent" },
+  { value: "DAILY_RENT", labelUk: "Подобово", labelEn: "Daily Rent" },
+] as const;
+
+export const SOURCE_OPTIONS = [
+  "OLX", "LUN.ua", "Dom.ria", "Facebook", "Instagram",
+  "Рекомендація", "Власна база", "Дзвінок", "Офіс", "Інше",
+] as const;
+
+export const COMMISSION_TYPES = [
+  { value: "FIXED",   labelUk: "Фіксована" },
+  { value: "PERCENT", labelUk: "Відсоток %" },
 ] as const;
 
 export const CURRENCIES = ["UAH", "USD", "EUR"] as const;

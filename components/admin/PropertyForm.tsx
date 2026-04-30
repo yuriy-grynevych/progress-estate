@@ -9,11 +9,14 @@ import { MessageSquarePlus } from "lucide-react";
 import dynamic from "next/dynamic";
 import {
   PROPERTY_TYPES,
+  PROPERTY_CATEGORIES,
   LISTING_TYPES,
   CURRENCIES,
   DISTRICTS_IF,
   PROPERTY_FEATURES,
   RESIDENTIAL_COMPLEXES_IF,
+  SOURCE_OPTIONS,
+  COMMISSION_TYPES,
 } from "@/lib/constants";
 import ImageUploader from "./ImageUploader";
 
@@ -40,8 +43,16 @@ const schema = z.object({
   renovationType: z.string().optional().nullable(),
   wallType: z.string().optional().nullable(),
   houseNumber: z.string().optional().nullable(),
+  apartmentNumber: z.string().optional().nullable(),
+  apartmentLetter: z.string().optional().nullable(),
   residentialComplex: z.string().optional().nullable(),
   landmark: z.string().optional().nullable(),
+  pricePer: z.string().optional().nullable(),
+  source: z.string().optional().nullable(),
+  commissionAmount: z.number().optional().nullable(),
+  commissionType: z.string().optional().nullable(),
+  commissionCurrency: z.string().optional().nullable(),
+  internalNote: z.string().optional().nullable(),
   district: z.string().optional(),
   address: z.string().optional(),
   latitude: z.number().nullable().optional(),
@@ -243,6 +254,16 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
 
   const isEdit = Boolean(initialData?.id);
 
+  function getCategoryFromType(t: string): string {
+    const residential = ["APARTMENT","ROOM","HOUSE","APARTMENT_PREMIUM","VILLA","PENTHOUSE","TOWNHOUSE","DUPLEX"];
+    const land = ["LAND","LAND_INDIVIDUAL","LAND_GARDEN","LAND_FARM","LAND_COMMERCIAL"];
+    if (residential.includes(t)) return "RESIDENTIAL";
+    if (land.includes(t)) return "LAND";
+    return "COMMERCIAL";
+  }
+
+  const [category, setCategory] = useState<string>(() => getCategoryFromType(initialData?.type ?? "APARTMENT"));
+
   const {
     register,
     handleSubmit,
@@ -273,8 +294,16 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
       renovationType: (initialData as any)?.renovationType ?? "",
       wallType: (initialData as any)?.wallType ?? "",
       houseNumber: (initialData as any)?.houseNumber ?? "",
+      apartmentNumber: (initialData as any)?.apartmentNumber ?? "",
+      apartmentLetter: (initialData as any)?.apartmentLetter ?? "",
       residentialComplex: (initialData as any)?.residentialComplex ?? "",
       landmark: (initialData as any)?.landmark ?? "",
+      pricePer: (initialData as any)?.pricePer ?? "OBJECT",
+      source: (initialData as any)?.source ?? "",
+      commissionAmount: (initialData as any)?.commissionAmount ?? null,
+      commissionType: (initialData as any)?.commissionType ?? "FIXED",
+      commissionCurrency: (initialData as any)?.commissionCurrency ?? "USD",
+      internalNote: (initialData as any)?.internalNote ?? "",
       district: initialData?.district ?? "",
       address: initialData?.address ?? "",
       latitude: initialData?.latitude ?? null,
@@ -384,17 +413,32 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             <span className="w-1 h-5 bg-navy-900 rounded-full inline-block" />
             Основне
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <FieldLabel required>Категорія</FieldLabel>
+              <Select value={category} onChange={(e) => {
+                setCategory(e.target.value);
+                const first = PROPERTY_TYPES.find(t => t.category === e.target.value);
+                if (first) setValue("type", first.value as any);
+              }}>
+                {PROPERTY_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.labelUk}</option>
+                ))}
+              </Select>
+            </div>
             <div>
               <FieldLabel required>Тип нерухомості</FieldLabel>
-              <Select {...register("type")}>
-                {PROPERTY_TYPES.map((t) => (
+              <Select {...register("type")} onChange={(e) => {
+                setValue("type", e.target.value as any);
+                setCategory(getCategoryFromType(e.target.value));
+              }}>
+                {PROPERTY_TYPES.filter(t => t.category === category).map((t) => (
                   <option key={t.value} value={t.value}>{t.labelUk}</option>
                 ))}
               </Select>
             </div>
             <div>
-              <FieldLabel required>Тип оголошення</FieldLabel>
+              <FieldLabel required>Тип угоди</FieldLabel>
               <Select {...register("listingType")}>
                 {LISTING_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.labelUk}</option>
@@ -412,8 +456,8 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             <Input {...register("titleEn")} placeholder="Spacious apartment in the center..." />
             {errors.titleEn && <p className="text-red-500 text-xs mt-1">{errors.titleEn.message}</p>}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="col-span-2 sm:col-span-1">
               <FieldLabel required>Ціна</FieldLabel>
               <Controller
                 name="price"
@@ -433,6 +477,13 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
                 )}
               />
               {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message as string}</p>}
+            </div>
+            <div>
+              <FieldLabel>За</FieldLabel>
+              <Select {...register("pricePer")}>
+                <option value="OBJECT">за об'єкт</option>
+                <option value="SQM">за м²</option>
+              </Select>
             </div>
             <div>
               <FieldLabel required>Валюта</FieldLabel>
@@ -526,10 +577,6 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
               <FieldLabel>Площа кухні (м²)</FieldLabel>
               <Input type="number" step="0.1" {...register("kitchenSqm")} placeholder="10" />
             </div>
-            <div>
-              <FieldLabel>Номер будинку</FieldLabel>
-              <Input {...register("houseNumber")} placeholder="15a" />
-            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
@@ -580,8 +627,22 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
             </Select>
           </div>
           <div>
-            <FieldLabel>Адреса</FieldLabel>
-            <Input {...register("address")} placeholder="вул. Незалежності, 15, Івано-Франківськ" />
+            <FieldLabel>Вулиця / Адреса</FieldLabel>
+            <Input {...register("address")} placeholder="вул. Незалежності, 15" />
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <FieldLabel>Номер будинку</FieldLabel>
+              <Input {...register("houseNumber")} placeholder="15а" />
+            </div>
+            <div>
+              <FieldLabel>Номер кв.</FieldLabel>
+              <Input {...register("apartmentNumber")} placeholder="42" />
+            </div>
+            <div>
+              <FieldLabel>Буква кв.</FieldLabel>
+              <Input {...register("apartmentLetter")} placeholder="А" />
+            </div>
           </div>
           <div>
             <FieldLabel>Житловий комплекс</FieldLabel>
@@ -613,6 +674,61 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
                 setValue("latitude", lat);
                 setValue("longitude", lng);
               }}
+            />
+          </div>
+        </div>
+
+        {/* Додаткова інформація */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
+          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
+            <span className="w-1 h-5 bg-purple-500 rounded-full inline-block" />
+            Додаткова інформація
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <FieldLabel>Джерело</FieldLabel>
+              <Select {...register("source")}>
+                <option value="">— Не вказано —</option>
+                {SOURCE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+              </Select>
+            </div>
+            <div>
+              <FieldLabel>Комісія</FieldLabel>
+              <div className="flex gap-2">
+                <Controller
+                  name="commissionAmount"
+                  control={control}
+                  render={({ field: { onChange, value, ref, name } }) => (
+                    <Input
+                      type="number"
+                      name={name}
+                      ref={ref}
+                      value={value ?? ""}
+                      placeholder="500"
+                      className="flex-1"
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        onChange(isNaN(v) ? null : v);
+                      }}
+                    />
+                  )}
+                />
+                <Select {...register("commissionType")} className="w-36">
+                  {COMMISSION_TYPES.map((c) => <option key={c.value} value={c.value}>{c.labelUk}</option>)}
+                </Select>
+                <Select {...register("commissionCurrency")} className="w-20">
+                  {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </Select>
+              </div>
+            </div>
+          </div>
+          <div>
+            <FieldLabel>Замітка (внутрішня)</FieldLabel>
+            <textarea
+              {...register("internalNote")}
+              rows={3}
+              placeholder="Внутрішні нотатки, не публікуються..."
+              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 resize-none"
             />
           </div>
         </div>

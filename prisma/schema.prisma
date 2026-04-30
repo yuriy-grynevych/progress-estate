@@ -91,8 +91,16 @@ model Property {
   renovationType String?
   wallType      String?
   houseNumber        String?
+  apartmentNumber    String?
+  apartmentLetter    String?
   residentialComplex String?
   landmark           String?
+  pricePer           String?       @default("OBJECT")
+  source             String?
+  commissionAmount   Float?
+  commissionType     String?
+  commissionCurrency String?
+  internalNote       String?
   city               String        @default("Івано-Франківськ")
   district      String?
   address       String?
@@ -130,15 +138,37 @@ model Property {
 
 enum PropertyType {
   APARTMENT
+  ROOM
   HOUSE
+  APARTMENT_PREMIUM
+  VILLA
+  PENTHOUSE
+  TOWNHOUSE
+  DUPLEX
   COMMERCIAL
-  LAND
   OFFICE
+  RETAIL
+  WAREHOUSE
+  INDUSTRIAL
+  FOOD_SERVICE
+  SERVICE_OBJECT
+  OTHER_OBJECT
+  SHOP
+  HOTEL_ROOM
+  WHOLE_BUILDING
+  LAND
+  LAND_INDIVIDUAL
+  LAND_GARDEN
+  LAND_FARM
+  LAND_COMMERCIAL
+  GARAGE
+  PARKING
 }
 
 enum ListingType {
   SALE
   RENT
+  DAILY_RENT
 }
 
 enum ListingStatus {
