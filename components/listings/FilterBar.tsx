@@ -149,7 +149,7 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
   // Кількість активних «додаткових» фільтрів
   const extraActiveCount = [
     sp.areaMin, sp.areaMax, sp.floorMin, sp.floorMax, sp.developer,
-    sp.complex, sp.condition, sp.govProgram, sp.renovationType, sp.wallType,
+    sp.complex, sp.district, sp.govProgram, sp.renovationType, sp.wallType,
     sp.gasType, sp.search,
   ].filter(Boolean).length;
 
@@ -260,25 +260,6 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
         </div>
       </div>
 
-      {/* ── РАЙОН ── */}
-      <div>
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">
-          {isUk ? "Район" : "District"}
-        </p>
-        <Drop label={districtLabel} active={!!district}>
-          {(close) => (<>
-            <DropItem active={!district} onClick={() => { set("district", null); close(); }}>
-              {isUk ? "Всі райони" : "All districts"}
-            </DropItem>
-            {DISTRICTS_IF.map((d) => (
-              <DropItem key={d.value} active={district === d.value} onClick={() => { set("district", d.value); close(); }}>
-                {isUk ? d.labelUk : d.labelEn}
-              </DropItem>
-            ))}
-          </>)}
-        </Drop>
-      </div>
-
       {/* ── ЦІНА ── */}
       <div>
         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">
@@ -317,6 +298,25 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* ── СТАН ── */}
+      <div>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">
+          {isUk ? "Стан" : "Condition"}
+        </p>
+        <Drop label={conditionLabel} active={!!condition}>
+          {(close) => (<>
+            <DropItem active={!condition} onClick={() => { set("condition", null); close(); }}>
+              {isUk ? "Будь-який" : "Any"}
+            </DropItem>
+            {CONDITIONS.map((c) => (
+              <DropItem key={c.value} active={condition === c.value} onClick={() => { set("condition", c.value); close(); }}>
+                {isUk ? c.uk : c.en}
+              </DropItem>
+            ))}
+          </>)}
+        </Drop>
       </div>
 
       {/* ── БІЛЬШЕ ФІЛЬТРІВ ── */}
@@ -397,15 +397,15 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
             )}
           </Drop>
 
-          {/* Стан */}
-          <Drop label={conditionLabel} active={!!condition}>
+          {/* Район */}
+          <Drop label={districtLabel} active={!!district}>
             {(close) => (<>
-              <DropItem active={!condition} onClick={() => { set("condition", null); close(); }}>
-                {isUk ? "Будь-який" : "Any"}
+              <DropItem active={!district} onClick={() => { set("district", null); close(); }}>
+                {isUk ? "Всі райони" : "All districts"}
               </DropItem>
-              {CONDITIONS.map((c) => (
-                <DropItem key={c.value} active={condition === c.value} onClick={() => { set("condition", c.value); close(); }}>
-                  {isUk ? c.uk : c.en}
+              {DISTRICTS_IF.map((d) => (
+                <DropItem key={d.value} active={district === d.value} onClick={() => { set("district", d.value); close(); }}>
+                  {isUk ? d.labelUk : d.labelEn}
                 </DropItem>
               ))}
             </>)}
