@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,41 +19,30 @@ import ImageUploader from "./ImageUploader";
 const TiptapEditor = dynamic(() => import("./TiptapEditor"), { ssr: false });
 const MapPicker = dynamic(() => import("./MapPicker"), { ssr: false });
 
-const toNum = (v: unknown) => {
-  if (v === "" || v === null || v === undefined) return undefined;
-  const n = Number(v);
-  return isNaN(n) ? undefined : n;
-};
-const toNumNullable = (v: unknown) => {
-  if (v === "" || v === null || v === undefined) return null;
-  const n = Number(v);
-  return isNaN(n) ? null : n;
-};
-
 const schema = z.object({
   titleUk: z.string().min(1, "Обов'язкове поле"),
   titleEn: z.string().min(1, "Required"),
   type: z.string().min(1),
   listingType: z.string().min(1),
   status: z.string().min(1),
-  price: z.preprocess(toNum, z.number({ invalid_type_error: "Вкажіть ціну" }).positive("Вкажіть ціну")),
+  price: z.number({ message: "Вкажіть ціну" }).positive("Вкажіть ціну"),
   currency: z.string().min(1),
-  areaSqm: z.preprocess(toNum, z.number({ invalid_type_error: "Вкажіть площу" }).positive("Вкажіть площу")),
-  rooms: z.preprocess(toNumNullable, z.number().nullable().optional()),
-  bedrooms: z.preprocess(toNumNullable, z.number().nullable().optional()),
-  bathrooms: z.preprocess(toNumNullable, z.number().nullable().optional()),
-  floor: z.preprocess(toNumNullable, z.number().nullable().optional()),
-  totalFloors: z.preprocess(toNumNullable, z.number().nullable().optional()),
-  yearBuilt: z.preprocess(toNumNullable, z.number().nullable().optional()),
-  kitchenSqm: z.preprocess(toNumNullable, z.number().nullable().optional()),
+  areaSqm: z.number({ message: "Вкажіть площу" }).positive("Вкажіть площу"),
+  rooms: z.number().nullable().optional(),
+  bedrooms: z.number().nullable().optional(),
+  bathrooms: z.number().nullable().optional(),
+  floor: z.number().nullable().optional(),
+  totalFloors: z.number().nullable().optional(),
+  yearBuilt: z.number().nullable().optional(),
+  kitchenSqm: z.number().nullable().optional(),
   gasType: z.string().optional().nullable(),
   renovationType: z.string().optional().nullable(),
   wallType: z.string().optional().nullable(),
   houseNumber: z.string().optional().nullable(),
   district: z.string().optional(),
   address: z.string().optional(),
-  latitude: z.preprocess(toNumNullable, z.number().nullable().optional()),
-  longitude: z.preprocess(toNumNullable, z.number().nullable().optional()),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
   descriptionUk: z.string().default(""),
   descriptionEn: z.string().default(""),
   features: z.array(z.string()).default([]),
@@ -111,14 +100,16 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
   );
 }
 
-function Input({ className = "", ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
-  return (
+const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className = "", ...props }, ref) => (
     <input
+      ref={ref}
       {...props}
       className={`w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 focus:border-navy-900 ${className}`}
     />
-  );
-}
+  )
+);
+Input.displayName = "Input";
 
 function Select({
   children,
@@ -266,9 +257,9 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
       type: initialData?.type ?? "APARTMENT",
       listingType: initialData?.listingType ?? "SALE",
       status: initialData?.status ?? "ACTIVE",
-      price: initialData?.price ?? undefined,
+      price: initialData?.price != null ? Number(initialData.price) : undefined,
       currency: initialData?.currency ?? "USD",
-      areaSqm: initialData?.areaSqm ?? undefined,
+      areaSqm: initialData?.areaSqm != null ? Number(initialData.areaSqm) : undefined,
       rooms: initialData?.rooms ?? null,
       bedrooms: initialData?.bedrooms ?? null,
       bathrooms: initialData?.bathrooms ?? null,
@@ -319,10 +310,25 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
     const method = isEdit ? "PUT" : "POST";
     const url = isEdit ? `/api/properties/${initialData!.id}` : "/api/properties";
 
+    const toN = (v: unknown) => { const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
+    const body = {
+      ...data,
+      rooms: toN(data.rooms),
+      bedrooms: toN(data.bedrooms),
+      bathrooms: toN(data.bathrooms),
+      floor: toN(data.floor),
+      totalFloors: toN(data.totalFloors),
+      yearBuilt: toN(data.yearBuilt),
+      kitchenSqm: toN(data.kitchenSqm),
+      latitude: toN(data.latitude),
+      longitude: toN(data.longitude),
+      agentComments: comments,
+    };
+
     const res = await fetch(url, {
       method,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...data, agentComments: comments }),
+      body: JSON.stringify(body),
     });
 
     if (res.ok) {
@@ -401,8 +407,24 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <FieldLabel required>Ціна</FieldLabel>
-              <Input type="number" {...register("price")} placeholder="50000" />
-              {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
+              <Controller
+                name="price"
+                control={control}
+                render={({ field: { onChange, value, ref, name } }) => (
+                  <Input
+                    type="number"
+                    name={name}
+                    ref={ref}
+                    value={value ?? ""}
+                    placeholder="50000"
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      onChange(isNaN(v) ? undefined : v);
+                    }}
+                  />
+                )}
+              />
+              {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message as string}</p>}
             </div>
             <div>
               <FieldLabel required>Валюта</FieldLabel>
@@ -448,8 +470,25 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div>
               <FieldLabel required>Площа (м²)</FieldLabel>
-              <Input type="number" step="0.1" {...register("areaSqm")} placeholder="65" />
-              {errors.areaSqm && <p className="text-red-500 text-xs mt-1">{errors.areaSqm.message}</p>}
+              <Controller
+                name="areaSqm"
+                control={control}
+                render={({ field: { onChange, value, ref, name } }) => (
+                  <Input
+                    type="number"
+                    step="0.1"
+                    name={name}
+                    ref={ref}
+                    value={value ?? ""}
+                    placeholder="65"
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      onChange(isNaN(v) ? undefined : v);
+                    }}
+                  />
+                )}
+              />
+              {errors.areaSqm && <p className="text-red-500 text-xs mt-1">{errors.areaSqm.message as string}</p>}
             </div>
             <div>
               <FieldLabel>Кімнати</FieldLabel>
