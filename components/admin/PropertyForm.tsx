@@ -19,30 +19,41 @@ import ImageUploader from "./ImageUploader";
 const TiptapEditor = dynamic(() => import("./TiptapEditor"), { ssr: false });
 const MapPicker = dynamic(() => import("./MapPicker"), { ssr: false });
 
+const toNum = (v: unknown) => {
+  if (v === "" || v === null || v === undefined) return undefined;
+  const n = Number(v);
+  return isNaN(n) ? undefined : n;
+};
+const toNumNullable = (v: unknown) => {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+};
+
 const schema = z.object({
   titleUk: z.string().min(1, "Обов'язкове поле"),
   titleEn: z.string().min(1, "Required"),
   type: z.string().min(1),
   listingType: z.string().min(1),
   status: z.string().min(1),
-  price: z.coerce.number().positive(),
+  price: z.preprocess(toNum, z.number({ invalid_type_error: "Вкажіть ціну" }).positive("Вкажіть ціну")),
   currency: z.string().min(1),
-  areaSqm: z.coerce.number().positive(),
-  rooms: z.coerce.number().optional().nullable(),
-  bedrooms: z.coerce.number().optional().nullable(),
-  bathrooms: z.coerce.number().optional().nullable(),
-  floor: z.coerce.number().optional().nullable(),
-  totalFloors: z.coerce.number().optional().nullable(),
-  yearBuilt: z.coerce.number().optional().nullable(),
-  kitchenSqm: z.coerce.number().optional().nullable(),
+  areaSqm: z.preprocess(toNum, z.number({ invalid_type_error: "Вкажіть площу" }).positive("Вкажіть площу")),
+  rooms: z.preprocess(toNumNullable, z.number().nullable().optional()),
+  bedrooms: z.preprocess(toNumNullable, z.number().nullable().optional()),
+  bathrooms: z.preprocess(toNumNullable, z.number().nullable().optional()),
+  floor: z.preprocess(toNumNullable, z.number().nullable().optional()),
+  totalFloors: z.preprocess(toNumNullable, z.number().nullable().optional()),
+  yearBuilt: z.preprocess(toNumNullable, z.number().nullable().optional()),
+  kitchenSqm: z.preprocess(toNumNullable, z.number().nullable().optional()),
   gasType: z.string().optional().nullable(),
   renovationType: z.string().optional().nullable(),
   wallType: z.string().optional().nullable(),
   houseNumber: z.string().optional().nullable(),
   district: z.string().optional(),
   address: z.string().optional(),
-  latitude: z.coerce.number().optional().nullable(),
-  longitude: z.coerce.number().optional().nullable(),
+  latitude: z.preprocess(toNumNullable, z.number().nullable().optional()),
+  longitude: z.preprocess(toNumNullable, z.number().nullable().optional()),
   descriptionUk: z.string().default(""),
   descriptionEn: z.string().default(""),
   features: z.array(z.string()).default([]),
@@ -390,7 +401,7 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <FieldLabel required>Ціна</FieldLabel>
-              <Input type="number" {...register("price", { valueAsNumber: true })} placeholder="50000" />
+              <Input type="number" {...register("price")} placeholder="50000" />
               {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
             </div>
             <div>
@@ -437,7 +448,7 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             <div>
               <FieldLabel required>Площа (м²)</FieldLabel>
-              <Input type="number" step="0.1" {...register("areaSqm", { valueAsNumber: true })} placeholder="65" />
+              <Input type="number" step="0.1" {...register("areaSqm")} placeholder="65" />
               {errors.areaSqm && <p className="text-red-500 text-xs mt-1">{errors.areaSqm.message}</p>}
             </div>
             <div>
