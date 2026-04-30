@@ -5,24 +5,23 @@ import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { MessageSquarePlus } from "lucide-react";
+import {
+  MessageSquarePlus, MapPin, Home, Building2, Layers, DollarSign,
+  FileText, Image, Info, ChevronLeft, Save, Loader2, X, Tag,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import {
-  PROPERTY_TYPES,
-  PROPERTY_CATEGORIES,
-  LISTING_TYPES,
-  CURRENCIES,
-  DISTRICTS_IF,
-  PROPERTY_FEATURES,
-  RESIDENTIAL_COMPLEXES_IF,
-  SOURCE_OPTIONS,
-  COMMISSION_TYPES,
+  PROPERTY_TYPES, PROPERTY_CATEGORIES, LISTING_TYPES, CURRENCIES,
+  DISTRICTS_IF, PROPERTY_FEATURES, RESIDENTIAL_COMPLEXES_IF,
+  SOURCE_OPTIONS, COMMISSION_TYPES,
 } from "@/lib/constants";
 import ImageUploader from "./ImageUploader";
+import { cn } from "@/lib/utils";
 
 const TiptapEditor = dynamic(() => import("./TiptapEditor"), { ssr: false });
-const MapPicker = dynamic(() => import("./MapPicker"), { ssr: false });
+const MapPicker    = dynamic(() => import("./MapPicker"),    { ssr: false });
 
+// ── Schema ───────────────────────────────────────────────────────────────────
 const schema = z.object({
   titleUk: z.string().min(1, "Обов'язкове поле"),
   titleEn: z.string().min(1, "Required"),
@@ -66,38 +65,13 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-interface PropertyImage {
-  id: string;
-  url: string;
-  isPrimary: boolean;
-}
-
-interface Employee {
-  id: string;
-  name: string | null;
-  email: string;
-}
-
-interface FeatureOption {
-  id: string;
-  value: string;
-  labelUk: string;
-  labelEn: string;
-}
-
-interface AgentComment {
-  text: string;
-  author: string;
-  createdAt: string;
-}
+interface PropertyImage   { id: string; url: string; isPrimary: boolean; }
+interface Employee        { id: string; name: string | null; email: string; }
+interface FeatureOption   { id: string; value: string; labelUk: string; labelEn: string; }
+interface AgentComment    { text: string; author: string; createdAt: string; }
 
 interface PropertyFormProps {
-  initialData?: Partial<FormData> & {
-    id?: string;
-    images?: PropertyImage[];
-    assignedUserId?: string | null;
-    agentComments?: AgentComment[];
-  };
+  initialData?: Partial<FormData> & { id?: string; images?: PropertyImage[]; assignedUserId?: string | null; agentComments?: AgentComment[]; };
   employees?: Employee[];
   featureOptions?: FeatureOption[];
   role?: "ADMIN" | "EMPLOYEE";
@@ -105,174 +79,79 @@ interface PropertyFormProps {
   currentUserName?: string;
 }
 
-function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+// ── UI primitives ─────────────────────────────────────────────────────────────
+function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      {children}
-      {required && <span className="text-red-500 ml-0.5">*</span>}
+    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+      {children}{required && <span className="text-red-400 ml-0.5">*</span>}
     </label>
   );
 }
 
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className = "", ...props }, ref) => (
-    <input
-      ref={ref}
-      {...props}
-      className={`w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 focus:border-navy-900 ${className}`}
-    />
+    <input ref={ref} {...props}
+      className={`w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white shadow-sm
+        focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900 transition-all placeholder:text-gray-300 ${className}`} />
   )
 );
 Input.displayName = "Input";
 
-function Select({
-  children,
-  className = "",
-  ...props
-}: React.SelectHTMLAttributes<HTMLSelectElement>) {
+function FSelect({ children, className = "", ...props }: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select
-      {...props}
-      className={`w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 focus:border-navy-900 bg-white ${className}`}
-    >
+    <select {...props}
+      className={`w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white shadow-sm
+        focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900 transition-all ${className}`}>
       {children}
     </select>
   );
 }
 
-function FeatureTab({
-  selectedFeatures,
-  predefinedFeatures,
-  onToggle,
-  onAdd,
-  onRemoveCustom,
-}: {
-  selectedFeatures: string[];
-  predefinedFeatures: { id: string; value: string; labelUk: string; labelEn: string }[];
-  onToggle: (value: string) => void;
-  onAdd: (value: string) => void;
-  onRemoveCustom: (value: string) => void;
-}) {
-  const [input, setInput] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const predefinedValues = predefinedFeatures.map((f) => f.value);
-  const customFeatures = selectedFeatures.filter((f) => !predefinedValues.includes(f));
-
-  function addCustom() {
-    const val = input.trim();
-    if (!val || selectedFeatures.includes(val)) return;
-    onAdd(val);
-    setInput("");
-    inputRef.current?.focus();
-  }
-
+function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className="space-y-6">
-      {/* Predefined */}
-      <div>
-        <p className="text-sm text-gray-500 mb-3">Виберіть наявні зручності:</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          {predefinedFeatures.map((feature) => {
-            const selected = selectedFeatures.includes(feature.value);
-            return (
-              <button
-                key={feature.value}
-                type="button"
-                onClick={() => onToggle(feature.value)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-sm transition ${
-                  selected
-                    ? "border-navy-900 bg-navy-50 text-navy-900 font-medium"
-                    : "border-gray-200 text-gray-600 hover:border-gray-300"
-                }`}
-              >
-                <span className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${selected ? "bg-black text-white" : "border border-gray-300"}`}>
-                  {selected && (
-                    <svg viewBox="0 0 10 8" fill="none" className="w-2.5 h-2.5">
-                      <path d="M1 4l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  )}
-                </span>
-                {feature.labelUk}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Custom */}
-      <div>
-        <p className="text-sm text-gray-500 mb-3">Додати власні зручності:</p>
-        <div className="flex gap-2 mb-3">
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
-            placeholder="Наприклад: Джакузі, Каміни, Тераса..."
-            className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
-          />
-          <button
-            type="button"
-            onClick={addCustom}
-            disabled={!input.trim()}
-            className="px-4 py-2 bg-black text-white rounded-xl text-sm font-medium hover:bg-black/90 transition disabled:opacity-40"
-          >
-            Додати
-          </button>
-        </div>
-        {customFeatures.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {customFeatures.map((f) => (
-              <span key={f} className="flex items-center gap-1.5 bg-gold-50 border border-gold-200 text-gold-700 text-sm px-3 py-1.5 rounded-xl">
-                {f}
-                <button
-                  type="button"
-                  onClick={() => onRemoveCustom(f)}
-                  className="text-gold-400 hover:text-gold-700 transition ml-0.5"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
+      {children}
     </div>
   );
 }
 
-export default function PropertyForm({ initialData, employees = [], featureOptions, role = "EMPLOYEE", currentUserId, currentUserName }: PropertyFormProps) {
-  const router = useRouter();
-  const [saving, setSaving] = useState(false);
-  const [propertyId, setPropertyId] = useState(initialData?.id ?? "new");
-  const [images, setImages] = useState<PropertyImage[]>(initialData?.images ?? []);
-  const [comments, setComments] = useState<AgentComment[]>(
-    (initialData?.agentComments as AgentComment[]) ?? []
+function CardHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-50">
+      <span className="text-gray-400">{icon}</span>
+      <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wider">{title}</h2>
+    </div>
   );
-  const [commentInput, setCommentInput] = useState("");
+}
 
+// ── Status configs ────────────────────────────────────────────────────────────
+const STATUS_CONFIG = [
+  { value: "ACTIVE",   label: "Активне",   dot: "bg-emerald-400" },
+  { value: "INACTIVE", label: "Неактивне", dot: "bg-gray-300" },
+  { value: "SOLD",     label: "Продано",   dot: "bg-red-400" },
+  { value: "RENTED",   label: "Здано",     dot: "bg-blue-400" },
+];
+
+// ── Main component ────────────────────────────────────────────────────────────
+export default function PropertyForm({
+  initialData, employees = [], featureOptions, role = "EMPLOYEE", currentUserId, currentUserName
+}: PropertyFormProps) {
+  const router = useRouter();
+  const [saving, setSaving]       = useState(false);
+  const [propertyId, setPropertyId] = useState(initialData?.id ?? "new");
+  const [images, setImages]       = useState<PropertyImage[]>(initialData?.images ?? []);
+  const [comments, setComments]   = useState<AgentComment[]>((initialData?.agentComments as AgentComment[]) ?? []);
+  const [commentInput, setCommentInput] = useState("");
   const isEdit = Boolean(initialData?.id);
 
   function getCategoryFromType(t: string): string {
-    const residential = ["APARTMENT","ROOM","HOUSE","APARTMENT_PREMIUM","VILLA","PENTHOUSE","TOWNHOUSE","DUPLEX"];
-    const land = ["LAND","LAND_INDIVIDUAL","LAND_GARDEN","LAND_FARM","LAND_COMMERCIAL"];
-    if (residential.includes(t)) return "RESIDENTIAL";
-    if (land.includes(t)) return "LAND";
+    if (["APARTMENT","ROOM","HOUSE","APARTMENT_PREMIUM","VILLA","PENTHOUSE","TOWNHOUSE","DUPLEX"].includes(t)) return "RESIDENTIAL";
+    if (["LAND","LAND_INDIVIDUAL","LAND_GARDEN","LAND_FARM","LAND_COMMERCIAL"].includes(t)) return "LAND";
     return "COMMERCIAL";
   }
-
   const [category, setCategory] = useState<string>(() => getCategoryFromType(initialData?.type ?? "APARTMENT"));
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-    watch,
-    setValue,
-  } = useForm<FormData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { register, handleSubmit, control, formState: { errors }, watch, setValue } = useForm<FormData>({
     resolver: zodResolver(schema) as any,
     defaultValues: {
       titleUk: initialData?.titleUk ?? "",
@@ -316,63 +195,44 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
     },
   });
 
+  const watchedListingType = watch("listingType");
+  const watchedStatus      = watch("status");
+  const watchedType        = watch("type");
+
   function addComment() {
     const text = commentInput.trim();
     if (!text) return;
-    setComments((prev) => [
-      ...prev,
-      { text, author: currentUserName ?? "", createdAt: new Date().toISOString() },
-    ]);
+    setComments((prev) => [...prev, { text, author: currentUserName ?? "", createdAt: new Date().toISOString() }]);
     setCommentInput("");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async function onSubmit(data: any) {
     setSaving(true);
     const method = isEdit ? "PUT" : "POST";
-    const url = isEdit ? `/api/properties/${initialData!.id}` : "/api/properties";
-
-    const toN = (v: unknown) => { const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
+    const url    = isEdit ? `/api/properties/${initialData!.id}` : "/api/properties";
+    const toN    = (v: unknown) => { const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
 
     let descriptionEn = data.descriptionEn ?? "";
     if (data.descriptionUk?.trim()) {
       try {
-        const tr = await fetch("/api/translate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: data.descriptionUk }),
-        });
+        const tr = await fetch("/api/translate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.descriptionUk }) });
         const trData = await tr.json();
         if (trData.translated) descriptionEn = trData.translated;
       } catch {}
     }
 
     const body = {
-      ...data,
-      descriptionEn,
-      rooms: toN(data.rooms),
-      bedrooms: toN(data.bedrooms),
-      bathrooms: toN(data.bathrooms),
-      floor: toN(data.floor),
-      totalFloors: toN(data.totalFloors),
-      yearBuilt: toN(data.yearBuilt),
-      kitchenSqm: toN(data.kitchenSqm),
-      latitude: toN(data.latitude),
-      longitude: toN(data.longitude),
+      ...data, descriptionEn,
+      rooms: toN(data.rooms), bedrooms: toN(data.bedrooms), bathrooms: toN(data.bathrooms),
+      floor: toN(data.floor), totalFloors: toN(data.totalFloors), yearBuilt: toN(data.yearBuilt),
+      kitchenSqm: toN(data.kitchenSqm), latitude: toN(data.latitude), longitude: toN(data.longitude),
       agentComments: comments,
     };
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
+    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (res.ok) {
       const json = await res.json();
-      if (!isEdit) {
-        setPropertyId(json.id);
-      }
+      if (!isEdit) setPropertyId(json.id);
       router.push("/admin/properties");
       router.refresh();
     } else {
@@ -381,468 +241,504 @@ export default function PropertyForm({ initialData, employees = [], featureOptio
     setSaving(false);
   }
 
+  const filteredTypes = PROPERTY_TYPES.filter(t => t.category === category);
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-navy-900">
-          {isEdit ? "Редагувати нерухомість" : "Нова нерухомість"}
-        </h1>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition"
-          >
+    <form onSubmit={handleSubmit(onSubmit)} className="max-w-5xl mx-auto pb-10">
+
+      {/* ── Sticky header ── */}
+      <div className="sticky top-0 z-20 bg-gray-100/95 backdrop-blur-sm py-4 mb-6 flex items-center gap-3">
+        <button type="button" onClick={() => router.back()}
+          className="p-2 rounded-xl hover:bg-white transition text-gray-400 hover:text-gray-700 border border-transparent hover:border-gray-200">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div>
+          <h1 className="text-lg font-bold text-gray-900 leading-tight">
+            {isEdit ? "Редагування нерухомості" : "Нова нерухомість"}
+          </h1>
+          {isEdit && initialData?.titleUk && (
+            <p className="text-xs text-gray-400 truncate max-w-xs">{initialData.titleUk}</p>
+          )}
+        </div>
+        <div className="ml-auto flex gap-2">
+          <button type="button" onClick={() => router.back()}
+            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-800 transition rounded-xl hover:bg-white border border-transparent hover:border-gray-200">
             Скасувати
           </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2 bg-black text-white rounded-xl text-sm font-medium hover:bg-black/90 transition disabled:opacity-60"
-          >
-            {saving ? "Збереження..." : isEdit ? "Зберегти зміни" : "Створити"}
+          <button type="submit" disabled={saving}
+            className="flex items-center gap-2 px-5 py-2 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-800 transition disabled:opacity-60 shadow-sm">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? "Збереження..." : isEdit ? "Зберегти" : "Створити"}
           </button>
         </div>
       </div>
 
-      <div className="space-y-6">
-        {/* Основне */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
-            <span className="w-1 h-5 bg-navy-900 rounded-full inline-block" />
-            Основне
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <FieldLabel required>Категорія</FieldLabel>
-              <Select value={category} onChange={(e) => {
-                setCategory(e.target.value);
-                const first = PROPERTY_TYPES.find(t => t.category === e.target.value);
-                if (first) setValue("type", first.value as any);
-              }}>
-                {PROPERTY_CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.labelUk}</option>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <FieldLabel required>Тип нерухомості</FieldLabel>
-              <Select {...register("type")} onChange={(e) => {
-                setValue("type", e.target.value as any);
-                setCategory(getCategoryFromType(e.target.value));
-              }}>
-                {PROPERTY_TYPES.filter(t => t.category === category).map((t) => (
-                  <option key={t.value} value={t.value}>{t.labelUk}</option>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <FieldLabel required>Тип угоди</FieldLabel>
-              <Select {...register("listingType")}>
-                {LISTING_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.labelUk}</option>
-                ))}
-              </Select>
-            </div>
-          </div>
-          <div>
-            <FieldLabel required>Назва (UA)</FieldLabel>
-            <Input {...register("titleUk")} placeholder="Простора квартира в центрі..." />
-            {errors.titleUk && <p className="text-red-500 text-xs mt-1">{errors.titleUk.message}</p>}
-          </div>
-          <div>
-            <FieldLabel required>Назва (EN)</FieldLabel>
-            <Input {...register("titleEn")} placeholder="Spacious apartment in the center..." />
-            {errors.titleEn && <p className="text-red-500 text-xs mt-1">{errors.titleEn.message}</p>}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="col-span-2 sm:col-span-1">
-              <FieldLabel required>Ціна</FieldLabel>
-              <Controller
-                name="price"
-                control={control}
-                render={({ field: { onChange, value, ref, name } }) => (
-                  <Input
-                    type="number"
-                    name={name}
-                    ref={ref}
-                    value={value ?? ""}
-                    placeholder="50000"
-                    onChange={(e) => {
-                      const v = parseFloat(e.target.value);
-                      onChange(isNaN(v) ? undefined : v);
-                    }}
-                  />
-                )}
-              />
-              {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message as string}</p>}
-            </div>
-            <div>
-              <FieldLabel>За</FieldLabel>
-              <Select {...register("pricePer")}>
-                <option value="OBJECT">за об'єкт</option>
-                <option value="SQM">за м²</option>
-              </Select>
-            </div>
-            <div>
-              <FieldLabel required>Валюта</FieldLabel>
-              <Select {...register("currency")}>
-                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </Select>
-            </div>
-            <div>
-              <FieldLabel required>Статус</FieldLabel>
-              <Select {...register("status")}>
-                <option value="ACTIVE">Активне</option>
-                <option value="INACTIVE">Неактивне</option>
-                <option value="SOLD">Продано</option>
-                <option value="RENTED">Здано</option>
-              </Select>
-            </div>
-          </div>
-          {role === "ADMIN" && employees.length > 0 && (
-            <div>
-              <FieldLabel>Відповідальний агент</FieldLabel>
-              <Select {...register("assignedUserId")}>
-                <option value="">— Не призначено —</option>
-                {employees.map((e) => (
-                  <option key={e.id} value={e.id}>{e.name ?? e.email}</option>
-                ))}
-              </Select>
-            </div>
-          )}
-          {role === "ADMIN" && (
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input type="checkbox" {...register("isFeatured")} className="rounded" />
-              Виділити на головній сторінці
-            </label>
-          )}
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-5">
 
-        {/* Параметри */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
-            <span className="w-1 h-5 bg-gold-500 rounded-full inline-block" />
-            Параметри
-          </h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <div>
-              <FieldLabel required>Площа (м²)</FieldLabel>
-              <Controller
-                name="areaSqm"
-                control={control}
-                render={({ field: { onChange, value, ref, name } }) => (
-                  <Input
-                    type="number"
-                    step="0.1"
-                    name={name}
-                    ref={ref}
-                    value={value ?? ""}
-                    placeholder="65"
-                    onChange={(e) => {
-                      const v = parseFloat(e.target.value);
-                      onChange(isNaN(v) ? undefined : v);
-                    }}
-                  />
-                )}
-              />
-              {errors.areaSqm && <p className="text-red-500 text-xs mt-1">{errors.areaSqm.message as string}</p>}
-            </div>
-            <div>
-              <FieldLabel>Кімнати</FieldLabel>
-              <Input type="number" {...register("rooms")} placeholder="2" />
-            </div>
-            <div>
-              <FieldLabel>Спальні</FieldLabel>
-              <Input type="number" {...register("bedrooms")} placeholder="1" />
-            </div>
-            <div>
-              <FieldLabel>Санвузли</FieldLabel>
-              <Input type="number" {...register("bathrooms")} placeholder="1" />
-            </div>
-            <div>
-              <FieldLabel>Поверх</FieldLabel>
-              <Input type="number" {...register("floor")} placeholder="3" />
-            </div>
-            <div>
-              <FieldLabel>Поверхів всього</FieldLabel>
-              <Input type="number" {...register("totalFloors")} placeholder="9" />
-            </div>
-            <div>
-              <FieldLabel>Рік побудови</FieldLabel>
-              <Input type="number" {...register("yearBuilt")} placeholder="2020" />
-            </div>
-            <div>
-              <FieldLabel>Площа кухні (м²)</FieldLabel>
-              <Input type="number" step="0.1" {...register("kitchenSqm")} placeholder="10" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <FieldLabel>Ремонт</FieldLabel>
-              <Select {...register("renovationType")}>
-                <option value="">— Не вказано —</option>
-                <option value="Сирець">Сирець</option>
-                <option value="Житловий стан">Житловий стан</option>
-                <option value="Євроремонт">Євроремонт</option>
-                <option value="Авторський дизайн">Авторський дизайн</option>
-              </Select>
-            </div>
-            <div>
-              <FieldLabel>Тип стін</FieldLabel>
-              <Select {...register("wallType")}>
-                <option value="">— Не вказано —</option>
-                <option value="Цегла">Цегла</option>
-                <option value="Моноліт">Моноліт</option>
-                <option value="Панель">Панель</option>
-              </Select>
-            </div>
-            <div>
-              <FieldLabel>Газ / опалення</FieldLabel>
-              <Select {...register("gasType")}>
-                <option value="">— Не вказано —</option>
-                <option value="Індивідуальне газове">Індивідуальне газове</option>
-                <option value="Дахова котельня">Дахова котельня</option>
-                <option value="Центральне">Центральне</option>
-                <option value="Електрика">Електрика</option>
-              </Select>
-            </div>
-          </div>
-        </div>
+        {/* ── LEFT COLUMN ── */}
+        <div className="space-y-5">
 
-        {/* Локалізація */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
-            <span className="w-1 h-5 bg-emerald-500 rounded-full inline-block" />
-            Локалізація
-          </h2>
-          <div>
-            <FieldLabel required>Район</FieldLabel>
-            <Select {...register("district")}>
-              <option value="">— Не вказано —</option>
-              {DISTRICTS_IF.map((d) => (
-                <option key={d.value} value={d.value}>{d.labelUk}</option>
-              ))}
-            </Select>
-          </div>
-          <div>
-            <FieldLabel>Вулиця / Адреса</FieldLabel>
-            <Input {...register("address")} placeholder="вул. Незалежності, 15" />
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <FieldLabel>Номер будинку</FieldLabel>
-              <Input {...register("houseNumber")} placeholder="15а" />
-            </div>
-            <div>
-              <FieldLabel>Номер кв.</FieldLabel>
-              <Input {...register("apartmentNumber")} placeholder="42" />
-            </div>
-            <div>
-              <FieldLabel>Буква кв.</FieldLabel>
-              <Input {...register("apartmentLetter")} placeholder="А" />
-            </div>
-          </div>
-          <div>
-            <FieldLabel>Житловий комплекс</FieldLabel>
-            <input
-              {...register("residentialComplex")}
-              list="complexes-list"
-              placeholder="Назва ЖК або адреса..."
-              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 focus:border-navy-900"
-            />
-            <datalist id="complexes-list">
-              {RESIDENTIAL_COMPLEXES_IF.map((name) => (
-                <option key={name} value={name} />
-              ))}
-            </datalist>
-          </div>
-          <div>
-            <FieldLabel>Орієнтир</FieldLabel>
-            <Input
-              {...register("landmark")}
-              placeholder="Поруч із ТЦ Атріум, навпроти ринку..."
-            />
-          </div>
-          <div>
-            <FieldLabel>Місцезнаходження на карті</FieldLabel>
-            <MapPicker
-              lat={watch("latitude") ?? null}
-              lng={watch("longitude") ?? null}
-              onChange={(lat, lng) => {
-                setValue("latitude", lat);
-                setValue("longitude", lng);
-              }}
-            />
-          </div>
-        </div>
+          {/* ── 1. Тип угоди + Категорія + Тип ── */}
+          <Card>
+            <CardHeader icon={<Tag className="w-4 h-4" />} title="Класифікація" />
+            <div className="p-6 space-y-5">
 
-        {/* Додаткова інформація */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
-            <span className="w-1 h-5 bg-purple-500 rounded-full inline-block" />
-            Додаткова інформація
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <FieldLabel>Джерело</FieldLabel>
-              <Select {...register("source")}>
-                <option value="">— Не вказано —</option>
-                {SOURCE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-              </Select>
-            </div>
-            <div>
-              <FieldLabel>Комісія</FieldLabel>
-              <div className="flex gap-2">
-                <Controller
-                  name="commissionAmount"
-                  control={control}
-                  render={({ field: { onChange, value, ref, name } }) => (
-                    <Input
-                      type="number"
-                      name={name}
-                      ref={ref}
-                      value={value ?? ""}
-                      placeholder="500"
-                      className="flex-1"
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value);
-                        onChange(isNaN(v) ? null : v);
+              {/* Тип угоди */}
+              <div>
+                <Label required>Тип угоди</Label>
+                <div className="flex gap-1.5 p-1 bg-gray-50 border border-gray-100 rounded-xl w-fit">
+                  {LISTING_TYPES.map((lt) => (
+                    <button key={lt.value} type="button"
+                      onClick={() => setValue("listingType", lt.value as any)}
+                      className={cn(
+                        "px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-150",
+                        watchedListingType === lt.value
+                          ? "bg-white text-navy-900 shadow-sm border border-gray-200"
+                          : "text-gray-500 hover:text-gray-700"
+                      )}>
+                      {lt.labelUk}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Категорія */}
+              <div>
+                <Label required>Категорія</Label>
+                <div className="flex gap-1.5">
+                  {PROPERTY_CATEGORIES.map((c) => (
+                    <button key={c.value} type="button"
+                      onClick={() => {
+                        setCategory(c.value);
+                        const first = PROPERTY_TYPES.find(t => t.category === c.value);
+                        if (first) setValue("type", first.value as any);
                       }}
-                    />
-                  )}
-                />
-                <Select {...register("commissionType")} className="w-36">
-                  {COMMISSION_TYPES.map((c) => <option key={c.value} value={c.value}>{c.labelUk}</option>)}
-                </Select>
-                <Select {...register("commissionCurrency")} className="w-20">
-                  {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </Select>
+                      className={cn(
+                        "px-4 py-1.5 rounded-xl text-sm font-medium border transition-all duration-150",
+                        category === c.value
+                          ? "bg-navy-900 text-white border-navy-900"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-navy-300"
+                      )}>
+                      {c.labelUk}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Тип нерухомості */}
+              <div>
+                <Label required>Тип нерухомості</Label>
+                <div className="flex flex-wrap gap-1.5">
+                  {filteredTypes.map((t) => (
+                    <button key={t.value} type="button"
+                      onClick={() => {
+                        setValue("type", t.value as any);
+                        setCategory(getCategoryFromType(t.value));
+                      }}
+                      className={cn(
+                        "px-3 py-1.5 rounded-xl text-xs font-medium border transition-all duration-150",
+                        watchedType === t.value
+                          ? "bg-navy-900 text-white border-navy-900"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-navy-300 hover:text-navy-900"
+                      )}>
+                      {t.labelUk}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          </Card>
+
+          {/* ── 2. Назва ── */}
+          <Card>
+            <CardHeader icon={<FileText className="w-4 h-4" />} title="Назва оголошення" />
+            <div className="p-6 space-y-4">
+              <div>
+                <Label required>Назва (UA)</Label>
+                <Input {...register("titleUk")} placeholder="Простора квартира в центрі міста..." />
+                {errors.titleUk && <p className="text-red-500 text-xs mt-1">{errors.titleUk.message}</p>}
+              </div>
+              <div>
+                <Label required>Назва (EN)</Label>
+                <Input {...register("titleEn")} placeholder="Spacious apartment in the city center..." />
+                {errors.titleEn && <p className="text-red-500 text-xs mt-1">{errors.titleEn.message}</p>}
               </div>
             </div>
-          </div>
-          <div>
-            <FieldLabel>Замітка (внутрішня)</FieldLabel>
-            <textarea
-              {...register("internalNote")}
-              rows={3}
-              placeholder="Внутрішні нотатки, не публікуються..."
-              className="w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 resize-none"
-            />
-          </div>
-        </div>
+          </Card>
 
-        {/* Опис */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200 space-y-5">
-          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 flex items-center gap-2">
-            <span className="w-1 h-5 bg-blue-500 rounded-full inline-block" />
-            Опис
-          </h2>
-          <div>
-            <FieldLabel>Опис (UA)</FieldLabel>
-            <Controller
-              name="descriptionUk"
-              control={control}
-              render={({ field }) => <TiptapEditor value={field.value} onChange={field.onChange} />}
-            />
-          </div>
-        </div>
-
-        {/* Коментарі агента */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200">
-          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 mb-5 flex items-center gap-2">
-            <span className="w-1 h-5 bg-indigo-500 rounded-full inline-block" />
-            Коментарі агента
-          </h2>
-
-          {comments.length > 0 && (
-            <div className="space-y-2 mb-4">
-              {comments.map((c, i) => (
-                <div key={i} className="bg-gray-50 rounded-xl p-3 flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm text-gray-800 whitespace-pre-wrap">{c.text}</p>
-                    {(c.author || c.createdAt) && (
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        {c.author}
-                        {c.author && c.createdAt ? " · " : ""}
-                        {c.createdAt
-                          ? new Date(c.createdAt).toLocaleDateString("uk-UA", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })
-                          : ""}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setComments((prev) => prev.filter((_, idx) => idx !== i))}
-                    className="text-gray-300 hover:text-red-400 transition text-lg leading-none flex-shrink-0"
-                    title="Видалити коментар"
-                  >
-                    ×
-                  </button>
+          {/* ── 3. Параметри ── */}
+          <Card>
+            <CardHeader icon={<Layers className="w-4 h-4" />} title="Параметри" />
+            <div className="p-6 space-y-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="col-span-2 sm:col-span-1">
+                  <Label required>Площа, м²</Label>
+                  <Controller name="areaSqm" control={control}
+                    render={({ field: { onChange, value, ref, name } }) => (
+                      <Input type="number" step="0.1" name={name} ref={ref} value={value ?? ""} placeholder="65"
+                        onChange={(e) => { const v = parseFloat(e.target.value); onChange(isNaN(v) ? undefined : v); }} />
+                    )} />
+                  {errors.areaSqm && <p className="text-red-500 text-xs mt-1">{errors.areaSqm.message as string}</p>}
                 </div>
-              ))}
+                <div>
+                  <Label>Кімнати</Label>
+                  <Input type="number" {...register("rooms")} placeholder="2" />
+                </div>
+                <div>
+                  <Label>Спальні</Label>
+                  <Input type="number" {...register("bedrooms")} placeholder="1" />
+                </div>
+                <div>
+                  <Label>Санвузли</Label>
+                  <Input type="number" {...register("bathrooms")} placeholder="1" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <Label>Поверх</Label>
+                  <Input type="number" {...register("floor")} placeholder="3" />
+                </div>
+                <div>
+                  <Label>Всього поверхів</Label>
+                  <Input type="number" {...register("totalFloors")} placeholder="9" />
+                </div>
+                <div>
+                  <Label>Рік побудови</Label>
+                  <Input type="number" {...register("yearBuilt")} placeholder="2022" />
+                </div>
+                <div>
+                  <Label>Кухня, м²</Label>
+                  <Input type="number" step="0.1" {...register("kitchenSqm")} placeholder="10" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <Label>Ремонт</Label>
+                  <FSelect {...register("renovationType")}>
+                    <option value="">— Не вказано —</option>
+                    <option value="Сирець">Сирець</option>
+                    <option value="Житловий стан">Житловий стан</option>
+                    <option value="Євроремонт">Євроремонт</option>
+                    <option value="Авторський дизайн">Авторський дизайн</option>
+                  </FSelect>
+                </div>
+                <div>
+                  <Label>Тип стін</Label>
+                  <FSelect {...register("wallType")}>
+                    <option value="">— Не вказано —</option>
+                    <option value="Цегла">Цегла</option>
+                    <option value="Моноліт">Моноліт</option>
+                    <option value="Панель">Панель</option>
+                  </FSelect>
+                </div>
+                <div>
+                  <Label>Опалення</Label>
+                  <FSelect {...register("gasType")}>
+                    <option value="">— Не вказано —</option>
+                    <option value="Індивідуальне газове">Індивідуальне газове</option>
+                    <option value="Дахова котельня">Дахова котельня</option>
+                    <option value="Центральне">Центральне</option>
+                    <option value="Електрика">Електрика</option>
+                  </FSelect>
+                </div>
+              </div>
             </div>
+          </Card>
+
+          {/* ── 4. Характеристики ── */}
+          {featureOptions && featureOptions.length > 0 && (
+            <Card>
+              <CardHeader icon={<Layers className="w-4 h-4" />} title="Характеристики" />
+              <div className="p-6">
+                <Controller name="features" control={control}
+                  render={({ field }) => (
+                    <div className="flex flex-wrap gap-2">
+                      {featureOptions.map((f) => {
+                        const isSelected = field.value?.includes(f.value);
+                        return (
+                          <button key={f.value} type="button"
+                            onClick={() => {
+                              const cur = field.value ?? [];
+                              field.onChange(isSelected ? cur.filter((v) => v !== f.value) : [...cur, f.value]);
+                            }}
+                            className={cn(
+                              "px-3 py-1.5 rounded-xl text-xs font-medium border transition-all duration-150",
+                              isSelected
+                                ? "bg-navy-900 text-white border-navy-900"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-navy-300 hover:text-navy-900"
+                            )}>
+                            {f.labelUk}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )} />
+              </div>
+            </Card>
           )}
 
-          <div className="flex gap-2 items-end">
-            <textarea
-              value={commentInput}
-              onChange={(e) => setCommentInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-                  e.preventDefault();
-                  addComment();
-                }
-              }}
-              placeholder="Додати коментар..."
-              rows={2}
-              className="flex-1 border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900 resize-none"
-            />
-            <button
-              type="button"
-              onClick={addComment}
-              disabled={!commentInput.trim()}
-              className="flex items-center gap-1.5 px-4 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-black/90 transition disabled:opacity-40 self-end"
-            >
-              <MessageSquarePlus className="w-4 h-4" />
-              +1
-            </button>
-          </div>
-        </div>
-
-        {/* Фото */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-gray-200">
-          <h2 className="text-base font-semibold text-navy-900 border-b-2 border-gray-200 pb-3 mb-5 flex items-center gap-2">
-            <span className="w-1 h-5 bg-orange-500 rounded-full inline-block" />
-            Фото
-          </h2>
-          {propertyId === "new" && (
-            <div className="bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-3 rounded-lg mb-4">
-              Спочатку збережіть нерухомість (натисніть «Створити»), потім додайте фото.
+          {/* ── 5. Розташування ── */}
+          <Card>
+            <CardHeader icon={<MapPin className="w-4 h-4" />} title="Розташування" />
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label required>Район</Label>
+                  <FSelect {...register("district")}>
+                    <option value="">— Оберіть район —</option>
+                    {DISTRICTS_IF.map((d) => <option key={d.value} value={d.value}>{d.labelUk}</option>)}
+                  </FSelect>
+                </div>
+                <div>
+                  <Label>Вулиця / Адреса</Label>
+                  <Input {...register("address")} placeholder="вул. Незалежності, 15" />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label>Номер будинку</Label>
+                  <Input {...register("houseNumber")} placeholder="15а" />
+                </div>
+                <div>
+                  <Label>Номер кв.</Label>
+                  <Input {...register("apartmentNumber")} placeholder="42" />
+                </div>
+                <div>
+                  <Label>Буква кв.</Label>
+                  <Input {...register("apartmentLetter")} placeholder="А" />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <Label>Житловий комплекс</Label>
+                  <input {...register("residentialComplex")} list="complexes-list"
+                    placeholder="Назва ЖК або адреса..."
+                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900 transition-all placeholder:text-gray-300" />
+                  <datalist id="complexes-list">
+                    {RESIDENTIAL_COMPLEXES_IF.map((n) => <option key={n} value={n} />)}
+                  </datalist>
+                </div>
+                <div>
+                  <Label>Орієнтир</Label>
+                  <Input {...register("landmark")} placeholder="Поруч із ТЦ Атріум..." />
+                </div>
+              </div>
+              <div>
+                <Label>Позначте на карті</Label>
+                <div className="rounded-xl overflow-hidden border border-gray-200">
+                  <MapPicker
+                    lat={watch("latitude") ?? null}
+                    lng={watch("longitude") ?? null}
+                    onChange={(lat, lng) => { setValue("latitude", lat); setValue("longitude", lng); }}
+                  />
+                </div>
+              </div>
             </div>
-          )}
-          <ImageUploader
-            propertyId={propertyId}
-            initialImages={images}
-            onChange={setImages}
-          />
-        </div>
-      </div>
+          </Card>
 
-      {/* Bottom save */}
-      <div className="flex justify-end mt-4">
-        <button
-          type="submit"
-          disabled={saving}
-          className="px-8 py-2.5 bg-black text-white rounded-xl text-sm font-medium hover:bg-black/90 transition disabled:opacity-60"
-        >
-          {saving ? "Збереження..." : isEdit ? "Зберегти зміни" : "Створити оголошення"}
-        </button>
+          {/* ── 5. Опис ── */}
+          <Card>
+            <CardHeader icon={<FileText className="w-4 h-4" />} title="Опис" />
+            <div className="p-6">
+              <Label>Опис (UA) — автоматично перекладається</Label>
+              <Controller name="descriptionUk" control={control}
+                render={({ field }) => <TiptapEditor value={field.value} onChange={field.onChange} />} />
+            </div>
+          </Card>
+
+          {/* ── 6. Фото ── */}
+          <Card>
+            <CardHeader icon={<Image className="w-4 h-4" />} title="Фото" />
+            <div className="p-6">
+              {propertyId === "new" && (
+                <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-3 rounded-xl mb-4">
+                  <span className="text-lg">💡</span>
+                  Спочатку збережіть («Створити»), потім додайте фото.
+                </div>
+              )}
+              <ImageUploader propertyId={propertyId} initialImages={images} onChange={setImages} />
+            </div>
+          </Card>
+
+          {/* ── 7. Коментарі агента ── */}
+          <Card>
+            <CardHeader icon={<MessageSquarePlus className="w-4 h-4" />} title="Коментарі агента" />
+            <div className="p-6">
+              {comments.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {comments.map((c, i) => (
+                    <div key={i} className="group flex items-start gap-3 bg-gray-50 rounded-xl p-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-800 whitespace-pre-wrap">{c.text}</p>
+                        {(c.author || c.createdAt) && (
+                          <p className="text-[11px] text-gray-400 mt-1">
+                            {c.author}{c.author && c.createdAt ? " · " : ""}
+                            {c.createdAt ? new Date(c.createdAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short", year: "numeric" }) : ""}
+                          </p>
+                        )}
+                      </div>
+                      <button type="button" onClick={() => setComments((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="opacity-0 group-hover:opacity-100 transition p-1 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-2 items-end">
+                <textarea value={commentInput} onChange={(e) => setCommentInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) { e.preventDefault(); addComment(); } }}
+                  placeholder="Додати коментар... (Cmd+Enter)"
+                  rows={2}
+                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900 resize-none transition-all placeholder:text-gray-300" />
+                <button type="button" onClick={addComment} disabled={!commentInput.trim()}
+                  className="flex items-center gap-1.5 px-4 py-2.5 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-800 transition disabled:opacity-40 self-end">
+                  <MessageSquarePlus className="w-4 h-4" />
+                  +1
+                </button>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* ── RIGHT COLUMN (sidebar) ── */}
+        <div className="space-y-5">
+
+          {/* Ціна та статус */}
+          <Card>
+            <CardHeader icon={<DollarSign className="w-4 h-4" />} title="Ціна" />
+            <div className="p-5 space-y-4">
+              <div>
+                <Label required>Вартість</Label>
+                <div className="flex gap-2">
+                  <Controller name="price" control={control}
+                    render={({ field: { onChange, value, ref, name } }) => (
+                      <Input type="number" name={name} ref={ref} value={value ?? ""} placeholder="50 000"
+                        className="flex-1"
+                        onChange={(e) => { const v = parseFloat(e.target.value); onChange(isNaN(v) ? undefined : v); }} />
+                    )} />
+                  <FSelect {...register("currency")} className="w-20">
+                    {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </FSelect>
+                </div>
+                {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message as string}</p>}
+              </div>
+              <div>
+                <Label>За</Label>
+                <div className="flex gap-1 p-1 bg-gray-50 border border-gray-100 rounded-xl">
+                  {[{ v: "OBJECT", l: "за об'єкт" }, { v: "SQM", l: "за м²" }].map((o) => (
+                    <button key={o.v} type="button"
+                      onClick={() => setValue("pricePer", o.v as any)}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-lg text-xs font-medium transition-all",
+                        watch("pricePer") === o.v ? "bg-white shadow-sm border border-gray-200 text-navy-900" : "text-gray-500"
+                      )}>
+                      {o.l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* Статус */}
+          <Card>
+            <CardHeader icon={<Building2 className="w-4 h-4" />} title="Статус" />
+            <div className="p-5">
+              <div className="grid grid-cols-2 gap-2">
+                {STATUS_CONFIG.map((s) => (
+                  <button key={s.value} type="button"
+                    onClick={() => setValue("status", s.value as any)}
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-150",
+                      watchedStatus === s.value
+                        ? "bg-navy-900 text-white border-navy-900"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                    )}>
+                    <span className={cn("w-2 h-2 rounded-full flex-shrink-0", watchedStatus === s.value ? "bg-white/70" : s.dot)} />
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          {/* Агент + Featured */}
+          {role === "ADMIN" && (
+            <Card>
+              <CardHeader icon={<Home className="w-4 h-4" />} title="Призначення" />
+              <div className="p-5 space-y-4">
+                {employees.length > 0 && (
+                  <div>
+                    <Label>Відповідальний агент</Label>
+                    <FSelect {...register("assignedUserId")}>
+                      <option value="">— Не призначено —</option>
+                      {employees.map((e) => <option key={e.id} value={e.id}>{e.name ?? e.email}</option>)}
+                    </FSelect>
+                  </div>
+                )}
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className={cn(
+                    "relative w-10 h-6 rounded-full transition-colors duration-200",
+                    watch("isFeatured") ? "bg-gold-500" : "bg-gray-200"
+                  )}>
+                    <input type="checkbox" {...register("isFeatured")} className="sr-only" />
+                    <span className={cn(
+                      "absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200",
+                      watch("isFeatured") ? "translate-x-5" : "translate-x-1"
+                    )} />
+                  </div>
+                  <span className="text-sm text-gray-700 font-medium">🔥 Виділити на головній</span>
+                </label>
+              </div>
+            </Card>
+          )}
+
+          {/* Джерело + Комісія */}
+          <Card>
+            <CardHeader icon={<Info className="w-4 h-4" />} title="Додатково" />
+            <div className="p-5 space-y-4">
+              <div>
+                <Label>Джерело</Label>
+                <FSelect {...register("source")}>
+                  <option value="">— Не вказано —</option>
+                  {SOURCE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </FSelect>
+              </div>
+              <div>
+                <Label>Комісія</Label>
+                <div className="flex gap-1.5">
+                  <Controller name="commissionAmount" control={control}
+                    render={({ field: { onChange, value, ref, name } }) => (
+                      <Input type="number" name={name} ref={ref} value={value ?? ""} placeholder="500"
+                        className="flex-1 min-w-0"
+                        onChange={(e) => { const v = parseFloat(e.target.value); onChange(isNaN(v) ? null : v); }} />
+                    )} />
+                  <FSelect {...register("commissionType")} className="w-28">
+                    {COMMISSION_TYPES.map((c) => <option key={c.value} value={c.value}>{c.labelUk}</option>)}
+                  </FSelect>
+                  <FSelect {...register("commissionCurrency")} className="w-16">
+                    {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </FSelect>
+                </div>
+              </div>
+              <div>
+                <Label>Замітка (внутрішня)</Label>
+                <textarea {...register("internalNote")} rows={3}
+                  placeholder="Внутрішні нотатки..."
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900 resize-none transition-all placeholder:text-gray-300" />
+              </div>
+            </div>
+          </Card>
+
+          {/* Save button */}
+          <button type="submit" disabled={saving}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-900 text-white rounded-2xl text-sm font-bold hover:bg-navy-800 transition disabled:opacity-60 shadow-sm">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {saving ? "Збереження..." : isEdit ? "Зберегти зміни" : "Створити оголошення"}
+          </button>
+        </div>
       </div>
     </form>
   );
