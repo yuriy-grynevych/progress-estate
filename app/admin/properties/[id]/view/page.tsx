@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import AdminPropertyGallery from "@/components/admin/AdminPropertyGallery";
 import PropertyMap from "@/components/property/PropertyMap";
+import AgentCommentSection from "@/components/admin/AgentCommentSection";
 import { formatPrice, getPropertyTypeLabel } from "@/lib/utils";
 import { PROPERTY_FEATURES } from "@/lib/constants";
 import {
@@ -240,23 +241,10 @@ export default async function AgentPropertyViewPage({
           )}
 
           {/* Agent comments */}
-          {((property.agentComments as any[]) ?? []).length > 0 && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
-              <h2 className="text-base font-bold text-navy-900 mb-3">Коментарі агента</h2>
-              <div className="space-y-2">
-                {(property.agentComments as any[]).map((c, i) => (
-                  <div key={i} className="bg-blue-50 rounded-xl px-3 py-2 text-sm text-gray-700">
-                    <span className="font-semibold text-blue-600">{c.author}:</span> {c.text}
-                    {c.createdAt && (
-                      <span className="text-[10px] text-gray-400 ml-2">
-                        {new Date(c.createdAt).toLocaleDateString("uk-UA")}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <AgentCommentSection
+            propertyId={id}
+            initialComments={(property.agentComments as any[]) ?? []}
+          />
         </div>
 
         {/* Right column */}
