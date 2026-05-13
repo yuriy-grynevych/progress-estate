@@ -142,6 +142,7 @@ export default function PropertyForm({
   const [images, setImages]       = useState<PropertyImage[]>(initialData?.images ?? []);
   const [comments, setComments]   = useState<AgentComment[]>((initialData?.agentComments as AgentComment[]) ?? []);
   const [commentInput, setCommentInput] = useState("");
+  const [commentSaving, setCommentSaving] = useState(false);
   const isEdit = Boolean(initialData?.id);
 
   function getCategoryFromType(t: string): string {
@@ -199,11 +200,45 @@ export default function PropertyForm({
   const watchedStatus      = watch("status");
   const watchedType        = watch("type");
 
-  function addComment() {
+  async function addComment() {
     const text = commentInput.trim();
     if (!text) return;
-    setComments((prev) => [...prev, { text, author: currentUserName ?? "", createdAt: new Date().toISOString() }]);
-    setCommentInput("");
+    if (isEdit && initialData?.id) {
+      setCommentSaving(true);
+      try {
+        const res = await fetch(`/api/properties/${initialData.id}/comments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setComments(data.comments);
+          setCommentInput("");
+        }
+      } finally {
+        setCommentSaving(false);
+      }
+    } else {
+      setComments((prev) => [...prev, { text, author: currentUserName ?? "", createdAt: new Date().toISOString() }]);
+      setCommentInput("");
+    }
+  }
+
+  async function deleteComment(index: number) {
+    if (isEdit && initialData?.id) {
+      const res = await fetch(`/api/properties/${initialData.id}/comments`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ index }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data.comments);
+      }
+    } else {
+      setComments((prev) => prev.filter((_, idx) => idx !== index));
+    }
   }
 
   async function onSubmit(data: any) {
@@ -578,7 +613,7 @@ export default function PropertyForm({
                           </p>
                         )}
                       </div>
-                      <button type="button" onClick={() => setComments((prev) => prev.filter((_, idx) => idx !== i))}
+                      <button type="button" onClick={() => deleteComment(i)}
                         className="opacity-0 group-hover:opacity-100 transition p-1 rounded-lg hover:bg-red-50 text-gray-300 hover:text-red-400">
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -592,10 +627,10 @@ export default function PropertyForm({
                   placeholder="Додати коментар... (Cmd+Enter)"
                   rows={2}
                   className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900 resize-none transition-all placeholder:text-gray-300" />
-                <button type="button" onClick={addComment} disabled={!commentInput.trim()}
+                <button type="button" onClick={addComment} disabled={!commentInput.trim() || commentSaving}
                   className="flex items-center gap-1.5 px-4 py-2.5 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-800 transition disabled:opacity-40 self-end">
                   <MessageSquarePlus className="w-4 h-4" />
-                  +1
+                  {commentSaving ? "..." : "+1"}
                 </button>
               </div>
             </div>
