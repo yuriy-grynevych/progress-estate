@@ -55,10 +55,10 @@ export default async function InquiryKanbanPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-96px)]">
-      <div className="flex items-center justify-between mb-4 flex-shrink-0">
-        <h1 className="text-2xl font-bold text-navy-900">
+      <div className="flex items-center justify-between mb-3 flex-shrink-0">
+        <h1 className="text-lg font-bold text-navy-900">
           Воронка заявок
-          <span className="ml-2 text-base font-normal text-gray-400">({allInquiries})</span>
+          <span className="ml-2 text-sm font-normal text-gray-400">({allInquiries})</span>
         </h1>
         <div className="flex items-center gap-2">
           <Link
