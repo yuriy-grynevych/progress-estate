@@ -149,17 +149,14 @@ export default async function AdminPropertiesPage({
         </Link>
       </div>
 
-      {/* Two-column layout */}
-      <div className="flex gap-6 items-start">
-        {/* Sidebar filters */}
-        <Suspense fallback={<div className="hidden lg:block w-56 flex-shrink-0" />}>
-          <AdminPropertySidebar />
-        </Suspense>
+      {/* Filters at the top */}
+      <Suspense fallback={<div className="h-10 mb-4" />}>
+        <AdminPropertySidebar />
+      </Suspense>
 
-        {/* Main content */}
-        <div className="flex-1 min-w-0">
-          {/* Search */}
-          <form className="mb-4">
+      {/* Search */}
+      <div>
+        <form className="mb-4">
             {Object.entries(searchParams).filter(([k]) => k !== "search").map(([k, v]) =>
               v ? <input key={k} type="hidden" name={k} value={v} /> : null
             )}
@@ -380,7 +377,6 @@ export default async function AdminPropertiesPage({
             })}
           </div>
         </div>
-      </div>
     </div>
   );
 }
