@@ -146,7 +146,6 @@ export default function AdminPropertySidebar() {
             { v: "", label: "Всі" },
             { v: "SALE", label: "Продаж" },
             { v: "RENT", label: "Оренда" },
-            { v: "DAILY_RENT", label: "Подобова" },
           ].map((o) => (
             <button key={o.v || "all"} onClick={() => push({ listingType: o.v || null })}
               className={cn("text-sm py-1.5 px-3 rounded-full transition-all font-medium whitespace-nowrap",
