@@ -57,6 +57,16 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
   const data = parsed.data;
+
+  if (data.phone) {
+    const duplicate = await prisma.contact.findFirst({
+      where: { phone: data.phone, type: data.type },
+    });
+    if (duplicate) {
+      return NextResponse.json({ error: "DUPLICATE_PHONE" }, { status: 409 });
+    }
+  }
+
   // Employees are always assigned to themselves
   const assignedUserId = role === "EMPLOYEE" ? userId : (data.assignedUserId || userId);
 

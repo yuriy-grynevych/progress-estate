@@ -37,6 +37,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
+  if (parsed.data.phone) {
+    const duplicate = await prisma.contact.findFirst({
+      where: { phone: parsed.data.phone, id: { not: params.id } },
+    });
+    if (duplicate) {
+      return NextResponse.json({ error: "DUPLICATE_PHONE" }, { status: 409 });
+    }
+  }
+
   const contact = await prisma.contact.update({
     where: { id: params.id },
     data: {

@@ -57,6 +57,11 @@ export default function ContactsManager({ initialContacts, agents, role, current
   const [filterAgent, setFilterAgent] = useState<string>("");
   const [error, setError] = useState("");
 
+  function normalizePhone(raw: string) {
+    const digits = raw.replace(/\D/g, "");
+    return digits.startsWith("380") ? digits.slice(3) : digits;
+  }
+
   const filtered = contacts.filter((c) => {
     if (c.type !== activeTab) return false;
     if (filterAgent && c.assignedUser?.id !== filterAgent) return false;
@@ -88,6 +93,10 @@ export default function ContactsManager({ initialContacts, agents, role, current
           assignedUserId: role === "ADMIN" ? (form.assignedUserId || currentUserId) : undefined,
         }),
       });
+      if (res.status === 409) {
+        setError(`Цей ${activeTab === "CLIENT" ? "клієнт" : "власник"} вже є в базі!`);
+        return;
+      }
       if (!res.ok) throw new Error("Помилка збереження");
       const created: Contact = await res.json();
       setContacts((prev) => [created, ...prev]);
@@ -109,6 +118,10 @@ export default function ContactsManager({ initialContacts, agents, role, current
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(editForm),
       });
+      if (res.status === 409) {
+        setError("Контакт з таким телефоном вже є в базі!");
+        return;
+      }
       if (!res.ok) throw new Error();
       const updated: Contact = await res.json();
       setContacts((prev) => prev.map((c) => (c.id === id ? updated : c)));
@@ -234,9 +247,10 @@ export default function ContactsManager({ initialContacts, agents, role, current
               <label className="block text-xs text-gray-500 mb-1">Телефон</label>
               <input
                 value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, phone: normalizePhone(e.target.value) }))}
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-navy-400"
-                placeholder="+380..."
+                placeholder="0671234567"
+                inputMode="numeric"
               />
             </div>
             <div>
@@ -343,8 +357,9 @@ export default function ContactsManager({ initialContacts, agents, role, current
                     <label className="block text-xs text-gray-500 mb-1">Телефон</label>
                     <input
                       value={editForm.phone ?? ""}
-                      onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                      onChange={(e) => setEditForm((f) => ({ ...f, phone: normalizePhone(e.target.value) }))}
                       className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-navy-400"
+                      inputMode="numeric"
                     />
                   </div>
                   <div>
