@@ -138,6 +138,7 @@ export default function PropertyForm({
 }: PropertyFormProps) {
   const router = useRouter();
   const [saving, setSaving]       = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [propertyId, setPropertyId] = useState(initialData?.id ?? "new");
   const [images, setImages]       = useState<PropertyImage[]>(initialData?.images ?? []);
   const [comments, setComments]   = useState<AgentComment[]>((initialData?.agentComments as AgentComment[]) ?? []);
@@ -243,6 +244,7 @@ export default function PropertyForm({
 
   async function onSubmit(data: any) {
     setSaving(true);
+    setSaveError(null);
     const method = isEdit ? "PUT" : "POST";
     const url    = isEdit ? `/api/properties/${initialData!.id}` : "/api/properties";
     const toN    = (v: unknown) => { const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
@@ -264,14 +266,25 @@ export default function PropertyForm({
       agentComments: comments,
     };
 
-    const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    if (res.ok) {
-      const json = await res.json();
-      if (!isEdit) setPropertyId(json.id);
-      router.push("/admin/properties");
-      router.refresh();
-    } else {
-      alert("Помилка збереження. Перевірте всі поля.");
+    try {
+      const res = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (res.ok) {
+        const json = await res.json();
+        if (!isEdit) setPropertyId(json.id);
+        router.push("/admin/properties");
+        router.refresh();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        const fieldErrors = errData?.error?.fieldErrors;
+        if (fieldErrors) {
+          const msgs = Object.entries(fieldErrors).map(([k, v]) => `${k}: ${(v as string[]).join(", ")}`).join("; ");
+          setSaveError(`Помилка валідації: ${msgs}`);
+        } else {
+          setSaveError(`Помилка збереження (${res.status}). Перевірте всі поля.`);
+        }
+      }
+    } catch (e: any) {
+      setSaveError(`Мережева помилка: ${e?.message ?? "невідома"}`);
     }
     setSaving(false);
   }
@@ -295,16 +308,21 @@ export default function PropertyForm({
             <p className="text-xs text-gray-400 truncate max-w-xs">{initialData.titleUk}</p>
           )}
         </div>
-        <div className="ml-auto flex gap-2">
-          <button type="button" onClick={() => router.back()}
-            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-800 transition rounded-xl hover:bg-white border border-transparent hover:border-gray-200">
-            Скасувати
-          </button>
-          <button type="submit" disabled={saving}
-            className="flex items-center gap-2 px-5 py-2 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-800 transition disabled:opacity-60 shadow-sm">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {saving ? "Збереження..." : isEdit ? "Зберегти" : "Створити"}
-          </button>
+        <div className="ml-auto flex flex-col items-end gap-1">
+          <div className="flex gap-2">
+            <button type="button" onClick={() => router.back()}
+              className="px-4 py-2 text-sm text-gray-500 hover:text-gray-800 transition rounded-xl hover:bg-white border border-transparent hover:border-gray-200">
+              Скасувати
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex items-center gap-2 px-5 py-2 bg-navy-900 text-white rounded-xl text-sm font-semibold hover:bg-navy-800 transition disabled:opacity-60 shadow-sm">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? "Збереження..." : isEdit ? "Зберегти" : "Створити"}
+            </button>
+          </div>
+          {saveError && (
+            <p className="text-xs text-red-500 max-w-sm text-right">{saveError}</p>
+          )}
         </div>
       </div>
 
