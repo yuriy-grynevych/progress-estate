@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight, ImageOff, Sparkles, ExternalLink } from "lucide-react";
 import { isExternalImage } from "@/lib/cloudinary";
@@ -16,10 +17,12 @@ interface Props {
   title: string;
   isNew?: boolean;
   isRent?: boolean;
-  linkToSlug?: string;
+  linkToSlug?: string;   // "На сайті" button inside lightbox
+  navigateTo?: string;   // when set: click navigates here instead of opening lightbox
 }
 
-export default function AdminPropertyGallery({ images, title, isNew, isRent, linkToSlug }: Props) {
+export default function AdminPropertyGallery({ images, title, isNew, isRent, linkToSlug, navigateTo }: Props) {
+  const router = useRouter();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
@@ -56,7 +59,7 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent, lin
         {/* Main image — fills its grid cell */}
         <div
           className="relative overflow-hidden cursor-pointer bg-gray-100"
-          onClick={() => mainImg && openAt(mainImg)}
+          onClick={() => navigateTo ? router.push(navigateTo) : (mainImg && openAt(mainImg))}
         >
           {mainImg ? (
             <Image
@@ -103,7 +106,7 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent, lin
               <div
                 key={i}
                 className="relative overflow-hidden cursor-pointer"
-                onClick={() => openAt(thumb)}
+                onClick={() => navigateTo ? router.push(navigateTo) : openAt(thumb)}
               >
                 <Image
                   src={thumb.url}
