@@ -90,7 +90,7 @@ export default function AdminPropertySidebar() {
   const isMine       = sp.get("mine") === "1";
 
   const hasFilters = ["listingType","rooms","condition","status","type","district","priceMin","priceMax","areaMin","areaMax","mine","search"].some((k) => sp.get(k));
-  const extraActiveCount = [sp.get("priceMin"),sp.get("priceMax"),sp.get("areaMin"),sp.get("areaMax"),sp.get("type"),sp.get("district"),sp.get("condition"),sp.get("search")].filter(Boolean).length;
+  const extraActiveCount = [sp.get("priceMin"),sp.get("priceMax"),sp.get("areaMin"),sp.get("areaMax"),sp.get("type"),sp.get("district"),sp.get("condition"),sp.get("search"),sp.get("rooms")].filter(Boolean).length;
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -159,20 +159,6 @@ export default function AdminPropertySidebar() {
 
         <div className="w-px h-5 bg-gray-200 hidden sm:block" />
 
-        {/* К-ть кімнат */}
-        <div className="flex items-center gap-1">
-          {["", "1", "2", "3", "4"].map((r) => (
-            <button key={r || "all"} onClick={() => push({ rooms: r || null })}
-              className={cn("w-8 h-8 text-xs font-semibold rounded-full border transition-all",
-                rooms === r ? "bg-navy-900 text-white border-navy-900" : "bg-white text-gray-600 border-gray-200 hover:border-navy-300"
-              )}>
-              {r ? `${r}${r === "4" ? "+" : ""}` : "Всі"}
-            </button>
-          ))}
-        </div>
-
-        <div className="w-px h-5 bg-gray-200 hidden sm:block" />
-
         {/* Статус */}
         <Drop label={statusLabel} active={!!status}>
           {(close) => (<>
@@ -204,6 +190,21 @@ export default function AdminPropertySidebar() {
           {extraOpen && (
             <div className="absolute top-full left-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 p-4 w-[480px] max-w-[calc(100vw-2rem)]">
               <div className="grid grid-cols-2 gap-4">
+                {/* К-ть кімнат */}
+                <div className="col-span-2">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">К-ть кімнат</p>
+                  <div className="flex gap-1.5">
+                    {["", "1", "2", "3", "4"].map((r) => (
+                      <button key={r || "all"} onClick={() => push({ rooms: r || null })}
+                        className={cn("flex-1 py-1.5 text-xs font-semibold rounded-xl border transition-all",
+                          rooms === r ? "bg-navy-900 text-white border-navy-900" : "bg-white text-gray-600 border-gray-200 hover:border-navy-300"
+                        )}>
+                        {r ? `${r}${r === "4" ? "+" : ""}` : "Всі"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Ціна */}
                 <div className="col-span-2 sm:col-span-1">
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ціна</p>
