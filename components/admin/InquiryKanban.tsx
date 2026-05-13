@@ -239,13 +239,13 @@ export default function InquiryKanban({ initialCards, agents }: Props) {
         <p className="text-sm text-gray-400">{totalCount} заявок</p>
         <AddLeadModal agents={agents} onCreated={handleCreated} />
       </div>
-    <div className="flex gap-3 overflow-x-auto overflow-y-auto pb-4" style={{ height: "calc(100vh - 220px)" }}>
+    <div className="flex gap-3 pb-4" style={{ height: "calc(100vh - 220px)" }}>
       {FUNNEL_STAGES.map((stage, stageIdx) => {
         const stageCards = cards.filter((c) => c.funnelStage === stage.id);
         return (
           <div
             key={stage.id}
-            className="flex-shrink-0 w-64 flex flex-col"
+            className="flex-1 min-w-0 flex flex-col"
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(stage.id)}
           >
