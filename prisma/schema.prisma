@@ -32,6 +32,7 @@ model User {
 
   assignedProperties Property[]
   referredInquiries  Inquiry[]  @relation("ReferredBy")
+  assignedInquiries  Inquiry[]  @relation("InquiryAssigned")
   contacts           Contact[]
   sentMessages       ChatMessage[]
 
@@ -214,11 +215,19 @@ model Inquiry {
   source           String?
   chatHistory      Json?
 
+  funnelStage      String    @default("NEW")
+  deadline         DateTime?
+
   referredByUserId String?
   referredBy       User?   @relation("ReferredBy", fields: [referredByUserId], references: [id], onDelete: SetNull)
+
+  assignedUserId   String?
+  assignedUser     User?     @relation("InquiryAssigned", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
   property         Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
   @@index([status])
+  @@index([funnelStage])
   @@map("inquiries")
 }
 

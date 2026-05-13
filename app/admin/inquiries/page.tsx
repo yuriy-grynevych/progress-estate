@@ -1,8 +1,9 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import InquiryStatusSelect from "@/components/admin/InquiryStatusSelect";
-import { Phone, Mail, Lock, Bot, ChevronDown, ChevronUp } from "lucide-react";
+import { Phone, Mail, Lock, Kanban, List } from "lucide-react";
 import ChatHistoryBlock from "@/components/admin/ChatHistoryBlock";
 
 const statusFilter = ["ALL", "NEW", "READ", "REPLIED", "ARCHIVED"] as const;
@@ -73,6 +74,14 @@ export default async function InquiriesPage({
             </span>
           )}
         </h1>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/inquiries" className="flex items-center gap-1.5 px-3 py-2 text-sm bg-navy-900 text-white rounded-xl">
+            <List className="w-4 h-4" /> Список
+          </Link>
+          <Link href="/admin/inquiries/kanban" className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 hover:text-navy-900 rounded-xl hover:bg-white border border-transparent hover:border-gray-200 transition">
+            <Kanban className="w-4 h-4" /> Воронка
+          </Link>
+        </div>
       </div>
 
       {/* Status filter tabs */}

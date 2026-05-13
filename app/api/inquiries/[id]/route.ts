@@ -17,8 +17,13 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const { status } = await req.json();
-  const inquiry = await prisma.inquiry.update({ where: { id: params.id }, data: { status } });
+  const body = await req.json();
+  const data: any = {};
+  if (body.status !== undefined) data.status = body.status;
+  if (body.funnelStage !== undefined) data.funnelStage = body.funnelStage;
+  if (body.deadline !== undefined) data.deadline = body.deadline ? new Date(body.deadline) : null;
+  if (body.assignedUserId !== undefined) data.assignedUserId = body.assignedUserId || null;
+  const inquiry = await prisma.inquiry.update({ where: { id: params.id }, data });
   return NextResponse.json(inquiry);
 }
 
