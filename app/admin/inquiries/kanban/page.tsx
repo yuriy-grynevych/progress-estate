@@ -78,7 +78,7 @@ export default async function InquiryKanbanPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden -mx-6 px-6">
+      <div className="flex-1 overflow-x-auto -mx-6 px-6">
         <InquiryKanban initialCards={cards} agents={agents} />
       </div>
     </div>

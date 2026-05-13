@@ -32,9 +32,9 @@ export default async function AdminLayout({
         </aside>
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col min-h-screen">
+        <div className="flex-1 min-w-0 flex flex-col min-h-screen overflow-hidden">
           <AdminMobileHeader role={role} />
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-6 overflow-x-hidden">{children}</main>
         </div>
         <ChatPanel />
       </div>
