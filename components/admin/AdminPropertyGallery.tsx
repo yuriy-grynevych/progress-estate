@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { X, ChevronLeft, ChevronRight, ImageOff, Sparkles } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ImageOff, Sparkles, ExternalLink } from "lucide-react";
 import { isExternalImage } from "@/lib/cloudinary";
 
 interface GalleryImage {
@@ -56,10 +56,7 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent, lin
         {/* Main image — fills its grid cell */}
         <div
           className="relative overflow-hidden cursor-pointer bg-gray-100"
-          onClick={() => {
-            if (linkToSlug) window.open(`/uk/listings/${linkToSlug}`, "_blank");
-            else if (mainImg) openAt(mainImg);
-          }}
+          onClick={() => mainImg && openAt(mainImg)}
         >
           {mainImg ? (
             <Image
@@ -106,10 +103,7 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent, lin
               <div
                 key={i}
                 className="relative overflow-hidden cursor-pointer"
-                onClick={() => {
-                  if (linkToSlug) window.open(`/uk/listings/${linkToSlug}`, "_blank");
-                  else openAt(thumb);
-                }}
+                onClick={() => openAt(thumb)}
               >
                 <Image
                   src={thumb.url}
@@ -135,12 +129,26 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent, lin
           onTouchStart={(e) => setTouchStart(e.touches[0].clientX)}
           onTouchEnd={handleTouchEnd}
         >
-          <button
-            className="absolute top-4 right-4 text-white p-2.5 bg-white/10 hover:bg-white/20 rounded-full z-10"
-            onClick={(e) => { e.stopPropagation(); setLightboxIndex(null); }}
-          >
-            <X className="w-6 h-6" />
-          </button>
+          <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+            {linkToSlug && (
+              <a
+                href={`/uk/listings/${linkToSlug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1.5 text-white text-sm px-3 py-2 bg-white/10 hover:bg-white/20 rounded-full transition"
+              >
+                <ExternalLink className="w-4 h-4" />
+                На сайті
+              </a>
+            )}
+            <button
+              className="text-white p-2.5 bg-white/10 hover:bg-white/20 rounded-full"
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex(null); }}
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
 
           {allImages.length > 1 && (
             <>
