@@ -200,7 +200,7 @@ export default function RemindersManager({ initialContacts, role }: Props) {
     return (
       <div className="bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center py-16 gap-3">
         <Bell className="w-10 h-10 text-gray-200" />
-        <p className="text-gray-400 font-medium">Немає нагадувань</p>
+        <p className="text-gray-400 font-medium">Немає завдань</p>
         <p className="text-xs text-gray-300">Встановіть дату нагадування у картці контакту</p>
       </div>
     );

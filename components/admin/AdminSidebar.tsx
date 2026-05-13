@@ -29,7 +29,7 @@ const adminNavItems = [
   { href: "/admin/inquiries/kanban", label: "Воронка", icon: Kanban },
   { href: "/admin/inquiries", label: "Запити", icon: MessageSquare },
   { href: "/admin/contacts", label: "Контакти", icon: BookUser },
-  { href: "/admin/reminders", label: "Нагадування", icon: Bell },
+  { href: "/admin/reminders", label: "Завдання", icon: Bell },
   { href: "/admin/testimonials", label: "Відгуки", icon: Star },
   { href: "/admin/users", label: "Працівники", icon: Users },
   { href: "/admin/settings", label: "Налаштування", icon: Settings },
@@ -43,7 +43,7 @@ const employeeNavItems = [
   { href: "/admin/inquiries/kanban", label: "Воронка", icon: Kanban },
   { href: "/admin/inquiries", label: "Мої запити", icon: MessageSquare },
   { href: "/admin/contacts", label: "Контакти", icon: BookUser },
-  { href: "/admin/reminders", label: "Нагадування", icon: Bell },
+  { href: "/admin/reminders", label: "Завдання", icon: Bell },
   { href: "/admin/profile", label: "Мій профіль", icon: UserCircle },
 ];
 

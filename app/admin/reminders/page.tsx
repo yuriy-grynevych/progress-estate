@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import RemindersManager from "@/components/admin/RemindersManager";
 
-export const metadata = { title: "Нагадування | Admin" };
+export const metadata = { title: "Завдання | Admin" };
 
 export default async function RemindersPage() {
   const session = await getServerSession(authOptions);
@@ -23,7 +23,7 @@ export default async function RemindersPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold text-navy-900 mb-6">Нагадування</h1>
+      <h1 className="text-2xl font-bold text-navy-900 mb-6">Завдання</h1>
       <RemindersManager initialContacts={contacts as any} role={role as "ADMIN" | "EMPLOYEE"} />
     </div>
   );
