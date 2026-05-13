@@ -2,13 +2,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
 import DeletePropertyButton from "@/components/admin/DeletePropertyButton";
 import ToggleStatusButton from "@/components/admin/ToggleStatusButton";
 import CopyAgentLinkButton from "@/components/admin/CopyAgentLinkButton";
 import AdminPropertyGallery from "@/components/admin/AdminPropertyGallery";
 import AgentCommentsToggle from "@/components/admin/AgentCommentsToggle";
+import AdminPropertyFilters from "@/components/admin/AdminPropertyFilters";
 import { PlusCircle, Eye, Pencil } from "lucide-react";
+import { Suspense } from "react";
 
 const TYPE_LABELS: Record<string, string> = {
   APARTMENT: "Квартира",
@@ -18,31 +21,37 @@ const TYPE_LABELS: Record<string, string> = {
   OFFICE: "Офіс",
 };
 
-async function getProperties(search?: string, role?: string, userId?: string) {
-  const searchWhere = search
-    ? {
-        OR: [
-          { titleUk: { contains: search, mode: "insensitive" as const } },
-          { address: { contains: search, mode: "insensitive" as const } },
-        ],
-      }
-    : {};
+async function getProperties(opts: {
+  search?: string;
+  listingType?: string;
+  status?: string;
+  mine?: boolean;
+  userId: string;
+}) {
+  const { search, listingType, status, mine, userId } = opts;
 
-  const properties = await prisma.property.findMany({
-    where: searchWhere,
+  const where: any = {};
+
+  if (search) {
+    where.OR = [
+      { titleUk: { contains: search, mode: "insensitive" } },
+      { address: { contains: search, mode: "insensitive" } },
+    ];
+  }
+  if (listingType) where.listingType = listingType;
+  if (status) where.status = status;
+  if (mine) where.assignedUserId = userId;
+
+  return prisma.property.findMany({
+    where,
     orderBy: { updatedAt: "desc" },
     include: {
       images: { orderBy: { order: "asc" as const }, take: 5 },
-      assignedUser: { select: { id: true, name: true, email: true } },
+      assignedUser: {
+        select: { id: true, name: true, email: true, photoUrl: true, accentColor: true },
+      },
     },
   });
-
-  if (role === "EMPLOYEE" && userId) {
-    const own = properties.filter((p) => p.assignedUserId === userId);
-    const others = properties.filter((p) => p.assignedUserId !== userId);
-    return [...own, ...others];
-  }
-  return properties;
 }
 
 function isNew(createdAt: Date) {
@@ -56,13 +65,20 @@ function fmtDate(d: Date) {
 export default async function AdminPropertiesPage({
   searchParams,
 }: {
-  searchParams: { search?: string };
+  searchParams: { search?: string; listingType?: string; status?: string; mine?: string };
 }) {
   const session = await getServerSession(authOptions);
   const role = (session?.user as any)?.role as string ?? "EMPLOYEE";
   const userId = (session?.user as any)?.id as string;
 
-  const properties = await getProperties(searchParams.search, role, userId);
+  const properties = await getProperties({
+    search: searchParams.search,
+    listingType: searchParams.listingType,
+    status: searchParams.status,
+    mine: searchParams.mine === "1",
+    userId,
+  });
+
   const featuredCount = properties.filter((p) => p.isFeatured).length;
 
   const currentUser = await prisma.user.findUnique({
@@ -92,8 +108,23 @@ export default async function AdminPropertiesPage({
         </Link>
       </div>
 
+      {/* Filters */}
+      <Suspense fallback={<div className="h-10 mb-4" />}>
+        <AdminPropertyFilters />
+      </Suspense>
+
       {/* Search */}
       <form className="mb-5">
+        {/* Preserve filter params in hidden inputs */}
+        {searchParams.listingType && (
+          <input type="hidden" name="listingType" value={searchParams.listingType} />
+        )}
+        {searchParams.status && (
+          <input type="hidden" name="status" value={searchParams.status} />
+        )}
+        {searchParams.mine && (
+          <input type="hidden" name="mine" value={searchParams.mine} />
+        )}
         <input
           type="text"
           name="search"
@@ -114,7 +145,7 @@ export default async function AdminPropertiesPage({
           const isOwn = property.assignedUserId === userId;
           const canEdit = role === "ADMIN" || isOwn;
           const newProperty = isNew(property.createdAt);
-          const isRent = property.listingType === "RENT";
+          const isRent = property.listingType === "RENT" || property.listingType === "DAILY_RENT";
 
           const currPrice = Number(property.price);
           const prevPrice = property.previousPrice ? Number(property.previousPrice) : null;
@@ -125,6 +156,8 @@ export default async function AdminPropertiesPage({
           const editedLater =
             new Date(property.updatedAt).getTime() - new Date(property.createdAt).getTime() > 60_000;
 
+          const agentColor = (property.assignedUser as any)?.accentColor ?? "#C9A84C";
+
           return (
             <div
               key={property.id}
@@ -133,15 +166,16 @@ export default async function AdminPropertiesPage({
               }`}
             >
               <div className="flex flex-col sm:grid sm:grid-cols-[55%_45%]">
-                {/* Gallery */}
+                {/* Gallery — clicking photo goes to client page */}
                 <AdminPropertyGallery
                   images={property.images}
                   title={property.titleUk}
                   isNew={newProperty}
                   isRent={isRent}
+                  linkToSlug={property.slug}
                 />
 
-                {/* Info — styl katalogu klienta */}
+                {/* Info */}
                 <div className="p-3 sm:p-4 flex flex-col justify-between min-w-0">
                   <div>
                     {/* Price */}
@@ -159,10 +193,9 @@ export default async function AdminPropertiesPage({
                       )}
                     </div>
 
-                    {/* Title */}
+                    {/* Title — links to agent view page */}
                     <Link
-                      href={`/uk/listings/${property.slug}`}
-                      target="_blank"
+                      href={`/admin/properties/${property.id}/view`}
                       className="block text-sm sm:text-base font-semibold text-gold-500 hover:text-gold-600 transition line-clamp-1 leading-snug mb-2"
                     >
                       {property.titleUk}
@@ -227,17 +260,44 @@ export default async function AdminPropertiesPage({
                           {property.status}
                         </span>
                       )}
+
+                      {/* Agent badge with avatar + accent color */}
                       {property.assignedUser && (
-                        <span
-                          className={`text-xs px-2 py-1 rounded-lg ${
-                            isOwn
-                              ? "bg-gold-100 text-gold-600 font-medium"
-                              : "bg-gray-100 text-gray-500"
-                          }`}
-                        >
-                          {property.assignedUser.name ?? property.assignedUser.email}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <div
+                            className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 border"
+                            style={{ borderColor: agentColor }}
+                          >
+                            {(property.assignedUser as any).photoUrl ? (
+                              <Image
+                                src={(property.assignedUser as any).photoUrl}
+                                alt={property.assignedUser.name ?? ""}
+                                width={20}
+                                height={20}
+                                className="object-cover w-full h-full"
+                                unoptimized
+                              />
+                            ) : (
+                              <div
+                                className="w-full h-full flex items-center justify-center text-[8px] font-bold text-white"
+                                style={{ backgroundColor: agentColor }}
+                              >
+                                {property.assignedUser.name?.[0]?.toUpperCase() ?? "?"}
+                              </div>
+                            )}
+                          </div>
+                          <span
+                            className="text-xs px-2 py-0.5 rounded-lg font-medium"
+                            style={{
+                              backgroundColor: `${agentColor}1a`,
+                              color: agentColor,
+                            }}
+                          >
+                            {property.assignedUser.name ?? property.assignedUser.email}
+                          </span>
+                        </div>
                       )}
+
                       <span className="flex items-center gap-1 text-xs text-gray-400">
                         <Eye className="w-3 h-3" /> {property.viewCount}
                       </span>

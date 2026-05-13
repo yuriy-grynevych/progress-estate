@@ -16,9 +16,10 @@ interface Props {
   title: string;
   isNew?: boolean;
   isRent?: boolean;
+  linkToSlug?: string;
 }
 
-export default function AdminPropertyGallery({ images, title, isNew, isRent }: Props) {
+export default function AdminPropertyGallery({ images, title, isNew, isRent, linkToSlug }: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
 
@@ -55,7 +56,10 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
         {/* Main image — fills its grid cell */}
         <div
           className="relative overflow-hidden cursor-pointer bg-gray-100"
-          onClick={() => mainImg && openAt(mainImg)}
+          onClick={() => {
+            if (linkToSlug) window.open(`/uk/listings/${linkToSlug}`, "_blank");
+            else if (mainImg) openAt(mainImg);
+          }}
         >
           {mainImg ? (
             <Image
@@ -102,7 +106,10 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent }: P
               <div
                 key={i}
                 className="relative overflow-hidden cursor-pointer"
-                onClick={() => openAt(thumb)}
+                onClick={() => {
+                  if (linkToSlug) window.open(`/uk/listings/${linkToSlug}`, "_blank");
+                  else openAt(thumb);
+                }}
               >
                 <Image
                   src={thumb.url}

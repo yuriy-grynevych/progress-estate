@@ -4,6 +4,12 @@ import { useState, useRef } from "react";
 import { Camera, Copy, Check, Save, Key, Send, Instagram } from "lucide-react";
 import Image from "next/image";
 
+const PRESET_COLORS = [
+  "#C9A84C", "#1E3A5F", "#2563EB", "#16A34A",
+  "#DC2626", "#9333EA", "#EA580C", "#0891B2",
+  "#BE185D", "#374151", "#0F766E", "#B45309",
+];
+
 interface UserProfile {
   id: string;
   name: string | null;
@@ -14,6 +20,7 @@ interface UserProfile {
   role: string;
   telegramChatId: string | null;
   instagram: string | null;
+  accentColor: string | null;
 }
 
 export default function ProfileEditor({ user }: { user: UserProfile }) {
@@ -23,6 +30,8 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
   const [telegramChatId, setTelegramChatId] = useState(user.telegramChatId ?? "");
   const [instagram, setInstagram] = useState(user.instagram ?? "");
   const [telegramSaved, setTelegramSaved] = useState(false);
+  const [accentColor, setAccentColor] = useState(user.accentColor ?? "#C9A84C");
+  const [colorSaved, setColorSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -48,6 +57,19 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
       setTimeout(() => setTelegramSaved(false), 2000);
     }
     setSaving(false);
+  }
+
+  async function saveColor(color: string) {
+    setAccentColor(color);
+    const res = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ accentColor: color }),
+    });
+    if (res.ok) {
+      setColorSaved(true);
+      setTimeout(() => setColorSaved(false), 2000);
+    }
   }
 
   async function saveProfile(e: React.FormEvent) {
@@ -198,6 +220,63 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
             {saved && <span className="text-green-600 text-sm font-medium">Збережено ✓</span>}
           </div>
         </form>
+      </div>
+
+      {/* Accent color */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="font-semibold text-navy-900">Колір акценту</h2>
+          {colorSaved && <span className="text-green-600 text-sm font-medium">Збережено ✓</span>}
+        </div>
+        <p className="text-xs text-gray-400 mb-4">
+          Відображається на вашому значку у списку нерухомості.
+        </p>
+        <div className="flex items-center gap-4 flex-wrap">
+          {/* Preview */}
+          <div className="flex items-center gap-2">
+            <div
+              className="w-10 h-10 rounded-full border-2 flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+              style={{ backgroundColor: accentColor, borderColor: accentColor }}
+            >
+              {profile.name?.[0]?.toUpperCase() ?? profile.email[0]?.toUpperCase()}
+            </div>
+            <span
+              className="text-xs px-2 py-1 rounded-lg font-medium"
+              style={{ backgroundColor: `${accentColor}1a`, color: accentColor }}
+            >
+              {profile.name ?? profile.email}
+            </span>
+          </div>
+          {/* Color grid */}
+          <div className="flex flex-wrap gap-2">
+            {PRESET_COLORS.map((color) => (
+              <button
+                key={color}
+                onClick={() => saveColor(color)}
+                title={color}
+                className="w-7 h-7 rounded-full transition hover:scale-110 focus:outline-none"
+                style={{
+                  backgroundColor: color,
+                  boxShadow: accentColor === color ? `0 0 0 3px white, 0 0 0 5px ${color}` : undefined,
+                }}
+              />
+            ))}
+            {/* Custom hex input */}
+            <div className="flex items-center gap-1.5">
+              <div className="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 overflow-hidden flex-shrink-0">
+                <input
+                  type="color"
+                  value={accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  onBlur={(e) => saveColor(e.target.value)}
+                  className="w-10 h-10 -translate-x-1 -translate-y-1 cursor-pointer opacity-0 absolute"
+                  title="Власний колір"
+                />
+                <div className="w-full h-full" style={{ backgroundColor: accentColor }} />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Agent token */}
