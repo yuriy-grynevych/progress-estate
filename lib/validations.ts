@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const propertySchema = z.object({
   titleUk: z.string().min(3, "Мінімум 3 символи").max(200),
-  titleEn: z.string().min(1, "Required").max(200),
+  titleEn: z.string().max(200).default(""),
   descriptionUk: z.string().default(""),
   descriptionEn: z.string().default(""),
   type: z.enum(["APARTMENT","ROOM","HOUSE","APARTMENT_PREMIUM","VILLA","PENTHOUSE","TOWNHOUSE","DUPLEX","COMMERCIAL","OFFICE","RETAIL","WAREHOUSE","INDUSTRIAL","FOOD_SERVICE","SERVICE_OBJECT","OTHER_OBJECT","SHOP","HOTEL_ROOM","WHOLE_BUILDING","LAND","LAND_INDIVIDUAL","LAND_GARDEN","LAND_FARM","LAND_COMMERCIAL","GARAGE","PARKING"]),

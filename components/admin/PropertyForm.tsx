@@ -24,7 +24,6 @@ const MapPicker    = dynamic(() => import("./MapPicker"),    { ssr: false });
 // ── Schema ───────────────────────────────────────────────────────────────────
 const schema = z.object({
   titleUk: z.string().min(1, "Обов'язкове поле"),
-  titleEn: z.string().min(1, "Required"),
   type: z.string().min(1),
   listingType: z.string().min(1),
   status: z.string().min(1),
@@ -157,7 +156,6 @@ export default function PropertyForm({
     resolver: zodResolver(schema) as any,
     defaultValues: {
       titleUk: initialData?.titleUk ?? "",
-      titleEn: initialData?.titleEn ?? "",
       type: initialData?.type ?? "APARTMENT",
       listingType: initialData?.listingType ?? "SALE",
       status: initialData?.status ?? "ACTIVE",
@@ -250,16 +248,25 @@ export default function PropertyForm({
     const toN    = (v: unknown) => { const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
 
     let descriptionEn = data.descriptionEn ?? "";
+    let titleEn = initialData?.titleEn ?? "";
+    const translatePromises: Promise<void>[] = [];
+
     if (data.descriptionUk?.trim()) {
-      try {
-        const tr = await fetch("/api/translate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.descriptionUk }) });
-        const trData = await tr.json();
-        if (trData.translated) descriptionEn = trData.translated;
-      } catch {}
+      translatePromises.push(
+        fetch("/api/translate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.descriptionUk }) })
+          .then((r) => r.json()).then((d) => { if (d.translated) descriptionEn = d.translated; }).catch(() => {})
+      );
     }
+    if (data.titleUk?.trim()) {
+      translatePromises.push(
+        fetch("/api/translate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: data.titleUk }) })
+          .then((r) => r.json()).then((d) => { if (d.translated) titleEn = d.translated; }).catch(() => {})
+      );
+    }
+    await Promise.all(translatePromises);
 
     const body = {
-      ...data, descriptionEn,
+      ...data, descriptionEn, titleEn,
       rooms: toN(data.rooms), bedrooms: toN(data.bedrooms), bathrooms: toN(data.bathrooms),
       floor: toN(data.floor), totalFloors: toN(data.totalFloors), yearBuilt: toN(data.yearBuilt),
       kitchenSqm: toN(data.kitchenSqm), latitude: toN(data.latitude), longitude: toN(data.longitude),
@@ -411,11 +418,6 @@ export default function PropertyForm({
                 <Label required>Назва (UA)</Label>
                 <Input {...register("titleUk")} placeholder="Простора квартира в центрі міста..." />
                 {errors.titleUk && <p className="text-red-500 text-xs mt-1">{errors.titleUk.message}</p>}
-              </div>
-              <div>
-                <Label required>Назва (EN)</Label>
-                <Input {...register("titleEn")} placeholder="Spacious apartment in the city center..." />
-                {errors.titleEn && <p className="text-red-500 text-xs mt-1">{errors.titleEn.message}</p>}
               </div>
             </div>
           </Card>
