@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { User, Calendar, Phone, ChevronRight } from "lucide-react";
+import { Phone, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AddLeadModal from "./AddLeadModal";
 
 export const FUNNEL_STAGES = [
   { id: "NEW",         label: "Нова",      color: "bg-slate-500" },
@@ -173,7 +174,26 @@ function Card({
 
 export default function InquiryKanban({ initialCards, agents }: Props) {
   const [cards, setCards] = useState(initialCards);
+  const [totalCount, setTotalCount] = useState(initialCards.length);
   const dragCard = useRef<string | null>(null);
+
+  function handleCreated(inq: any) {
+    const newCard: InquiryCard = {
+      id: inq.id,
+      name: inq.name,
+      phone: inq.phone,
+      message: inq.message,
+      source: inq.source,
+      funnelStage: inq.funnelStage ?? "NEW",
+      deadline: inq.deadline ?? null,
+      createdAt: inq.createdAt,
+      assignedUser: inq.assignedUser ?? null,
+      property: inq.property ?? null,
+      seqNum: totalCount + 1,
+    };
+    setCards((prev) => [newCard, ...prev]);
+    setTotalCount((n) => n + 1);
+  }
 
   async function moveCard(id: string, newStage: string) {
     setCards((prev) => prev.map((c) => c.id === id ? { ...c, funnelStage: newStage } : c));
@@ -214,7 +234,12 @@ export default function InquiryKanban({ initialCards, agents }: Props) {
   }
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4 min-h-[calc(100vh-200px)]">
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <p className="text-sm text-gray-400">{totalCount} заявок</p>
+        <AddLeadModal agents={agents} onCreated={handleCreated} />
+      </div>
+    <div className="flex gap-3 overflow-x-auto pb-4 min-h-[calc(100vh-220px)]">
       {FUNNEL_STAGES.map((stage, stageIdx) => {
         const stageCards = cards.filter((c) => c.funnelStage === stage.id);
         return (
@@ -265,6 +290,7 @@ export default function InquiryKanban({ initialCards, agents }: Props) {
           </div>
         );
       })}
+    </div>
     </div>
   );
 }
