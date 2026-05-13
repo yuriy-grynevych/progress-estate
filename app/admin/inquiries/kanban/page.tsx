@@ -54,8 +54,8 @@ export default async function InquiryKanbanPage() {
   }));
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col h-[calc(100vh-96px)]">
+      <div className="flex items-center justify-between mb-4 flex-shrink-0">
         <h1 className="text-2xl font-bold text-navy-900">
           Воронка заявок
           <span className="ml-2 text-base font-normal text-gray-400">({allInquiries})</span>
@@ -78,7 +78,9 @@ export default async function InquiryKanbanPage() {
         </div>
       </div>
 
-      <InquiryKanban initialCards={cards} agents={agents} />
+      <div className="flex-1 overflow-hidden -mx-6 px-6">
+        <InquiryKanban initialCards={cards} agents={agents} />
+      </div>
     </div>
   );
 }
