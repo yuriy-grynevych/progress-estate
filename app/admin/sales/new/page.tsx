@@ -30,8 +30,7 @@ export default function NewSalePage() {
   // EXTERNAL form state
   const [extName, setExtName] = useState("");
   const [extAddress, setExtAddress] = useState("");
-  const [extClientName, setExtClientName] = useState("");
-  const [extClientPhone, setExtClientPhone] = useState("");
+  const [extClientContact, setExtClientContact] = useState("");
   const [extCommission, setExtCommission] = useState("");
   const [extCommissionType, setExtCommissionType] = useState("FIXED");
   const [extCurrency, setExtCurrency] = useState("USD");
@@ -57,8 +56,7 @@ export default function NewSalePage() {
       saleType: "EXTERNAL",
       externalName: extName,
       externalAddress: extAddress,
-      clientName: extClientName,
-      clientPhone: extClientPhone,
+      clientContactId: extClientContact || null,
       commission: extCommission ? Number(extCommission) : null,
       commissionType: extCommissionType,
       currency: extCurrency,
@@ -128,15 +126,14 @@ export default function NewSalePage() {
               <label className={labelCls}>Адреса</label>
               <input value={extAddress} onChange={e => setExtAddress(e.target.value)} placeholder="вул., будинок" className={inputCls} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls}>Ім&apos;я клієнта</label>
-                <input value={extClientName} onChange={e => setExtClientName(e.target.value)} placeholder="Ім'я та прізвище" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Телефон клієнта</label>
-                <input value={extClientPhone} onChange={e => setExtClientPhone(e.target.value)} placeholder="067..." className={inputCls} />
-              </div>
+            <div>
+              <label className={labelCls}>Покупець (з бази клієнтів)</label>
+              <select value={extClientContact} onChange={e => setExtClientContact(e.target.value)} className={inputCls}>
+                <option value="">— Оберіть клієнта —</option>
+                {contacts.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>
+                ))}
+              </select>
             </div>
           </>
         )}
