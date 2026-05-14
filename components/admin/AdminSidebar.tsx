@@ -103,7 +103,7 @@ export default function AdminSidebar({ onClose, role = "EMPLOYEE" }: AdminSideba
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-2 space-y-1">
+      <nav className="flex-1 px-3 py-1 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const active = isActive(item.href, item.exact);
           return (
@@ -111,7 +111,7 @@ export default function AdminSidebar({ onClose, role = "EMPLOYEE" }: AdminSideba
               key={item.href}
               href={item.href}
               onClick={onClose}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                 active
                   ? "bg-white/15 text-white"
                   : "text-white/60 hover:text-white hover:bg-white/10"
