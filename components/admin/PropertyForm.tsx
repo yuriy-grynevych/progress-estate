@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   MessageSquarePlus, MapPin, Home, Building2, Layers, DollarSign,
-  FileText, Image, Info, ChevronLeft, Save, Loader2, X, Tag,
+  FileText, Image, Info, ChevronLeft, Save, Loader2, X, Tag, Sparkles,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import {
@@ -143,6 +143,7 @@ export default function PropertyForm({
   const [comments, setComments]   = useState<AgentComment[]>((initialData?.agentComments as AgentComment[]) ?? []);
   const [commentInput, setCommentInput] = useState("");
   const [commentSaving, setCommentSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const isEdit = Boolean(initialData?.id);
 
   function getCategoryFromType(t: string): string {
@@ -237,6 +238,42 @@ export default function PropertyForm({
       }
     } else {
       setComments((prev) => prev.filter((_, idx) => idx !== index));
+    }
+  }
+
+  async function generateDescription() {
+    setGenerating(true);
+    const v = watch();
+    try {
+      const res = await fetch("/api/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: v.type,
+          listingType: v.listingType,
+          district: v.district,
+          address: v.address,
+          residentialComplex: (v as any).residentialComplex,
+          areaSqm: v.areaSqm,
+          kitchenSqm: (v as any).kitchenSqm,
+          rooms: v.rooms,
+          bedrooms: v.bedrooms,
+          bathrooms: v.bathrooms,
+          floor: v.floor,
+          totalFloors: v.totalFloors,
+          yearBuilt: v.yearBuilt,
+          renovationType: (v as any).renovationType,
+          heatingType: (v as any).heatingType,
+          price: v.price,
+          currency: v.currency,
+        }),
+      });
+      if (res.ok) {
+        const { html } = await res.json();
+        if (html) setValue("descriptionUk", html);
+      }
+    } finally {
+      setGenerating(false);
     }
   }
 
@@ -596,7 +633,20 @@ export default function PropertyForm({
           <Card>
             <CardHeader icon={<FileText className="w-4 h-4" />} title="Опис" />
             <div className="p-6">
-              <Label>Опис (UA) — автоматично перекладається</Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label>Опис (UA) — автоматично перекладається</Label>
+                <button
+                  type="button"
+                  onClick={generateDescription}
+                  disabled={generating}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 transition shadow-sm"
+                >
+                  {generating
+                    ? <><Loader2 className="w-3 h-3 animate-spin" /> Генерую...</>
+                    : <><Sparkles className="w-3 h-3" /> AI опис</>
+                  }
+                </button>
+              </div>
               <Controller name="descriptionUk" control={control}
                 render={({ field }) => <TiptapEditor value={field.value} onChange={field.onChange} />} />
             </div>
