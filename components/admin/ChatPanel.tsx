@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import {
-  MessageCircle, X, Send, Paperclip, Home, ChevronLeft, ChevronDown, Users,
+  MessageCircle, X, Send, Paperclip, Home, ChevronLeft, ChevronDown, Users, Pin,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -91,6 +91,8 @@ type ActiveChannel = { type: "general" } | { type: "dm"; user: ChatUser };
 export default function ChatPanel() {
   const { data: session } = useSession();
   const myId = (session?.user as any)?.id as string | undefined;
+  const myRole = (session?.user as any)?.role as string | undefined;
+  const isAdmin = myRole === "ADMIN";
 
   // Panel open/close
   const [open, setOpen] = useState(false);
@@ -109,6 +111,8 @@ export default function ChatPanel() {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  const [pinning, setPinning] = useState<string | null>(null);
 
   // Property picker
   const [propQuery, setPropQuery] = useState("");
@@ -305,9 +309,21 @@ export default function ChatPanel() {
     }
   }
 
+  // ── Pin message ───────────────────────────────────────────────────────────
+  async function pinMessage(msg: ChatMsg) {
+    setPinning(msg.id);
+    await fetch("/api/admin/chat/pin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: msg.content, sender: msg.sender.name ?? msg.sender.id }),
+    });
+    setPinning(null);
+  }
+
   // ── Render message bubble ─────────────────────────────────────────────────
   function renderMessage(msg: ChatMsg) {
     const isMe = msg.senderId === myId;
+    const isGeneral = !activeChannel || activeChannel.type === "general";
 
     const bubble = (() => {
       if (msg.type === "file" && msg.fileUrl) {
@@ -343,16 +359,38 @@ export default function ChatPanel() {
     })();
 
     return (
-      <div key={msg.id} className={`flex gap-2 ${isMe ? "flex-row-reverse" : "flex-row"}`}>
+      <div key={msg.id} className={`flex gap-2 group ${isMe ? "flex-row-reverse" : "flex-row"}`}>
         <Avatar user={msg.sender} size={7} />
         <div className={`max-w-[75%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
           {!isMe && (
             <span className="text-[10px] text-gray-400 mb-0.5 px-1">{msg.sender.name}</span>
           )}
-          <div className={`px-3 py-2 rounded-2xl ${
-            isMe ? "bg-navy-900 text-white rounded-tr-sm" : "bg-gray-100 text-gray-900 rounded-tl-sm"
-          }`}>
-            {bubble}
+          <div className="flex items-center gap-1">
+            {isAdmin && isGeneral && msg.type === "text" && !isMe && (
+              <button
+                onClick={() => pinMessage(msg)}
+                disabled={pinning === msg.id}
+                title="Закріпити як оголошення"
+                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gold-500 transition rounded"
+              >
+                <Pin className="w-3 h-3" />
+              </button>
+            )}
+            <div className={`px-3 py-2 rounded-2xl ${
+              isMe ? "bg-navy-900 text-white rounded-tr-sm" : "bg-gray-100 text-gray-900 rounded-tl-sm"
+            }`}>
+              {bubble}
+            </div>
+            {isAdmin && isGeneral && msg.type === "text" && isMe && (
+              <button
+                onClick={() => pinMessage(msg)}
+                disabled={pinning === msg.id}
+                title="Закріпити як оголошення"
+                className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-gold-500 transition rounded"
+              >
+                <Pin className="w-3 h-3" />
+              </button>
+            )}
           </div>
           <span className="text-[10px] text-gray-400 mt-0.5 px-1">{formatTime(msg.createdAt)}</span>
         </div>
