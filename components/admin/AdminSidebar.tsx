@@ -95,9 +95,9 @@ export default function AdminSidebar({ onClose, role = "EMPLOYEE" }: AdminSideba
         <Link
           href="/admin/sales/new"
           onClick={onClose}
-          className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-sm px-4 py-2.5 rounded-xl w-full transition mt-2"
+          className="flex items-center gap-1.5 text-white/50 hover:text-white text-xs font-medium px-2 py-1.5 w-full transition mt-1"
         >
-          <TrendingUp className="w-4 h-4" />
+          <TrendingUp className="w-3.5 h-3.5" />
           Записати продаж
         </Link>
       </div>
