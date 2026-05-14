@@ -13,18 +13,21 @@ import {
   ArrowLeft, ExternalLink, Pencil, Eye,
   Phone, Mail, MapPin, Lock,
 } from "lucide-react";
+import CopyDescriptionButton from "@/components/admin/CopyDescriptionButton";
 
 const STATUS_LABELS: Record<string, string> = {
-  ACTIVE: "Активне",
+  ACTIVE:   "Активне",
   INACTIVE: "Неактивне",
-  SOLD: "Продано",
-  RENTED: "Здано",
+  SOLD:     "Продано",
+  RENTED:   "Здано",
+  DEPOSIT:  "Завдаток",
 };
 const STATUS_COLORS: Record<string, string> = {
-  ACTIVE: "bg-green-100 text-green-700",
+  ACTIVE:   "bg-green-100 text-green-700",
   INACTIVE: "bg-gray-100 text-gray-600",
-  SOLD: "bg-blue-100 text-blue-700",
-  RENTED: "bg-purple-100 text-purple-700",
+  SOLD:     "bg-red-100 text-red-600",
+  RENTED:   "bg-blue-100 text-blue-700",
+  DEPOSIT:  "bg-amber-100 text-amber-700",
 };
 const LISTING_LABELS: Record<string, string> = {
   SALE: "Продаж",
@@ -46,6 +49,11 @@ export default async function AgentPropertyViewPage({
 
   const role = (session.user as any)?.role as "ADMIN" | "EMPLOYEE" ?? "EMPLOYEE";
   const currentUserId = (session.user as any)?.id as string;
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: currentUserId },
+    select: { phone: true },
+  });
 
   const property = await prisma.property.findUnique({
     where: { id },
@@ -206,7 +214,13 @@ export default async function AgentPropertyViewPage({
           {/* Description */}
           {property.descriptionUk && (
             <div className="bg-white rounded-2xl p-5 shadow-sm">
-              <h2 className="text-base font-bold text-navy-900 mb-3">Опис</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-base font-bold text-navy-900">Опис</h2>
+                <CopyDescriptionButton
+                  html={property.descriptionUk}
+                  agentPhone={currentUser?.phone ?? null}
+                />
+              </div>
               <div
                 className="prose prose-sm max-w-none text-gray-600"
                 dangerouslySetInnerHTML={{ __html: property.descriptionUk }}
