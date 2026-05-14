@@ -26,14 +26,34 @@ function htmlToText(html: string): string {
 export default function CopyDescriptionButton({ html, agentPhone }: Props) {
   const [copied, setCopied] = useState(false);
 
-  async function handleCopy() {
+  function handleCopy() {
     let text = htmlToText(html);
     if (agentPhone) {
       text += `\n\n📞 ${agentPhone}`;
     }
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    // Fallback for HTTP (no Clipboard API)
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
+      } else {
+        const el = document.createElement("textarea");
+        el.value = text;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {
+      // silent fail
+    }
   }
 
   return (
