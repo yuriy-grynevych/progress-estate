@@ -7,7 +7,7 @@ export const propertySchema = z.object({
   descriptionEn: z.string().default(""),
   type: z.enum(["APARTMENT","ROOM","HOUSE","APARTMENT_PREMIUM","VILLA","PENTHOUSE","TOWNHOUSE","DUPLEX","COMMERCIAL","OFFICE","RETAIL","WAREHOUSE","INDUSTRIAL","FOOD_SERVICE","SERVICE_OBJECT","OTHER_OBJECT","SHOP","HOTEL_ROOM","WHOLE_BUILDING","LAND","LAND_INDIVIDUAL","LAND_GARDEN","LAND_FARM","LAND_COMMERCIAL","GARAGE","PARKING"]),
   listingType: z.enum(["SALE", "RENT", "DAILY_RENT"]),
-  status: z.enum(["ACTIVE", "INACTIVE", "SOLD", "RENTED"]).default("ACTIVE"),
+  status: z.enum(["ACTIVE", "INACTIVE", "SOLD", "RENTED", "DEPOSIT"]).default("ACTIVE"),
   price: z.coerce.number().positive("Вкажіть ціну"),
   currency: z.string().default("UAH"),
   areaSqm: z.coerce.number().positive("Вкажіть площу"),
