@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
 import { Building2, MessageSquare, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone, Users, TrendingUp, Quote, Pin } from "lucide-react";
+import UnpinAnnouncementButton from "@/components/admin/UnpinAnnouncementButton";
 
 async function getTodayReminders(role: string, userId: string) {
   const now = new Date();
@@ -134,6 +135,7 @@ export default async function AdminDashboard() {
               <p className="text-xs text-white/50 mt-1">— {announcement.sender}</p>
             )}
           </div>
+          {role === "ADMIN" && <UnpinAnnouncementButton />}
         </div>
       )}
 

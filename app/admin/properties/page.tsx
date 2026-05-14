@@ -36,8 +36,10 @@ async function getProperties(opts: {
   areaMax?: string;
   floorMin?: string;
   floorMax?: string;
+  priceSqmMin?: string;
+  priceSqmMax?: string;
 }) {
-  const { search, listingType, status, mine, userId, rooms, type, district, priceMin, priceMax, areaMin, areaMax, floorMin, floorMax } = opts;
+  const { search, listingType, status, mine, userId, rooms, type, district, priceMin, priceMax, areaMin, areaMax, floorMin, floorMax, priceSqmMin, priceSqmMax } = opts;
 
   const where: any = {};
 
@@ -69,7 +71,7 @@ async function getProperties(opts: {
     if (floorMax) where.floor.lte = parseInt(floorMax);
   }
 
-  return prisma.property.findMany({
+  let result = await prisma.property.findMany({
     where,
     orderBy: { updatedAt: "desc" },
     include: {
@@ -79,6 +81,17 @@ async function getProperties(opts: {
       },
     },
   });
+
+  if (priceSqmMin || priceSqmMax) {
+    result = result.filter(p => {
+      const sqm = Number(p.price) / Number(p.areaSqm);
+      if (priceSqmMin && sqm < Number(priceSqmMin)) return false;
+      if (priceSqmMax && sqm > Number(priceSqmMax)) return false;
+      return true;
+    });
+  }
+
+  return result;
 }
 
 function isNew(createdAt: Date) {
@@ -97,6 +110,7 @@ export default async function AdminPropertiesPage({
     rooms?: string; type?: string; district?: string;
     priceMin?: string; priceMax?: string; areaMin?: string; areaMax?: string;
     floorMin?: string; floorMax?: string;
+    priceSqmMin?: string; priceSqmMax?: string;
   };
 }) {
   const session = await getServerSession(authOptions);
@@ -118,6 +132,8 @@ export default async function AdminPropertiesPage({
     areaMax: searchParams.areaMax,
     floorMin: searchParams.floorMin,
     floorMax: searchParams.floorMax,
+    priceSqmMin: searchParams.priceSqmMin,
+    priceSqmMax: searchParams.priceSqmMax,
   });
 
   const featuredCount = properties.filter((p) => p.isFeatured).length;

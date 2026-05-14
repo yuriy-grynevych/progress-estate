@@ -32,6 +32,8 @@ interface SearchParams {
   gasType?: string;
   page?: string;
   sort?: string;
+  priceSqmMin?: string;
+  priceSqmMax?: string;
   [key: string]: string | undefined;
 }
 
@@ -76,6 +78,18 @@ async function getProperties(sp: SearchParams) {
     ...(sp.wallType && { wallType: sp.wallType } as any),
     ...(sp.gasType && { gasType: sp.gasType } as any),
   };
+
+  // Price per sqm filter via raw SQL
+  if (sp.priceSqmMin || sp.priceSqmMax) {
+    const min = Number(sp.priceSqmMin || 0);
+    const max = Number(sp.priceSqmMax || 999999999);
+    const rows = await prisma.$queryRawUnsafe<{ id: string }[]>(
+      `SELECT id FROM properties WHERE "areaSqm" > 0 AND CAST(price AS FLOAT) / CAST("areaSqm" AS FLOAT) BETWEEN $1 AND $2`,
+      min, max
+    );
+    const ids = rows.map(r => r.id);
+    where.id = { in: ids };
+  }
 
   // AND-combine text search conditions that each use OR internally
   const andConditions: Prisma.PropertyWhereInput[] = [];

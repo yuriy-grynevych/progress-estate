@@ -133,6 +133,8 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
   const [floorMin, setFloorMin] = useState(searchParams.floorMin ?? "");
   const [floorMax, setFloorMax] = useState(searchParams.floorMax ?? "");
   const [developer, setDeveloper] = useState(searchParams.developer ?? "");
+  const [priceSqmMin, setPriceSqmMin] = useState(searchParams.priceSqmMin ?? "");
+  const [priceSqmMax, setPriceSqmMax] = useState(searchParams.priceSqmMax ?? "");
 
   const sp = searchParams;
   const listingType   = sp.listingType ?? "";
@@ -150,7 +152,7 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
   const extraActiveCount = [
     sp.areaMin, sp.areaMax, sp.floorMin, sp.floorMax, sp.developer,
     sp.complex, sp.district, sp.govProgram, sp.renovationType, sp.wallType,
-    sp.gasType, sp.search, sp.type,
+    sp.gasType, sp.search, sp.type, sp.priceSqmMin, sp.priceSqmMax,
   ].filter(Boolean).length;
 
   const buildParams = (overrides: Record<string, string | null>) => {
@@ -176,12 +178,14 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
       floorMin: floorMin || null,
       floorMax: floorMax || null,
       developer: developer || null,
+      priceSqmMin: priceSqmMin || null,
+      priceSqmMax: priceSqmMax || null,
     })}`);
   };
 
   const clearAll = () => {
     setPriceMin(""); setPriceMax(""); setAreaMin(""); setAreaMax("");
-    setFloorMin(""); setFloorMax(""); setDeveloper("");
+    setFloorMin(""); setFloorMax(""); setDeveloper(""); setPriceSqmMin(""); setPriceSqmMax("");
     router.push(pathname);
     setMobileOpen(false);
     setExtraOpen(false);
@@ -251,6 +255,26 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
           <span className="text-gray-300 font-light">—</span>
           <input type="number" placeholder="до" value={priceMax}
             onChange={(e) => setPriceMax(e.target.value)}
+            onBlur={applyRanges}
+            onKeyDown={(e) => e.key === "Enter" && applyRanges()}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-navy-900/20 focus:border-navy-900 bg-white" />
+        </div>
+      </div>
+
+      {/* ── ЦІНА ЗА М² ── */}
+      <div>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2.5">
+          {isUk ? "Ціна за м², $" : "Price per m², $"}
+        </p>
+        <div className="flex items-center gap-2">
+          <input type="number" placeholder="від" value={priceSqmMin}
+            onChange={(e) => setPriceSqmMin(e.target.value)}
+            onBlur={applyRanges}
+            onKeyDown={(e) => e.key === "Enter" && applyRanges()}
+            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-navy-900/20 focus:border-navy-900 bg-white" />
+          <span className="text-gray-300 font-light">—</span>
+          <input type="number" placeholder="до" value={priceSqmMax}
+            onChange={(e) => setPriceSqmMax(e.target.value)}
             onBlur={applyRanges}
             onKeyDown={(e) => e.key === "Enter" && applyRanges()}
             className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-navy-900/20 focus:border-navy-900 bg-white" />

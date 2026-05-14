@@ -80,6 +80,8 @@ export default function AdminPropertySidebar() {
   const [priceMax, setPriceMax] = useState(sp.get("priceMax") ?? "");
   const [areaMin, setAreaMin]   = useState(sp.get("areaMin") ?? "");
   const [areaMax, setAreaMax]   = useState(sp.get("areaMax") ?? "");
+  const [priceSqmMin, setPriceSqmMin] = useState(sp.get("priceSqmMin") ?? "");
+  const [priceSqmMax, setPriceSqmMax] = useState(sp.get("priceSqmMax") ?? "");
 
   const listingType  = sp.get("listingType") ?? "";
   const rooms        = sp.get("rooms") ?? "";
@@ -89,8 +91,8 @@ export default function AdminPropertySidebar() {
   const district     = sp.get("district") ?? "";
   const isMine       = sp.get("mine") === "1";
 
-  const hasFilters = ["listingType","rooms","condition","status","type","district","priceMin","priceMax","areaMin","areaMax","mine","search"].some((k) => sp.get(k));
-  const extraActiveCount = [sp.get("priceMin"),sp.get("priceMax"),sp.get("areaMin"),sp.get("areaMax"),sp.get("type"),sp.get("district"),sp.get("condition"),sp.get("search"),sp.get("rooms")].filter(Boolean).length;
+  const hasFilters = ["listingType","rooms","condition","status","type","district","priceMin","priceMax","areaMin","areaMax","priceSqmMin","priceSqmMax","mine","search"].some((k) => sp.get(k));
+  const extraActiveCount = [sp.get("priceMin"),sp.get("priceMax"),sp.get("areaMin"),sp.get("areaMax"),sp.get("priceSqmMin"),sp.get("priceSqmMax"),sp.get("type"),sp.get("district"),sp.get("condition"),sp.get("search"),sp.get("rooms")].filter(Boolean).length;
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -110,11 +112,11 @@ export default function AdminPropertySidebar() {
   }
 
   function applyRanges() {
-    push({ priceMin: priceMin || null, priceMax: priceMax || null, areaMin: areaMin || null, areaMax: areaMax || null });
+    push({ priceMin: priceMin || null, priceMax: priceMax || null, areaMin: areaMin || null, areaMax: areaMax || null, priceSqmMin: priceSqmMin || null, priceSqmMax: priceSqmMax || null });
   }
 
   function clearAll() {
-    setPriceMin(""); setPriceMax(""); setAreaMin(""); setAreaMax("");
+    setPriceMin(""); setPriceMax(""); setAreaMin(""); setAreaMax(""); setPriceSqmMin(""); setPriceSqmMax("");
     router.push("/admin/properties");
     setExtraOpen(false);
   }
@@ -231,6 +233,22 @@ export default function AdminPropertySidebar() {
                     <span className="text-gray-300">—</span>
                     <input type="number" placeholder="до" value={areaMax}
                       onChange={(e) => setAreaMax(e.target.value)}
+                      onBlur={applyRanges} onKeyDown={(e) => e.key === "Enter" && applyRanges()}
+                      className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-navy-900/20 bg-white" />
+                  </div>
+                </div>
+
+                {/* Ціна за м² */}
+                <div className="col-span-2 sm:col-span-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Ціна за м², $</p>
+                  <div className="flex items-center gap-2">
+                    <input type="number" placeholder="від" value={priceSqmMin}
+                      onChange={(e) => setPriceSqmMin(e.target.value)}
+                      onBlur={applyRanges} onKeyDown={(e) => e.key === "Enter" && applyRanges()}
+                      className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-navy-900/20 bg-white" />
+                    <span className="text-gray-300">—</span>
+                    <input type="number" placeholder="до" value={priceSqmMax}
+                      onChange={(e) => setPriceSqmMax(e.target.value)}
                       onBlur={applyRanges} onKeyDown={(e) => e.key === "Enter" && applyRanges()}
                       className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-navy-900/20 bg-white" />
                   </div>
