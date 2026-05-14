@@ -251,6 +251,11 @@ export default async function AdminPropertiesPage({
                               </span>
                             </div>
                           )}
+                          {property.status === "DEPOSIT" && (
+                            <div className="flex items-center gap-1.5 mt-0.5 text-amber-600">
+                              <span className="text-base font-extrabold uppercase tracking-wide">🔒 Завдаток</span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Title — links to agent view */}

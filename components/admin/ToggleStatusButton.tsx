@@ -3,6 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const STATUS_CONFIG: Record<string, { label: string; cls: string; toggle?: boolean }> = {
+  ACTIVE:   { label: "Активне",   cls: "bg-green-100 text-green-700 hover:bg-green-200", toggle: true },
+  INACTIVE: { label: "Неактивне", cls: "bg-gray-100 text-gray-500 hover:bg-gray-200",   toggle: true },
+  SOLD:     { label: "Продано",   cls: "bg-red-100 text-red-600 cursor-default" },
+  RENTED:   { label: "Здано",     cls: "bg-blue-100 text-blue-600 cursor-default" },
+  DEPOSIT:  { label: "Завдаток",  cls: "bg-amber-100 text-amber-700 cursor-default" },
+};
+
 interface Props {
   id: string;
   field: "status" | "isFeatured";
@@ -15,41 +23,34 @@ export default function ToggleStatusButton({ id, field, currentValue, isFeatured
   const [loading, setLoading] = useState(false);
 
   async function toggle() {
+    const cfg = STATUS_CONFIG[currentValue as string];
+    if (!cfg?.toggle) return;
     setLoading(true);
-    let body: Record<string, unknown>;
-
-    if (field === "status") {
-      body = { status: currentValue === "ACTIVE" ? "INACTIVE" : "ACTIVE" };
-    } else {
-      body = { isFeatured: !currentValue };
-    }
-
+    const body = field === "status"
+      ? { status: currentValue === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
+      : { isFeatured: !currentValue };
     await fetch(`/api/properties/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-
     setLoading(false);
     router.refresh();
   }
 
   if (field === "status") {
-    const isActive = currentValue === "ACTIVE";
+    const cfg = STATUS_CONFIG[currentValue as string] ?? STATUS_CONFIG.INACTIVE;
     return (
       <div className="flex flex-col gap-1 items-start">
         <button
           onClick={toggle}
-          disabled={loading}
-          className={`text-xs font-medium px-2.5 py-1 rounded-full transition ${
-            isActive
-              ? "bg-green-100 text-green-700 hover:bg-green-200"
-              : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-          }`}
+          disabled={loading || !cfg.toggle}
+          title={cfg.toggle ? "Натисніть для зміни" : undefined}
+          className={`text-xs font-medium px-2.5 py-1 rounded-full transition ${cfg.cls}`}
         >
-          {loading ? "..." : isActive ? "Активне" : "Неактивне"}
+          {loading ? "..." : cfg.label}
         </button>
-        {isActive && isFeatured && (
+        {currentValue === "ACTIVE" && isFeatured && (
           <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-orange-100 text-orange-600">
             🔥 Гаряча пропозиція
           </span>

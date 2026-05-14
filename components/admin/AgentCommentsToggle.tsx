@@ -17,9 +17,9 @@ export default function AgentCommentsToggle({ comments }: { comments: AgentComme
     <div className="mt-1.5">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1 text-[10px] font-semibold text-blue-500 hover:text-blue-600 transition"
+        className="flex items-center gap-1.5 text-xs font-semibold text-blue-500 hover:text-blue-600 transition"
       >
-        <MessageCircle className="w-3 h-3" />
+        <MessageCircle className="w-4 h-4" />
         +{comments.length} коментар{comments.length === 1 ? "" : comments.length < 5 ? "і" : "ів"}
       </button>
       {open && (
