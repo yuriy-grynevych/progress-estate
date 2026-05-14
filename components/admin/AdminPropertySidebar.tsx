@@ -29,6 +29,21 @@ const STATUSES = [
   { value: "INACTIVE", label: "Неактивне" },
   { value: "SOLD",     label: "Продано" },
   { value: "RENTED",   label: "Здано" },
+  { value: "DEPOSIT",  label: "Завдаток" },
+];
+
+const RENOVATION_TYPES_ADMIN = [
+  { value: "COSMETIC",           label: "Косметичний ремонт" },
+  { value: "EURO",               label: "Євроремонт" },
+  { value: "DESIGNER",           label: "Дизайнерський ремонт" },
+  { value: "WITHOUT_RENOVATION", label: "Без ремонту" },
+  { value: "ROUGH_FINISH",       label: "Чорновий стан" },
+];
+
+const BUILDING_STAGES = [
+  { value: "BUILT",              label: "Зданий" },
+  { value: "HANDOVER",           label: "На етапі здачі" },
+  { value: "UNDER_CONSTRUCTION", label: "Будується" },
 ];
 
 function Drop({
@@ -91,8 +106,8 @@ export default function AdminPropertySidebar() {
   const district     = sp.get("district") ?? "";
   const isMine       = sp.get("mine") === "1";
 
-  const hasFilters = ["listingType","rooms","condition","status","type","district","priceMin","priceMax","areaMin","areaMax","priceSqmMin","priceSqmMax","mine","search"].some((k) => sp.get(k));
-  const extraActiveCount = [sp.get("priceMin"),sp.get("priceMax"),sp.get("areaMin"),sp.get("areaMax"),sp.get("priceSqmMin"),sp.get("priceSqmMax"),sp.get("type"),sp.get("district"),sp.get("condition"),sp.get("search"),sp.get("rooms")].filter(Boolean).length;
+  const hasFilters = ["listingType","rooms","condition","status","type","district","priceMin","priceMax","areaMin","areaMax","priceSqmMin","priceSqmMax","mine","search","renovationType","buildingStage"].some((k) => sp.get(k));
+  const extraActiveCount = [sp.get("priceMin"),sp.get("priceMax"),sp.get("areaMin"),sp.get("areaMax"),sp.get("priceSqmMin"),sp.get("priceSqmMax"),sp.get("type"),sp.get("district"),sp.get("condition"),sp.get("search"),sp.get("rooms"),sp.get("renovationType"),sp.get("buildingStage")].filter(Boolean).length;
 
   useEffect(() => {
     const h = (e: MouseEvent) => {
@@ -262,6 +277,32 @@ export default function AdminPropertySidebar() {
                       <DropItem active={!condition} onClick={() => { push({ condition: null }); close(); }}>Будь-який</DropItem>
                       {CONDITIONS.map((c) => (
                         <DropItem key={c.value} active={condition === c.value} onClick={() => { push({ condition: c.value }); close(); }}>{c.label}</DropItem>
+                      ))}
+                    </>)}
+                  </Drop>
+                </div>
+
+                {/* Стан квартири (ремонт) */}
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Стан квартири</p>
+                  <Drop label={sp.get("renovationType") ? (RENOVATION_TYPES_ADMIN.find(r => r.value === sp.get("renovationType"))?.label ?? sp.get("renovationType")!) : "Будь-який"} active={!!sp.get("renovationType")}>
+                    {(close) => (<>
+                      <DropItem active={!sp.get("renovationType")} onClick={() => { push({ renovationType: null }); close(); }}>Будь-який</DropItem>
+                      {RENOVATION_TYPES_ADMIN.map((r) => (
+                        <DropItem key={r.value} active={sp.get("renovationType") === r.value} onClick={() => { push({ renovationType: r.value }); close(); }}>{r.label}</DropItem>
+                      ))}
+                    </>)}
+                  </Drop>
+                </div>
+
+                {/* Етап будинку */}
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Етап будинку</p>
+                  <Drop label={sp.get("buildingStage") ? (BUILDING_STAGES.find(b => b.value === sp.get("buildingStage"))?.label ?? sp.get("buildingStage")!) : "Будь-який"} active={!!sp.get("buildingStage")}>
+                    {(close) => (<>
+                      <DropItem active={!sp.get("buildingStage")} onClick={() => { push({ buildingStage: null }); close(); }}>Будь-який</DropItem>
+                      {BUILDING_STAGES.map((b) => (
+                        <DropItem key={b.value} active={sp.get("buildingStage") === b.value} onClick={() => { push({ buildingStage: b.value }); close(); }}>{b.label}</DropItem>
                       ))}
                     </>)}
                   </Drop>

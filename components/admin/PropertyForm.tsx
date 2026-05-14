@@ -39,6 +39,7 @@ const schema = z.object({
   kitchenSqm: z.number().nullable().optional(),
   gasType: z.string().optional().nullable(),
   renovationType: z.string().optional().nullable(),
+  buildingStage: z.string().optional().nullable(),
   wallType: z.string().optional().nullable(),
   houseNumber: z.string().optional().nullable(),
   apartmentNumber: z.string().optional().nullable(),
@@ -129,6 +130,7 @@ const STATUS_CONFIG = [
   { value: "INACTIVE", label: "Неактивне", dot: "bg-gray-300" },
   { value: "SOLD",     label: "Продано",   dot: "bg-red-400" },
   { value: "RENTED",   label: "Здано",     dot: "bg-blue-400" },
+  { value: "DEPOSIT",  label: "Завдаток",  dot: "bg-amber-400" },
 ];
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -172,6 +174,7 @@ export default function PropertyForm({
       kitchenSqm: (initialData as any)?.kitchenSqm ?? null,
       gasType: (initialData as any)?.gasType ?? "",
       renovationType: (initialData as any)?.renovationType ?? "",
+      buildingStage: (initialData as any)?.buildingStage ?? "",
       wallType: (initialData as any)?.wallType ?? "",
       houseNumber: (initialData as any)?.houseNumber ?? "",
       apartmentNumber: (initialData as any)?.apartmentNumber ?? "",
@@ -504,15 +507,24 @@ export default function PropertyForm({
                   <Input type="number" step="0.1" {...register("kitchenSqm")} placeholder="10" />
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
-                  <Label>Ремонт</Label>
+                  <Label>Стан квартири</Label>
                   <FSelect {...register("renovationType")}>
                     <option value="">— Не вказано —</option>
                     <option value="Сирець">Сирець</option>
                     <option value="Житловий стан">Житловий стан</option>
                     <option value="Євроремонт">Євроремонт</option>
                     <option value="Авторський дизайн">Авторський дизайн</option>
+                  </FSelect>
+                </div>
+                <div>
+                  <Label>Етап будинку</Label>
+                  <FSelect {...register("buildingStage")}>
+                    <option value="">— не вказано —</option>
+                    <option value="BUILT">Зданий</option>
+                    <option value="HANDOVER">На етапі здачі</option>
+                    <option value="UNDER_CONSTRUCTION">Будується</option>
                   </FSelect>
                 </div>
                 <div>

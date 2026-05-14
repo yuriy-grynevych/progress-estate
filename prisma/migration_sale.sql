@@ -1,0 +1,20 @@
+ALTER TABLE properties ADD COLUMN IF NOT EXISTS "buildingStage" TEXT;
+ALTER TYPE "ListingStatus" ADD VALUE IF NOT EXISTS 'DEPOSIT';
+CREATE TABLE IF NOT EXISTS sales (
+  id TEXT PRIMARY KEY,
+  "saleType" TEXT NOT NULL DEFAULT 'OWN',
+  "propertyId" TEXT REFERENCES properties(id) ON DELETE SET NULL,
+  "externalName" TEXT,
+  "externalAddress" TEXT,
+  "clientContactId" TEXT REFERENCES contacts(id) ON DELETE SET NULL,
+  "clientName" TEXT,
+  "clientPhone" TEXT,
+  commission DOUBLE PRECISION,
+  "commissionType" TEXT DEFAULT 'FIXED',
+  currency TEXT NOT NULL DEFAULT 'USD',
+  "saleDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  note TEXT,
+  "agentId" TEXT REFERENCES users(id) ON DELETE SET NULL,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

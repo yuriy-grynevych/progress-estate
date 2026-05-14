@@ -38,8 +38,10 @@ async function getProperties(opts: {
   floorMax?: string;
   priceSqmMin?: string;
   priceSqmMax?: string;
+  renovationType?: string;
+  buildingStage?: string;
 }) {
-  const { search, listingType, status, mine, userId, rooms, type, district, priceMin, priceMax, areaMin, areaMax, floorMin, floorMax, priceSqmMin, priceSqmMax } = opts;
+  const { search, listingType, status, mine, userId, rooms, type, district, priceMin, priceMax, areaMin, areaMax, floorMin, floorMax, priceSqmMin, priceSqmMax, renovationType, buildingStage } = opts;
 
   const where: any = {};
 
@@ -70,6 +72,8 @@ async function getProperties(opts: {
     if (floorMin) where.floor.gte = parseInt(floorMin);
     if (floorMax) where.floor.lte = parseInt(floorMax);
   }
+  if (renovationType) where.renovationType = renovationType;
+  if (buildingStage) where.buildingStage = buildingStage;
 
   let result = await prisma.property.findMany({
     where,
@@ -111,6 +115,7 @@ export default async function AdminPropertiesPage({
     priceMin?: string; priceMax?: string; areaMin?: string; areaMax?: string;
     floorMin?: string; floorMax?: string;
     priceSqmMin?: string; priceSqmMax?: string;
+    renovationType?: string; buildingStage?: string;
   };
 }) {
   const session = await getServerSession(authOptions);
@@ -134,6 +139,8 @@ export default async function AdminPropertiesPage({
     floorMax: searchParams.floorMax,
     priceSqmMin: searchParams.priceSqmMin,
     priceSqmMax: searchParams.priceSqmMax,
+    renovationType: searchParams.renovationType,
+    buildingStage: searchParams.buildingStage,
   });
 
   const featuredCount = properties.filter((p) => p.isFeatured).length;

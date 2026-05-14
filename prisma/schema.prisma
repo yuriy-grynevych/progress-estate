@@ -35,6 +35,7 @@ model User {
   assignedInquiries  Inquiry[]  @relation("InquiryAssigned")
   contacts           Contact[]
   sentMessages       ChatMessage[]
+  sales              Sale[]
 
   @@map("users")
 }
@@ -55,6 +56,7 @@ model Contact {
   assignedUserId String?
   assignedUser   User?       @relation(fields: [assignedUserId], references: [id], onDelete: SetNull)
   properties     Property[]
+  purchases      Sale[]
   followUpAt     DateTime?
   followUpSent   Boolean     @default(false)
   createdAt      DateTime    @default(now())
@@ -91,6 +93,7 @@ model Property {
   kitchenSqm    Float?
   gasType       String?
   renovationType String?
+  buildingStage String?
   wallType      String?
   houseNumber        String?
   apartmentNumber    String?
@@ -131,6 +134,7 @@ model Property {
   images    PropertyImage[]
   inquiries Inquiry[]
   auditLogs PropertyAuditLog[]
+  sales     Sale[]
 
   @@index([listingType, status])
   @@index([type, status])
@@ -178,6 +182,7 @@ enum ListingStatus {
   INACTIVE
   SOLD
   RENTED
+  DEPOSIT
 }
 
 // ──────────────────────────────────────────────
@@ -300,6 +305,42 @@ model ChatMessage {
   @@index([createdAt])
   @@index([senderId, receiverId])
   @@map("chat_messages")
+}
+
+// ──────────────────────────────────────────────
+// SALES
+// ──────────────────────────────────────────────
+model Sale {
+  id              String    @id @default(cuid())
+  saleType        String    @default("OWN") // OWN | EXTERNAL
+
+  // OWN type — link to our property
+  propertyId      String?
+  property        Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  // EXTERNAL type — manually entered
+  externalName    String?
+  externalAddress String?
+
+  // Buyer (from contacts or manual)
+  clientContactId String?
+  clientContact   Contact?  @relation(fields: [clientContactId], references: [id], onDelete: SetNull)
+  clientName      String?
+  clientPhone     String?
+
+  commission      Float?
+  commissionType  String?   @default("FIXED") // FIXED | PERCENT
+  currency        String    @default("USD")
+  saleDate        DateTime  @default(now())
+  note            String?
+
+  agentId         String?
+  agent           User?     @relation(fields: [agentId], references: [id], onDelete: SetNull)
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("sales")
 }
 
 // ──────────────────────────────────────────────
