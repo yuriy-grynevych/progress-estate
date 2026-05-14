@@ -1,6 +1,7 @@
 "use client";
 
 import { useEditor, EditorContent } from "@tiptap/react";
+import { useEffect } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import {
@@ -43,6 +44,12 @@ export default function TiptapEditor({
       },
     },
   });
+
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value ?? "", false);
+    }
+  }, [editor, value]);
 
   if (!editor) return null;
 
