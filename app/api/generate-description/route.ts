@@ -30,22 +30,22 @@ export async function POST(req: NextRequest) {
     ELECTRIC: "електричне", GAS: "газове", AUTONOMOUS: "автономне",
   };
 
-  if (params.type) lines.push(`Тип: ${typeMap[params.type] ?? params.type}`);
-  if (params.listingType) lines.push(`Призначення: ${listingMap[params.listingType] ?? params.listingType}`);
-  if (params.district) lines.push(`Район: ${params.district}`);
-  if (params.address) lines.push(`Адреса: ${params.address}`);
-  if (params.residentialComplex) lines.push(`ЖК: ${params.residentialComplex}`);
-  if (params.areaSqm) lines.push(`Загальна площа: ${params.areaSqm} м²`);
-  if (params.kitchenSqm) lines.push(`Кухня: ${params.kitchenSqm} м²`);
-  if (params.rooms) lines.push(`Кімнат: ${params.rooms}`);
-  if (params.bedrooms) lines.push(`Спалень: ${params.bedrooms}`);
-  if (params.bathrooms) lines.push(`Санвузлів: ${params.bathrooms}`);
-  if (params.floor && params.totalFloors) lines.push(`Поверх: ${params.floor} з ${params.totalFloors}`);
-  else if (params.floor) lines.push(`Поверх: ${params.floor}`);
-  if (params.yearBuilt) lines.push(`Рік побудови: ${params.yearBuilt}`);
-  if (params.renovationType) lines.push(`Ремонт: ${renovationMap[params.renovationType] ?? params.renovationType}`);
-  if (params.heatingType) lines.push(`Опалення: ${heatingMap[params.heatingType] ?? params.heatingType}`);
-  if (params.price && params.currency) lines.push(`Ціна: ${Number(params.price).toLocaleString("uk-UA")} ${params.currency}`);
+  if (params.type) lines.push(`🏠 Тип: ${typeMap[params.type] ?? params.type}`);
+  if (params.listingType) lines.push(`🏷️ Призначення: ${listingMap[params.listingType] ?? params.listingType}`);
+  if (params.district) lines.push(`📍 Район: ${params.district}`);
+  if (params.address) lines.push(`🗺️ Адреса: ${params.address}`);
+  if (params.residentialComplex) lines.push(`🏗️ ЖК: ${params.residentialComplex}`);
+  if (params.areaSqm) lines.push(`📐 Загальна площа: ${params.areaSqm} м²`);
+  if (params.kitchenSqm) lines.push(`🍳 Кухня: ${params.kitchenSqm} м²`);
+  if (params.rooms) lines.push(`🚪 Кімнат: ${params.rooms}`);
+  if (params.bedrooms) lines.push(`🛏️ Спалень: ${params.bedrooms}`);
+  if (params.bathrooms) lines.push(`🚿 Санвузлів: ${params.bathrooms}`);
+  if (params.floor && params.totalFloors) lines.push(`🏢 Поверх: ${params.floor} з ${params.totalFloors}`);
+  else if (params.floor) lines.push(`🏢 Поверх: ${params.floor}`);
+  if (params.yearBuilt) lines.push(`📅 Рік побудови: ${params.yearBuilt}`);
+  if (params.renovationType) lines.push(`🔨 Ремонт: ${renovationMap[params.renovationType] ?? params.renovationType}`);
+  if (params.heatingType) lines.push(`🌡️ Опалення: ${heatingMap[params.heatingType] ?? params.heatingType}`);
+  if (params.price && params.currency) lines.push(`💰 Ціна: ${Number(params.price).toLocaleString("uk-UA")} ${params.currency}`);
 
   const paramText = lines.join("\n");
 
