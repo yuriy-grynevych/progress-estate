@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus, Search, Phone, Mail, User, Trash2, Edit2, X, Check,
-  ChevronDown, Calendar, MessageSquare, Filter
+  ChevronDown, Calendar, MessageSquare, Filter, History, CheckCircle2, ChevronUp,
 } from "lucide-react";
 
 type Agent = { id: string; name: string | null; email: string };
@@ -56,6 +56,9 @@ export default function ContactsManager({ initialContacts, agents, role, current
   const [deleting, setDeleting] = useState<string | null>(null);
   const [filterAgent, setFilterAgent] = useState<string>("");
   const [error, setError] = useState("");
+  const [historyOpen, setHistoryOpen] = useState<string | null>(null);
+  const [historyData, setHistoryData] = useState<Record<string, any[]>>({});
+  const [historyLoading, setHistoryLoading] = useState<string | null>(null);
 
   function normalizePhone(raw: string) {
     const digits = raw.replace(/\D/g, "");
@@ -156,6 +159,23 @@ export default function ContactsManager({ initialContacts, agents, role, current
       assignedUserId: c.assignedUser?.id ?? "",
       followUpSent: c.followUpSent,
     });
+  }
+
+  async function toggleHistory(contactId: string) {
+    if (historyOpen === contactId) {
+      setHistoryOpen(null);
+      return;
+    }
+    setHistoryOpen(contactId);
+    if (historyData[contactId]) return;
+    setHistoryLoading(contactId);
+    try {
+      const res = await fetch(`/api/contacts/${contactId}/history`);
+      const data = await res.json();
+      setHistoryData((prev) => ({ ...prev, [contactId]: data }));
+    } finally {
+      setHistoryLoading(null);
+    }
   }
 
   const fmt = (d: string | null) =>
@@ -430,6 +450,7 @@ export default function ContactsManager({ initialContacts, agents, role, current
                 </div>
               ) : (
                 /* View mode */
+                <div>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -480,6 +501,17 @@ export default function ContactsManager({ initialContacts, agents, role, current
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
+                      onClick={() => toggleHistory(c.id)}
+                      title="Історія завдань"
+                      className={`p-1.5 rounded-lg transition ${
+                        historyOpen === c.id
+                          ? "text-purple-600 bg-purple-50"
+                          : "text-gray-400 hover:text-purple-600 hover:bg-purple-50"
+                      }`}
+                    >
+                      <History className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => startEdit(c)}
                       className="p-1.5 text-gray-400 hover:text-navy-700 hover:bg-gray-100 rounded-lg transition"
                     >
@@ -493,6 +525,39 @@ export default function ContactsManager({ initialContacts, agents, role, current
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
+                </div>
+
+                {/* History panel */}
+                {historyOpen === c.id && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                      Виконані завдання
+                    </p>
+                    {historyLoading === c.id ? (
+                      <p className="text-xs text-gray-400">Завантаження...</p>
+                    ) : !historyData[c.id] || historyData[c.id].length === 0 ? (
+                      <p className="text-xs text-gray-400">Немає виконаних завдань</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {historyData[c.id].map((t: any) => (
+                          <div key={t.id} className="flex items-start gap-2 text-xs text-gray-600">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0">
+                              <span className="font-medium line-through text-gray-400">{t.title}</span>
+                              {t.description && (
+                                <span className="text-gray-400"> · {t.description.slice(0, 60)}</span>
+                              )}
+                              <span className="text-gray-300 ml-1">
+                                · {new Date(t.updatedAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
+                                {t.user?.name && ` · ${t.user.name}`}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
                 </div>
               )}
             </div>
