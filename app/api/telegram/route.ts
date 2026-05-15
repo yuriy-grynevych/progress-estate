@@ -284,7 +284,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (agent) {
-      await sendMessage(chatId, `👋 Привіт, ${agent.name ?? firstName}! Ти підключений до системи Житлова компанія Progress.\n\nЯ буду нагадувати тобі про клієнтів. Також можеш ставити питання!`);
+      await sendMessage(chatId, `👋 Привіт, ${agent.name ?? firstName}! Ти підключений до системи Житлова компанія Progress.\n\n📋 <b>Команди:</b>\n/завдання — переглянути завдання\n/нагадування — нагадування про клієнтів\n/myid — ваш Chat ID\n\nТакож я нагадуватиму автоматично о вчасно запланованих завданнях 🔔`);
     } else {
       await sendMessage(chatId, `👋 Привіт, ${firstName}!\n\nЯ — AI-асистент агентства нерухомості <b>Житлова компанія Progress</b> з Івано-Франківська.\n\nМожу розповісти про нерухомість, райони міста, ціни та допомогти з вибором. Запитуй!`);
     }
@@ -294,6 +294,59 @@ export async function POST(req: NextRequest) {
   // ── /myid ────────────────────────────────────────────
   if (text === "/myid") {
     await sendMessage(chatId, `🔑 Ваш Chat ID: <code>${chatId}</code>`);
+    return NextResponse.json({ ok: true });
+  }
+
+  // ── /tasks ───────────────────────────────────────────
+  if (text === "/tasks" || text === "/завдання") {
+    const agent = await prisma.user.findFirst({
+      where: { telegramChatId: String(chatId) },
+      select: { id: true, name: true },
+    });
+
+    if (!agent) {
+      await sendMessage(chatId, "❌ Ви не підключені до системи. Додайте ваш Chat ID у профілі на сайті.");
+      return NextResponse.json({ ok: true });
+    }
+
+    const tasks = await prisma.task.findMany({
+      where: { userId: agent.id, isDone: false },
+      orderBy: { dueAt: "asc" },
+      take: 15,
+      include: { contact: { select: { name: true, phone: true } } },
+    });
+
+    if (tasks.length === 0) {
+      await sendMessage(chatId, "✅ Немає активних завдань!\n\n<i>Додайте завдання на сайті у розділі Завдання.</i>");
+    } else {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const todayEnd = new Date(todayStart.getTime() + 86400000);
+
+      const lines = tasks.map((t) => {
+        const d = t.dueAt ? new Date(t.dueAt) : null;
+        let flag = "⚪";
+        if (d) {
+          if (d < todayStart) flag = "🔴";
+          else if (d < todayEnd) flag = "🟡";
+          else flag = "🟢";
+        }
+        const dateStr = d
+          ? d.toLocaleDateString("uk-UA", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })
+          : "без дати";
+        const parts = [`${flag} <b>${t.title}</b>  — ${dateStr}`];
+        if (t.description) parts.push(`   💬 ${t.description.slice(0, 60)}`);
+        if (t.contact) parts.push(`   👤 ${t.contact.name}${t.contact.phone ? ` · ${t.contact.phone}` : ""}`);
+        return parts.join("\n");
+      });
+
+      const APP_URL = process.env.NEXTAUTH_URL ?? "https://progress-estate.com.ua";
+      await sendMessage(
+        chatId,
+        `📋 <b>Ваші завдання (${tasks.length}):</b>\n\n${lines.join("\n\n")}`,
+        [[{ text: "📂 Відкрити всі завдання", url: `${APP_URL}/admin/reminders` }]]
+      );
+    }
     return NextResponse.json({ ok: true });
   }
 
