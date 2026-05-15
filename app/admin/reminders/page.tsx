@@ -20,7 +20,7 @@ export default async function RemindersPage() {
       ? { isDone: false }
       : { isDone: false, userId };
 
-  const [contacts, tasks, allContacts] = await Promise.all([
+  const [contacts, tasks, allContacts, agents] = await Promise.all([
     prisma.contact.findMany({
       where: contactWhere,
       orderBy: { followUpAt: "asc" },
@@ -36,6 +36,9 @@ export default async function RemindersPage() {
       orderBy: { name: "asc" },
       select: { id: true, name: true, phone: true },
     }),
+    role === "ADMIN"
+      ? prisma.user.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } })
+      : Promise.resolve([]),
   ]);
 
   return (
@@ -45,7 +48,9 @@ export default async function RemindersPage() {
         initialContacts={contacts as any}
         initialTasks={tasks as any}
         contactOptions={allContacts}
+        agents={agents}
         role={role as "ADMIN" | "EMPLOYEE"}
+        currentUserId={userId}
       />
     </div>
   );

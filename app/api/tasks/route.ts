@@ -7,15 +7,31 @@ export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const userId = (session.user as any).id as string;
+  const currentUserId = (session.user as any).id as string;
   const role = (session.user as any).role as string;
 
-  const where = role === "ADMIN" ? { isDone: false } : { userId, isDone: false };
+  const { searchParams } = new URL(req.url);
+  const isDoneParam = searchParams.get("isDone");
+  const filterUserId = searchParams.get("userId"); // admin only
+
+  const isDone = isDoneParam === "true" ? true : isDoneParam === "false" ? false : false;
+
+  // For history: admin can request any userId, employee only sees own
+  const targetUserId =
+    role === "ADMIN" && filterUserId ? filterUserId : currentUserId;
+
+  const where =
+    role === "ADMIN" && !filterUserId
+      ? { isDone }
+      : { userId: targetUserId, isDone };
 
   const tasks = await prisma.task.findMany({
     where,
-    orderBy: { dueAt: "asc" },
-    include: { contact: { select: { id: true, name: true, phone: true } } },
+    orderBy: isDone ? { updatedAt: "desc" } : { dueAt: "asc" },
+    include: {
+      contact: { select: { id: true, name: true, phone: true } },
+      user: { select: { id: true, name: true } },
+    },
   });
 
   return NextResponse.json(tasks);
@@ -41,7 +57,10 @@ export async function POST(req: NextRequest) {
       contactId: contactId || null,
       userId,
     },
-    include: { contact: { select: { id: true, name: true, phone: true } } },
+    include: {
+      contact: { select: { id: true, name: true, phone: true } },
+      user: { select: { id: true, name: true } },
+    },
   });
 
   return NextResponse.json(task, { status: 201 });

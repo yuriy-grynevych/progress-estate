@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell, CheckCircle, Clock, Phone, Mail, ChevronRight,
-  AlertCircle, Plus, X, Trash2, ListTodo,
+  AlertCircle, Plus, X, Trash2, ListTodo, History, CheckCircle2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -31,12 +31,15 @@ type Task = {
 };
 
 type ContactOption = { id: string; name: string; phone: string | null };
+type Agent = { id: string; name: string | null };
 
 interface Props {
   initialContacts: Contact[];
   initialTasks: Task[];
   contactOptions: ContactOption[];
+  agents: Agent[];
   role: "ADMIN" | "EMPLOYEE";
+  currentUserId: string;
 }
 
 // ─── Grouping helpers ─────────────────────────────────────────────────────────
@@ -350,12 +353,18 @@ function AddTaskModal({ contactOptions, onClose, onAdd }: {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function RemindersManager({ initialContacts, initialTasks, contactOptions, role }: Props) {
+export default function RemindersManager({ initialContacts, initialTasks, contactOptions, agents, role, currentUserId }: Props) {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+
+  // ─ history ─
+  const [showHistory, setShowHistory] = useState(false);
+  const [historyTasks, setHistoryTasks] = useState<(Task & { user?: { name: string | null } | null })[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyAgent, setHistoryAgent] = useState<string>("");
 
   const cg = groupByDate(contacts.map((c) => ({ ...c, dueAt: c.followUpAt })));
   const tg = groupByDate(tasks);
@@ -370,6 +379,30 @@ export default function RemindersManager({ initialContacts, initialTasks, contac
 
   const totalContacts = contacts.length;
   const totalTasks = tasks.length;
+
+  // ─ history ─
+  async function loadHistory(userId?: string) {
+    setHistoryLoading(true);
+    try {
+      const params = new URLSearchParams({ isDone: "true" });
+      if (userId) params.set("userId", userId);
+      const res = await fetch(`/api/tasks?${params}`);
+      setHistoryTasks(await res.json());
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
+
+  function handleToggleHistory() {
+    if (showHistory) { setShowHistory(false); return; }
+    setShowHistory(true);
+    loadHistory(role === "ADMIN" ? historyAgent || undefined : undefined);
+  }
+
+  function handleHistoryAgentChange(uid: string) {
+    setHistoryAgent(uid);
+    loadHistory(uid || undefined);
+  }
 
   // ─ contact handlers ─
   const handleContactDone = async (id: string) => {
@@ -470,21 +503,84 @@ export default function RemindersManager({ initialContacts, initialTasks, contac
       )}
 
       <div className="space-y-4">
-        {/* Header with add button */}
-        <div className="flex items-center justify-between">
+        {/* Header with buttons */}
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <p className="text-sm text-gray-500">
             {totalContacts + totalTasks > 0
               ? `${totalContacts} нагадувань · ${totalTasks} завдань`
               : "Немає активних завдань"}
           </p>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 bg-navy-900 hover:bg-navy-800 text-white text-sm font-semibold px-4 py-2 rounded-xl transition"
-          >
-            <Plus className="w-4 h-4" />
-            Додати завдання
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleToggleHistory}
+              className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition border ${
+                showHistory
+                  ? "bg-purple-100 text-purple-700 border-purple-200"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              <History className="w-4 h-4" />
+              Історія
+            </button>
+            <button
+              onClick={() => setShowModal(true)}
+              className="flex items-center gap-1.5 bg-navy-900 hover:bg-navy-800 text-white text-sm font-semibold px-4 py-2 rounded-xl transition"
+            >
+              <Plus className="w-4 h-4" />
+              Додати завдання
+            </button>
+          </div>
         </div>
+
+        {/* History panel */}
+        {showHistory && (
+          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 bg-purple-50">
+              <History className="w-4 h-4 text-purple-600" />
+              <span className="font-semibold text-sm text-purple-700">Виконані завдання</span>
+              {role === "ADMIN" && agents.length > 0 && (
+                <select
+                  value={historyAgent}
+                  onChange={(e) => handleHistoryAgentChange(e.target.value)}
+                  className="ml-auto text-sm border border-purple-200 rounded-lg px-2 py-1 bg-white focus:outline-none"
+                >
+                  <option value="">Всі агенти</option>
+                  {agents.map((a) => (
+                    <option key={a.id} value={a.id}>{a.name ?? a.id}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+            {historyLoading ? (
+              <p className="px-5 py-6 text-sm text-gray-400 text-center">Завантаження...</p>
+            ) : historyTasks.length === 0 ? (
+              <p className="px-5 py-6 text-sm text-gray-400 text-center">Немає виконаних завдань</p>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {historyTasks.map((t) => (
+                  <div key={t.id} className="flex items-start gap-3 px-5 py-3">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-gray-400 line-through">{t.title}</span>
+                      {t.description && (
+                        <span className="text-xs text-gray-300 ml-2">{t.description.slice(0, 60)}</span>
+                      )}
+                      {t.contact && (
+                        <span className="ml-2 text-xs text-blue-400">· {t.contact.name}</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-gray-300 flex-shrink-0 text-right">
+                      {t.dueAt && new Date(t.dueAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
+                      {(t as any).user?.name && role === "ADMIN" && (
+                        <div className="text-gray-400">{(t as any).user.name}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {renderGroup("overdue",  "Прострочені",   <AlertCircle className="w-4 h-4" />, "bg-red-50 text-red-700")}
         {renderGroup("today",    "Сьогодні",       <Bell className="w-4 h-4" />,        "bg-amber-50 text-amber-700")}

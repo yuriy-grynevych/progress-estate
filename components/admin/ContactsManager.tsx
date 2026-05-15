@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus, Search, Phone, Mail, User, Trash2, Edit2, X, Check,
-  ChevronDown, Calendar, MessageSquare, Filter, History, CheckCircle2, ChevronUp,
+  ChevronDown, Calendar, MessageSquare, Filter, History, CheckCircle2,
 } from "lucide-react";
 
 type Agent = { id: string; name: string | null; email: string };
@@ -59,6 +59,12 @@ export default function ContactsManager({ initialContacts, agents, role, current
   const [historyOpen, setHistoryOpen] = useState<string | null>(null);
   const [historyData, setHistoryData] = useState<Record<string, any[]>>({});
   const [historyLoading, setHistoryLoading] = useState<string | null>(null);
+
+  // page-level history
+  const [showPageHistory, setShowPageHistory] = useState(false);
+  const [pageHistoryTasks, setPageHistoryTasks] = useState<any[]>([]);
+  const [pageHistoryLoading, setPageHistoryLoading] = useState(false);
+  const [pageHistoryAgent, setPageHistoryAgent] = useState<string>("");
 
   function normalizePhone(raw: string) {
     const digits = raw.replace(/\D/g, "");
@@ -161,6 +167,30 @@ export default function ContactsManager({ initialContacts, agents, role, current
     });
   }
 
+  async function loadPageHistory(userId?: string) {
+    setPageHistoryLoading(true);
+    try {
+      const params = new URLSearchParams({ isDone: "true" });
+      if (userId) params.set("userId", userId);
+      const res = await fetch(`/api/tasks?${params}`);
+      const all = await res.json();
+      setPageHistoryTasks(all.filter((t: any) => t.contact));
+    } finally {
+      setPageHistoryLoading(false);
+    }
+  }
+
+  function handleTogglePageHistory() {
+    if (showPageHistory) { setShowPageHistory(false); return; }
+    setShowPageHistory(true);
+    loadPageHistory(role === "ADMIN" ? pageHistoryAgent || undefined : undefined);
+  }
+
+  function handlePageHistoryAgent(uid: string) {
+    setPageHistoryAgent(uid);
+    loadPageHistory(uid || undefined);
+  }
+
   async function toggleHistory(contactId: string) {
     if (historyOpen === contactId) {
       setHistoryOpen(null);
@@ -237,14 +267,77 @@ export default function ContactsManager({ initialContacts, agents, role, current
             </div>
           )}
         </div>
-        <button
-          onClick={() => { setShowForm(true); setError(""); }}
-          className="flex items-center justify-center gap-2 bg-black hover:bg-black/90 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition w-full sm:w-auto sm:self-start"
-        >
-          <Plus className="w-4 h-4" />
-          Додати {activeTab === "CLIENT" ? "клієнта" : "власника"}
-        </button>
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={handleTogglePageHistory}
+            className={`flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl transition border ${
+              showPageHistory
+                ? "bg-purple-100 text-purple-700 border-purple-200"
+                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+            }`}
+          >
+            <History className="w-4 h-4" />
+            Історія завдань
+          </button>
+          <button
+            onClick={() => { setShowForm(true); setError(""); }}
+            className="flex items-center justify-center gap-2 bg-black hover:bg-black/90 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
+          >
+            <Plus className="w-4 h-4" />
+            Додати {activeTab === "CLIENT" ? "клієнта" : "власника"}
+          </button>
+        </div>
       </div>
+
+      {/* Page-level history panel */}
+      {showPageHistory && (
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+          <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 bg-purple-50">
+            <History className="w-4 h-4 text-purple-600" />
+            <span className="font-semibold text-sm text-purple-700">Виконані завдання по контактах</span>
+            {role === "ADMIN" && agents.length > 0 && (
+              <select
+                value={pageHistoryAgent}
+                onChange={(e) => handlePageHistoryAgent(e.target.value)}
+                className="ml-auto text-sm border border-purple-200 rounded-lg px-2 py-1 bg-white focus:outline-none"
+              >
+                <option value="">Всі агенти</option>
+                {agents.map((a) => (
+                  <option key={a.id} value={a.id}>{a.name ?? a.email}</option>
+                ))}
+              </select>
+            )}
+          </div>
+          {pageHistoryLoading ? (
+            <p className="px-5 py-6 text-sm text-gray-400 text-center">Завантаження...</p>
+          ) : pageHistoryTasks.length === 0 ? (
+            <p className="px-5 py-6 text-sm text-gray-400 text-center">Немає виконаних завдань</p>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {pageHistoryTasks.map((t: any) => (
+                <div key={t.id} className="flex items-start gap-3 px-5 py-3">
+                  <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-medium text-gray-400 line-through">{t.title}</span>
+                    {t.description && (
+                      <span className="text-xs text-gray-300 ml-2">{t.description.slice(0, 60)}</span>
+                    )}
+                    {t.contact && (
+                      <span className="ml-2 text-xs text-blue-500 font-medium">· {t.contact.name}</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-300 flex-shrink-0 text-right">
+                    {t.dueAt && new Date(t.dueAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
+                    {t.user?.name && role === "ADMIN" && (
+                      <div className="text-gray-400">{t.user.name}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Add form */}
       {showForm && (
