@@ -10,7 +10,7 @@ export default async function ContactsPage() {
   const role = (session?.user as any)?.role as string ?? "EMPLOYEE";
   const userId = (session?.user as any)?.id as string;
 
-  const where = role === "ADMIN" ? {} : { assignedUserId: userId };
+  const where = role === "ADMIN" ? { deletedAt: null } : { assignedUserId: userId, deletedAt: null };
 
   const [contacts, agents] = await Promise.all([
     prisma.contact.findMany({

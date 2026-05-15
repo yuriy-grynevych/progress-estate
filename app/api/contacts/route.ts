@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
   const search = searchParams.get("search");
 
   const where: any = {
+    deletedAt: null,
     ...(type && { type }),
     ...(role === "EMPLOYEE" && { assignedUserId: userId }),
     ...(search && {

@@ -12,8 +12,8 @@ export async function GET() {
 
   const where =
     role === "ADMIN"
-      ? { followUpAt: { not: null } }
-      : { followUpAt: { not: null }, assignedUserId: userId };
+      ? { followUpAt: { not: null }, deletedAt: null }
+      : { followUpAt: { not: null }, assignedUserId: userId, deletedAt: null };
 
   const contacts = await prisma.contact.findMany({
     where,

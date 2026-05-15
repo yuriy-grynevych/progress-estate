@@ -11,8 +11,8 @@ async function getTodayReminders(role: string, userId: string) {
   const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   const where =
     role === "ADMIN"
-      ? { followUpAt: { not: null, lte: todayEnd } }
-      : { followUpAt: { not: null, lte: todayEnd }, assignedUserId: userId };
+      ? { followUpAt: { not: null, lte: todayEnd }, deletedAt: null }
+      : { followUpAt: { not: null, lte: todayEnd }, assignedUserId: userId, deletedAt: null };
   return prisma.contact.findMany({
     where,
     orderBy: { followUpAt: "asc" },
@@ -34,8 +34,8 @@ async function getStats(role: string, userId: string) {
     prisma.inquiry.count({ where: { ...inquiryWhere, status: "NEW" } }),
     prisma.contact.count(
       role === "ADMIN"
-        ? {}
-        : { where: { assignedUserId: userId } }
+        ? { where: { deletedAt: null } }
+        : { where: { assignedUserId: userId, deletedAt: null } }
     ),
   ]);
 

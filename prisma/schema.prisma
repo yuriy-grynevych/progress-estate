@@ -61,6 +61,7 @@ model Contact {
   purchases      Sale[]
   followUpAt     DateTime?
   followUpSent   Boolean     @default(false)
+  deletedAt      DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tasks          Task[]

@@ -323,7 +323,7 @@ export async function POST(req: NextRequest) {
         include: { contact: { select: { name: true, phone: true } } },
       }),
       prisma.contact.findMany({
-        where: { assignedUserId: agent.id, followUpAt: { not: null, lte: upcoming }, followUpSent: false },
+        where: { assignedUserId: agent.id, followUpAt: { not: null, lte: upcoming }, followUpSent: false, deletedAt: null },
         orderBy: { followUpAt: "asc" },
         take: 10,
       }),

@@ -12,8 +12,8 @@ export default async function RemindersPage() {
 
   const contactWhere =
     role === "ADMIN"
-      ? { followUpAt: { not: null } }
-      : { followUpAt: { not: null }, assignedUserId: userId };
+      ? { followUpAt: { not: null }, deletedAt: null }
+      : { followUpAt: { not: null }, assignedUserId: userId, deletedAt: null };
 
   const taskWhere =
     role === "ADMIN"

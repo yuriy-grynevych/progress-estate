@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus, Search, Phone, Mail, User, Trash2, Edit2, X, Check,
-  ChevronDown, Calendar, MessageSquare, Filter, History, Send, CheckCircle2,
+  ChevronDown, Calendar, Filter, History, RotateCcw,
 } from "lucide-react";
 
 type Agent = { id: string; name: string | null; email: string };
@@ -20,6 +20,15 @@ type Contact = {
   followUpAt: string | null;
   followUpSent: boolean;
   createdAt: string;
+  assignedUser: { id: string; name: string | null; email: string } | null;
+};
+
+type DeletedContact = {
+  id: string;
+  type: "CLIENT" | "OWNER";
+  name: string;
+  phone: string | null;
+  deletedAt: string;
   assignedUser: { id: string; name: string | null; email: string } | null;
 };
 
@@ -56,17 +65,13 @@ export default function ContactsManager({ initialContacts, agents, role, current
   const [deleting, setDeleting] = useState<string | null>(null);
   const [filterAgent, setFilterAgent] = useState<string>("");
   const [error, setError] = useState("");
-  const [historyOpen, setHistoryOpen] = useState<string | null>(null);
-  const [historyNotes, setHistoryNotes] = useState<Record<string, any[]>>({});
-  const [historyLoading, setHistoryLoading] = useState<string | null>(null);
-  const [noteText, setNoteText] = useState<Record<string, string>>({});
-  const [noteSaving, setNoteSaving] = useState<string | null>(null);
 
-  // page-level history
+  // page-level history (deleted contacts)
   const [showPageHistory, setShowPageHistory] = useState(false);
-  const [pageHistoryTasks, setPageHistoryTasks] = useState<any[]>([]);
+  const [deletedContacts, setDeletedContacts] = useState<DeletedContact[]>([]);
   const [pageHistoryLoading, setPageHistoryLoading] = useState(false);
   const [pageHistoryAgent, setPageHistoryAgent] = useState<string>("");
+  const [restoring, setRestoring] = useState<string | null>(null);
 
   function normalizePhone(raw: string) {
     const digits = raw.replace(/\D/g, "");
@@ -174,8 +179,8 @@ export default function ContactsManager({ initialContacts, agents, role, current
     try {
       const params = new URLSearchParams();
       if (agentId) params.set("agentId", agentId);
-      const res = await fetch(`/api/contacts/notes${params.toString() ? "?" + params : ""}`);
-      setPageHistoryTasks(await res.json());
+      const res = await fetch(`/api/contacts/deleted${params.toString() ? "?" + params : ""}`);
+      setDeletedContacts(await res.json());
     } finally {
       setPageHistoryLoading(false);
     }
@@ -192,48 +197,17 @@ export default function ContactsManager({ initialContacts, agents, role, current
     loadPageHistory(uid || undefined);
   }
 
-  async function toggleHistory(contactId: string) {
-    if (historyOpen === contactId) { setHistoryOpen(null); return; }
-    setHistoryOpen(contactId);
-    if (historyNotes[contactId]) return;
-    setHistoryLoading(contactId);
+  async function handleRestore(id: string) {
+    setRestoring(id);
     try {
-      const res = await fetch(`/api/contacts/${contactId}/history`);
-      const data = await res.json();
-      setHistoryNotes((prev) => ({ ...prev, [contactId]: data }));
+      const res = await fetch(`/api/contacts/${id}/restore`, { method: "POST" });
+      if (!res.ok) return;
+      const restored: Contact = await res.json();
+      setDeletedContacts((prev) => prev.filter((c) => c.id !== id));
+      setContacts((prev) => [restored, ...prev]);
     } finally {
-      setHistoryLoading(null);
+      setRestoring(null);
     }
-  }
-
-  async function handleAddNote(contactId: string) {
-    const text = noteText[contactId]?.trim();
-    if (!text) return;
-    setNoteSaving(contactId);
-    try {
-      const res = await fetch(`/api/contacts/${contactId}/history`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      const note = await res.json();
-      setHistoryNotes((prev) => ({ ...prev, [contactId]: [note, ...(prev[contactId] ?? [])] }));
-      setNoteText((prev) => ({ ...prev, [contactId]: "" }));
-    } finally {
-      setNoteSaving(null);
-    }
-  }
-
-  async function handleDeleteNote(contactId: string, noteId: string) {
-    await fetch(`/api/contacts/${contactId}/history`, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ noteId }),
-    });
-    setHistoryNotes((prev) => ({
-      ...prev,
-      [contactId]: (prev[contactId] ?? []).filter((n: any) => n.id !== noteId),
-    }));
   }
 
   const fmt = (d: string | null) =>
@@ -317,12 +291,12 @@ export default function ContactsManager({ initialContacts, agents, role, current
         </div>
       </div>
 
-      {/* Page-level history panel */}
+      {/* Page-level history panel (deleted contacts) */}
       {showPageHistory && (
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
           <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 bg-purple-50">
             <History className="w-4 h-4 text-purple-600" />
-            <span className="font-semibold text-sm text-purple-700">Історія контактів</span>
+            <span className="font-semibold text-sm text-purple-700">Видалені контакти</span>
             {role === "ADMIN" && agents.length > 0 && (
               <select
                 value={pageHistoryAgent}
@@ -338,30 +312,41 @@ export default function ContactsManager({ initialContacts, agents, role, current
           </div>
           {pageHistoryLoading ? (
             <p className="px-5 py-6 text-sm text-gray-400 text-center">Завантаження...</p>
-          ) : pageHistoryTasks.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-gray-400 text-center">Немає виконаних завдань</p>
+          ) : deletedContacts.length === 0 ? (
+            <p className="px-5 py-6 text-sm text-gray-400 text-center">Немає видалених контактів</p>
           ) : (
             <div className="divide-y divide-gray-50">
-              {pageHistoryTasks.map((n: any) => (
-                <div key={n.id} className="flex items-start gap-3 px-5 py-3">
-                  <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-xs font-bold text-gray-500">
-                    {n.contact?.name?.[0]?.toUpperCase() ?? "?"}
+              {deletedContacts.map((c) => (
+                <div key={c.id} className="flex items-center gap-3 px-5 py-3">
+                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 text-sm font-bold text-gray-500">
+                    {c.name[0]?.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-sm font-semibold text-navy-900">{n.contact?.name}</span>
+                      <span className="text-sm font-semibold text-navy-900">{c.name}</span>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                        n.contact?.type === "CLIENT" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
+                        c.type === "CLIENT" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700"
                       }`}>
-                        {n.contact?.type === "CLIENT" ? "Клієнт" : "Власник"}
+                        {c.type === "CLIENT" ? "Клієнт" : "Власник"}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 mt-0.5">{n.text}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">
-                      {new Date(n.createdAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                      {n.user?.name && ` · ${n.user.name}`}
-                    </p>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-0.5 text-xs text-gray-400">
+                      {c.phone && <span><Phone className="w-3 h-3 inline mr-0.5" />{c.phone}</span>}
+                      <span>Видалено: {fmt(c.deletedAt)}</span>
+                      {role === "ADMIN" && c.assignedUser && (
+                        <span>{c.assignedUser.name ?? c.assignedUser.email}</span>
+                      )}
+                    </div>
                   </div>
+                  <button
+                    onClick={() => handleRestore(c.id)}
+                    disabled={restoring === c.id}
+                    title="Відновити контакт"
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 hover:bg-green-100 rounded-lg transition disabled:opacity-50"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Відновити
+                  </button>
                 </div>
               ))}
             </div>
@@ -573,7 +558,6 @@ export default function ContactsManager({ initialContacts, agents, role, current
                 </div>
               ) : (
                 /* View mode */
-                <div>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -624,17 +608,6 @@ export default function ContactsManager({ initialContacts, agents, role, current
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      onClick={() => toggleHistory(c.id)}
-                      title="Історія завдань"
-                      className={`p-1.5 rounded-lg transition ${
-                        historyOpen === c.id
-                          ? "text-purple-600 bg-purple-50"
-                          : "text-gray-400 hover:text-purple-600 hover:bg-purple-50"
-                      }`}
-                    >
-                      <History className="w-4 h-4" />
-                    </button>
-                    <button
                       onClick={() => startEdit(c)}
                       className="p-1.5 text-gray-400 hover:text-navy-700 hover:bg-gray-100 rounded-lg transition"
                     >
@@ -648,60 +621,6 @@ export default function ContactsManager({ initialContacts, agents, role, current
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                </div>
-
-                {/* History panel */}
-                {historyOpen === c.id && (
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                      Історія контакту
-                    </p>
-
-                    {/* Add note input */}
-                    <div className="flex gap-2 mb-3">
-                      <input
-                        value={noteText[c.id] ?? ""}
-                        onChange={(e) => setNoteText((p) => ({ ...p, [c.id]: e.target.value }))}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddNote(c.id)}
-                        placeholder="Додати запис..."
-                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-navy-300"
-                      />
-                      <button
-                        onClick={() => handleAddNote(c.id)}
-                        disabled={noteSaving === c.id || !noteText[c.id]?.trim()}
-                        className="flex items-center gap-1 px-2.5 py-1.5 bg-navy-900 text-white text-xs rounded-lg hover:bg-navy-800 transition disabled:opacity-40"
-                      >
-                        <Send className="w-3 h-3" />
-                      </button>
-                    </div>
-
-                    {historyLoading === c.id ? (
-                      <p className="text-xs text-gray-400">Завантаження...</p>
-                    ) : !historyNotes[c.id] || historyNotes[c.id].length === 0 ? (
-                      <p className="text-xs text-gray-400">Ще немає записів</p>
-                    ) : (
-                      <div className="space-y-2">
-                        {historyNotes[c.id].map((n: any) => (
-                          <div key={n.id} className="flex items-start gap-2 group">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs text-gray-700">{n.text}</p>
-                              <p className="text-[10px] text-gray-400 mt-0.5">
-                                {new Date(n.createdAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                                {n.user?.name && ` · ${n.user.name}`}
-                              </p>
-                            </div>
-                            <button
-                              onClick={() => handleDeleteNote(c.id, n.id)}
-                              className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-300 hover:text-red-400 transition"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
                 </div>
               )}
             </div>

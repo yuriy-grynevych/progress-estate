@@ -52,6 +52,7 @@ export async function GET(req: NextRequest) {
     where: {
       followUpAt: { gte: startOfDay, lt: endOfDay },
       followUpSent: false,
+      deletedAt: null,
     },
     include: {
       assignedUser: { select: { id: true, name: true, telegramChatId: true } },
