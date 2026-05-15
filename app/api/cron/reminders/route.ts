@@ -45,6 +45,7 @@ export async function GET(req: NextRequest) {
 
   let contactsSent = 0;
   let propertiesSent = 0;
+  let tasksSent = 0;
 
   // ── 1. Contact follow-up reminders ──────────────────────────────
   const dueContacts = await prisma.contact.findMany({
@@ -143,10 +144,57 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ── 3. Task reminders ────────────────────────────────────────────
+  const dueTasks = await prisma.task.findMany({
+    where: {
+      isDone: false,
+      reminderSent: false,
+      dueAt: { gte: startOfDay, lt: endOfDay },
+    },
+    include: {
+      user: { select: { telegramChatId: true } },
+      contact: { select: { name: true, phone: true } },
+    },
+  });
+
+  for (const task of dueTasks) {
+    const chatId = task.user?.telegramChatId;
+    if (!chatId) continue;
+
+    const lines: string[] = [
+      `📋 <b>Нагадування про завдання</b>`,
+      ``,
+      `✅ <b>${task.title}</b>`,
+    ];
+    if (task.description) lines.push(``, `💬 <i>${task.description}</i>`);
+    if (task.contact) {
+      lines.push(``, `👤 ${task.contact.name}`);
+      if (task.contact.phone) lines.push(`📞 <code>${task.contact.phone}</code>`);
+    }
+    lines.push(``, `<i>Не забудьте виконати це завдання сьогодні!</i>`);
+
+    const buttons: InlineButton[][] = [
+      [
+        { text: "✅ Виконано", callback_data: `task_done_${task.id}` },
+        { text: "⏰ Завтра",   callback_data: `task_snooze_${task.id}` },
+      ],
+      [{ text: "📋 Відкрити завдання", url: `${APP_URL}/admin/reminders` }],
+    ];
+
+    try {
+      await sendMessage(chatId, lines.join("\n"), buttons);
+      await prisma.task.update({ where: { id: task.id }, data: { reminderSent: true } });
+      tasksSent++;
+    } catch (err) {
+      console.error(`Failed to send task reminder for ${task.id}:`, err);
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     contactsSent,
     propertiesSent,
+    tasksSent,
     checkedAt: now.toISOString(),
   });
 }

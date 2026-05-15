@@ -243,7 +243,7 @@ export default async function AdminPropertiesPage({
                           <div className="text-xl sm:text-2xl font-bold text-navy-900 leading-tight">
                             {formatPrice(currPrice, property.currency)}
                           </div>
-                          {newProperty && (
+                          {newProperty && !priceChanged && (
                             <div className="flex items-center gap-1.5 mt-0.5 text-emerald-600">
                               <span className="text-base font-extrabold uppercase tracking-wide">✨ Нове</span>
                             </div>

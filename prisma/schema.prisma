@@ -36,6 +36,7 @@ model User {
   contacts           Contact[]
   sentMessages       ChatMessage[]
   sales              Sale[]
+  tasks              Task[]
 
   @@map("users")
 }
@@ -61,6 +62,7 @@ model Contact {
   followUpSent   Boolean     @default(false)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
+  tasks          Task[]
 
   @@index([type])
   @@index([assignedUserId])
@@ -341,6 +343,28 @@ model Sale {
   updatedAt       DateTime  @updatedAt
 
   @@map("sales")
+}
+
+// ──────────────────────────────────────────────
+// TASKS
+// ──────────────────────────────────────────────
+model Task {
+  id           String    @id @default(cuid())
+  title        String
+  description  String?
+  dueAt        DateTime?
+  isDone       Boolean   @default(false)
+  reminderSent Boolean   @default(false)
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactId    String?
+  contact      Contact?  @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([dueAt])
+  @@map("tasks")
 }
 
 // ──────────────────────────────────────────────

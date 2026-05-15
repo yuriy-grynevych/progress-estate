@@ -1,8 +1,13 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, CheckCircle, Clock, Phone, Mail, ChevronRight, AlertCircle } from "lucide-react";
+import {
+  Bell, CheckCircle, Clock, Phone, Mail, ChevronRight,
+  AlertCircle, Plus, X, Trash2, ListTodo,
+} from "lucide-react";
 import Link from "next/link";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Contact = {
   id: string;
@@ -16,32 +21,50 @@ type Contact = {
   assignedUser: { id: string; name: string | null } | null;
 };
 
+type Task = {
+  id: string;
+  title: string;
+  description: string | null;
+  dueAt: string | null;
+  isDone: boolean;
+  contact: { id: string; name: string; phone: string | null } | null;
+};
+
+type ContactOption = { id: string; name: string; phone: string | null };
+
 interface Props {
   initialContacts: Contact[];
+  initialTasks: Task[];
+  contactOptions: ContactOption[];
   role: "ADMIN" | "EMPLOYEE";
 }
 
-function groupContacts(contacts: Contact[]) {
+// ─── Grouping helpers ─────────────────────────────────────────────────────────
+
+type Groups<T> = { overdue: T[]; today: T[]; thisWeek: T[]; later: T[]; noDate: T[] };
+
+function getDate(d: string | null) { return d ? new Date(d) : null; }
+
+function groupByDate<T extends { dueAt?: string | null; followUpAt?: string | null }>(items: T[]): Groups<T> {
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const todayEnd = new Date(todayStart); todayEnd.setDate(todayEnd.getDate() + 1);
-  const weekEnd = new Date(todayStart); weekEnd.setDate(weekEnd.getDate() + 7);
+  const todayEnd   = new Date(todayStart); todayEnd.setDate(todayEnd.getDate() + 1);
+  const weekEnd    = new Date(todayStart); weekEnd.setDate(weekEnd.getDate() + 7);
 
-  const overdue: Contact[] = [];
-  const today: Contact[] = [];
-  const thisWeek: Contact[] = [];
-  const later: Contact[] = [];
-
-  for (const c of contacts) {
-    const d = new Date(c.followUpAt!);
-    if (d < todayStart)      overdue.push(c);
-    else if (d < todayEnd)   today.push(c);
-    else if (d < weekEnd)    thisWeek.push(c);
-    else                     later.push(c);
+  const out: Groups<T> = { overdue: [], today: [], thisWeek: [], later: [], noDate: [] };
+  for (const item of items) {
+    const raw = (item as any).dueAt ?? (item as any).followUpAt;
+    const d = getDate(raw);
+    if (!d)          { out.noDate.push(item); continue; }
+    if (d < todayStart)    out.overdue.push(item);
+    else if (d < todayEnd)  out.today.push(item);
+    else if (d < weekEnd)   out.thisWeek.push(item);
+    else                    out.later.push(item);
   }
-
-  return { overdue, today, thisWeek, later };
+  return out;
 }
+
+// ─── Contact card ─────────────────────────────────────────────────────────────
 
 function ContactCard({ contact, onDone, onSnooze, loading, role }: {
   contact: Contact;
@@ -54,14 +77,8 @@ function ContactCard({ contact, onDone, onSnooze, loading, role }: {
     ? new Date(contact.followUpAt).toLocaleDateString("uk-UA", { day: "numeric", month: "long" })
     : "";
   const isLoading = loading === contact.id;
-
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
   const tomorrowStr = tomorrow.toISOString().split("T")[0];
-
-  const nextWeek = new Date();
-  nextWeek.setDate(nextWeek.getDate() + 7);
-  const nextWeekStr = nextWeek.toISOString().split("T")[0];
 
   return (
     <div className="flex items-start gap-4 py-4 px-5">
@@ -77,9 +94,7 @@ function ContactCard({ contact, onDone, onSnooze, loading, role }: {
             {contact.type === "CLIENT" ? "Клієнт" : "Власник"}
           </span>
           {contact.followUpSent && (
-            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
-              надіслано
-            </span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">надіслано</span>
           )}
         </div>
         <div className="flex items-center gap-3 mt-1 flex-wrap">
@@ -94,9 +109,7 @@ function ContactCard({ contact, onDone, onSnooze, loading, role }: {
             </span>
           )}
         </div>
-        {contact.notes && (
-          <p className="text-xs text-gray-400 mt-1 line-clamp-1">{contact.notes}</p>
-        )}
+        {contact.notes && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{contact.notes}</p>}
         {role === "ADMIN" && contact.assignedUser?.name && (
           <p className="text-xs text-gray-400 mt-0.5">Агент: {contact.assignedUser.name}</p>
         )}
@@ -132,42 +145,235 @@ function ContactCard({ contact, onDone, onSnooze, loading, role }: {
   );
 }
 
-function Group({ title, contacts, icon, accent, onDone, onSnooze, loading, role }: {
-  title: string;
-  contacts: Contact[];
-  icon: React.ReactNode;
-  accent: string;
+// ─── Task card ────────────────────────────────────────────────────────────────
+
+function TaskCard({ task, onDone, onSnooze, onDelete, loading }: {
+  task: Task;
   onDone: (id: string) => void;
   onSnooze: (id: string, date: string) => void;
+  onDelete: (id: string) => void;
   loading: string | null;
-  role: "ADMIN" | "EMPLOYEE";
 }) {
-  if (contacts.length === 0) return null;
+  const date = task.dueAt
+    ? new Date(task.dueAt).toLocaleDateString("uk-UA", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" })
+    : null;
+  const isLoading = loading === task.id;
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-      <div className={`flex items-center gap-2 px-5 py-3 border-b border-gray-100 ${accent}`}>
-        {icon}
-        <span className="font-semibold text-sm">{title}</span>
-        <span className="ml-auto text-xs font-bold bg-white/60 px-2 py-0.5 rounded-full">{contacts.length}</span>
+    <div className="flex items-start gap-4 py-4 px-5">
+      <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+        <ListTodo className="w-4 h-4 text-purple-600" />
       </div>
-      <div className="divide-y divide-gray-50">
-        {contacts.map((c) => (
-          <ContactCard key={c.id} contact={c} onDone={onDone} onSnooze={onSnooze} loading={loading} role={role} />
-        ))}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-navy-900 text-sm">{task.title}</span>
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">
+            Завдання
+          </span>
+        </div>
+        {task.description && (
+          <p className="text-xs text-gray-400 mt-1 line-clamp-2">{task.description}</p>
+        )}
+        {task.contact && (
+          <Link href="/admin/contacts" className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 mt-1 transition">
+            <Phone className="w-3 h-3" />
+            {task.contact.name}
+            {task.contact.phone && ` · ${task.contact.phone}`}
+          </Link>
+        )}
+        {date && <p className="text-xs text-gray-400 mt-0.5">{date}</p>}
+      </div>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <button
+          onClick={() => onSnooze(task.id, tomorrowStr)}
+          disabled={isLoading}
+          title="Відкласти на 1 день"
+          className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-amber-500 hover:border-amber-200 transition disabled:opacity-40"
+        >
+          <Clock className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={() => onDone(task.id)}
+          disabled={isLoading}
+          title="Виконано"
+          className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-green-600 hover:border-green-200 transition disabled:opacity-40"
+        >
+          <CheckCircle className="w-3.5 h-3.5" />
+        </button>
+        <button
+          onClick={() => onDelete(task.id)}
+          disabled={isLoading}
+          title="Видалити"
+          className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-500 hover:border-red-200 transition disabled:opacity-40"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
 }
 
-export default function RemindersManager({ initialContacts, role }: Props) {
+// ─── Group wrapper ─────────────────────────────────────────────────────────────
+
+function Group({ title, icon, accent, children, count }: {
+  title: string;
+  icon: React.ReactNode;
+  accent: string;
+  children: React.ReactNode;
+  count: number;
+}) {
+  if (count === 0) return null;
+  return (
+    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className={`flex items-center gap-2 px-5 py-3 border-b border-gray-100 ${accent}`}>
+        {icon}
+        <span className="font-semibold text-sm">{title}</span>
+        <span className="ml-auto text-xs font-bold bg-white/60 px-2 py-0.5 rounded-full">{count}</span>
+      </div>
+      <div className="divide-y divide-gray-50">{children}</div>
+    </div>
+  );
+}
+
+// ─── Add Task Modal ───────────────────────────────────────────────────────────
+
+function AddTaskModal({ contactOptions, onClose, onAdd }: {
+  contactOptions: ContactOption[];
+  onClose: () => void;
+  onAdd: (task: Task) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [dueAt, setDueAt] = useState("");
+  const [contactId, setContactId] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) { setError("Введіть назву"); return; }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, dueAt: dueAt || null, contactId: contactId || null }),
+      });
+      if (!res.ok) { setError("Помилка збереження"); return; }
+      const task = await res.json();
+      onAdd(task);
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h2 className="font-bold text-navy-900 text-base">Нове завдання</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">Назва *</label>
+            <input
+              autoFocus
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Що потрібно зробити?"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-300"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">Опис</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
+              placeholder="Додаткові деталі..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-300 resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">Нагадати</label>
+            <input
+              type="datetime-local"
+              value={dueAt}
+              onChange={(e) => setDueAt(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-300"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1">Клієнт (необов'язково)</label>
+            <select
+              value={contactId}
+              onChange={(e) => setContactId(e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-300 bg-white"
+            >
+              <option value="">— не обрано —</option>
+              {contactOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}{c.phone ? ` · ${c.phone}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+          <div className="flex gap-3 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-500 hover:bg-gray-50 transition"
+            >
+              Скасувати
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-2.5 rounded-xl bg-navy-900 text-white text-sm font-semibold hover:bg-navy-800 transition disabled:opacity-50"
+            >
+              {saving ? "Збереження…" : "Зберегти"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+export default function RemindersManager({ initialContacts, initialTasks, contactOptions, role }: Props) {
   const router = useRouter();
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);
-  const [loading, setLoading] = useState<string | null>(null);
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
-  const { overdue, today, thisWeek, later } = groupContacts(contacts);
+  const cg = groupByDate(contacts.map((c) => ({ ...c, dueAt: c.followUpAt })));
+  const tg = groupByDate(tasks);
 
-  const handleDone = async (id: string) => {
-    setLoading(id);
+  const merged = {
+    overdue:  { contacts: cg.overdue,  tasks: tg.overdue  },
+    today:    { contacts: cg.today,    tasks: tg.today    },
+    thisWeek: { contacts: cg.thisWeek, tasks: tg.thisWeek },
+    later:    { contacts: cg.later,    tasks: tg.later    },
+    noDate:   { contacts: cg.noDate,   tasks: tg.noDate   },
+  };
+
+  const totalContacts = contacts.length;
+  const totalTasks = tasks.length;
+
+  // ─ contact handlers ─
+  const handleContactDone = async (id: string) => {
+    setLoadingId(id);
     try {
       await fetch("/api/reminders", {
         method: "PATCH",
@@ -175,13 +381,11 @@ export default function RemindersManager({ initialContacts, role }: Props) {
         body: JSON.stringify({ contactId: id, action: "done" }),
       });
       setContacts((prev) => prev.filter((c) => c.id !== id));
-    } finally {
-      setLoading(null);
-    }
+    } finally { setLoadingId(null); }
   };
 
-  const handleSnooze = async (id: string, date: string) => {
-    setLoading(id);
+  const handleContactSnooze = async (id: string, date: string) => {
+    setLoadingId(id);
     try {
       await fetch("/api/reminders", {
         method: "PATCH",
@@ -189,55 +393,113 @@ export default function RemindersManager({ initialContacts, role }: Props) {
         body: JSON.stringify({ contactId: id, action: "snooze", snoozeDate: date }),
       });
       router.refresh();
-    } finally {
-      setLoading(null);
-    }
+    } finally { setLoadingId(null); }
   };
 
-  const total = contacts.length;
+  // ─ task handlers ─
+  const handleTaskDone = async (id: string) => {
+    setLoadingId(id);
+    try {
+      await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "done" }),
+      });
+      setTasks((prev) => prev.filter((t) => t.id !== id));
+    } finally { setLoadingId(null); }
+  };
 
-  if (total === 0) {
+  const handleTaskSnooze = async (id: string, date: string) => {
+    setLoadingId(id);
+    try {
+      await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "snooze", snoozeDate: `${date}T09:00:00` }),
+      });
+      router.refresh();
+    } finally { setLoadingId(null); }
+  };
+
+  const handleTaskDelete = async (id: string) => {
+    setLoadingId(id);
+    try {
+      await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+      setTasks((prev) => prev.filter((t) => t.id !== id));
+    } finally { setLoadingId(null); }
+  };
+
+  const renderGroup = (key: keyof typeof merged, title: string, icon: React.ReactNode, accent: string) => {
+    const { contacts: gc, tasks: gt } = merged[key];
+    const count = gc.length + gt.length;
+    if (count === 0) return null;
     return (
-      <div className="bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center py-16 gap-3">
-        <Bell className="w-10 h-10 text-gray-200" />
-        <p className="text-gray-400 font-medium">Немає завдань</p>
-        <p className="text-xs text-gray-300">Встановіть дату нагадування у картці контакту</p>
-      </div>
+      <Group key={key} title={title} icon={icon} accent={accent} count={count}>
+        {gc.map((c) => (
+          <ContactCard
+            key={c.id}
+            contact={c}
+            onDone={handleContactDone}
+            onSnooze={handleContactSnooze}
+            loading={loadingId}
+            role={role}
+          />
+        ))}
+        {gt.map((t) => (
+          <TaskCard
+            key={t.id}
+            task={t}
+            onDone={handleTaskDone}
+            onSnooze={handleTaskSnooze}
+            onDelete={handleTaskDelete}
+            loading={loadingId}
+          />
+        ))}
+      </Group>
     );
-  }
-
-  const sharedProps = { onDone: handleDone, onSnooze: handleSnooze, loading, role };
+  };
 
   return (
-    <div className="space-y-4">
-      <Group
-        title="Прострочені"
-        contacts={overdue}
-        icon={<AlertCircle className="w-4 h-4" />}
-        accent="bg-red-50 text-red-700"
-        {...sharedProps}
-      />
-      <Group
-        title="Сьогодні"
-        contacts={today}
-        icon={<Bell className="w-4 h-4" />}
-        accent="bg-amber-50 text-amber-700"
-        {...sharedProps}
-      />
-      <Group
-        title="Цього тижня"
-        contacts={thisWeek}
-        icon={<Clock className="w-4 h-4" />}
-        accent="bg-blue-50 text-blue-700"
-        {...sharedProps}
-      />
-      <Group
-        title="Пізніше"
-        contacts={later}
-        icon={<Clock className="w-4 h-4" />}
-        accent="bg-gray-50 text-gray-600"
-        {...sharedProps}
-      />
-    </div>
+    <>
+      {showModal && (
+        <AddTaskModal
+          contactOptions={contactOptions}
+          onClose={() => setShowModal(false)}
+          onAdd={(task) => setTasks((prev) => [task, ...prev])}
+        />
+      )}
+
+      <div className="space-y-4">
+        {/* Header with add button */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            {totalContacts + totalTasks > 0
+              ? `${totalContacts} нагадувань · ${totalTasks} завдань`
+              : "Немає активних завдань"}
+          </p>
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-1.5 bg-navy-900 hover:bg-navy-800 text-white text-sm font-semibold px-4 py-2 rounded-xl transition"
+          >
+            <Plus className="w-4 h-4" />
+            Додати завдання
+          </button>
+        </div>
+
+        {renderGroup("overdue",  "Прострочені",   <AlertCircle className="w-4 h-4" />, "bg-red-50 text-red-700")}
+        {renderGroup("today",    "Сьогодні",       <Bell className="w-4 h-4" />,        "bg-amber-50 text-amber-700")}
+        {renderGroup("thisWeek", "Цього тижня",    <Clock className="w-4 h-4" />,       "bg-blue-50 text-blue-700")}
+        {renderGroup("later",    "Пізніше",        <Clock className="w-4 h-4" />,       "bg-gray-50 text-gray-600")}
+        {renderGroup("noDate",   "Без дати",       <ListTodo className="w-4 h-4" />,    "bg-purple-50 text-purple-700")}
+
+        {totalContacts + totalTasks === 0 && (
+          <div className="bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center py-16 gap-3">
+            <Bell className="w-10 h-10 text-gray-200" />
+            <p className="text-gray-400 font-medium">Немає завдань</p>
+            <p className="text-xs text-gray-300">Натисніть «Додати завдання» або встановіть дату нагадування у картці контакту</p>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

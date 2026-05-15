@@ -233,6 +233,34 @@ export async function POST(req: NextRequest) {
         });
         await sendMessage(String(cbChatId), `⏰ Нагадування відкладено на завтра (${tomorrow.toLocaleDateString("uk-UA")}).`);
       } catch {}
+    } else if (data.startsWith("task_done_")) {
+      const taskId = data.replace("task_done_", "");
+      try {
+        await prisma.task.update({ where: { id: taskId }, data: { isDone: true } });
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageReplyMarkup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: cbChatId, message_id: messageId, reply_markup: { inline_keyboard: [] } }),
+        });
+        await sendMessage(String(cbChatId), "✅ Завдання виконано!");
+      } catch {}
+    } else if (data.startsWith("task_snooze_")) {
+      const taskId = data.replace("task_snooze_", "");
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(9, 0, 0, 0);
+      try {
+        await prisma.task.update({
+          where: { id: taskId },
+          data: { dueAt: tomorrow, reminderSent: false },
+        });
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageReplyMarkup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: cbChatId, message_id: messageId, reply_markup: { inline_keyboard: [] } }),
+        });
+        await sendMessage(String(cbChatId), `⏰ Завдання відкладено на завтра (${tomorrow.toLocaleDateString("uk-UA")}).`);
+      } catch {}
     }
 
     return NextResponse.json({ ok: true });
