@@ -1,6 +1,14 @@
 #!/usr/bin/env node
 // Telegram long-polling bot — forwards updates to local Next.js API
-require("dotenv").config({ path: ".env" });
+const fs = require("fs");
+const path = require("path");
+try {
+  const env = fs.readFileSync(path.join(__dirname, ".env"), "utf8");
+  for (const line of env.split("\n")) {
+    const m = line.match(/^([A-Z_][A-Z0-9_]*)=["']?(.+?)["']?\s*$/);
+    if (m) process.env[m[1]] = m[2];
+  }
+} catch {}
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET ?? "";
