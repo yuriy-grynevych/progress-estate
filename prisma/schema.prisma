@@ -37,6 +37,7 @@ model User {
   sentMessages       ChatMessage[]
   sales              Sale[]
   tasks              Task[]
+  contactNotes       ContactNote[]
 
   @@map("users")
 }
@@ -63,6 +64,7 @@ model Contact {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tasks          Task[]
+  history        ContactNote[]
 
   @@index([type])
   @@index([assignedUserId])
@@ -343,6 +345,22 @@ model Sale {
   updatedAt       DateTime  @updatedAt
 
   @@map("sales")
+}
+
+// ──────────────────────────────────────────────
+// CONTACT HISTORY NOTES
+// ──────────────────────────────────────────────
+model ContactNote {
+  id        String   @id @default(cuid())
+  contactId String
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([contactId])
+  @@map("contact_notes")
 }
 
 // ──────────────────────────────────────────────

@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus, Search, Phone, Mail, User, Trash2, Edit2, X, Check,
-  ChevronDown, Calendar, MessageSquare, Filter, History, CheckCircle2,
+  ChevronDown, Calendar, MessageSquare, Filter, History, Send, CheckCircle2,
 } from "lucide-react";
 
 type Agent = { id: string; name: string | null; email: string };
@@ -57,8 +57,10 @@ export default function ContactsManager({ initialContacts, agents, role, current
   const [filterAgent, setFilterAgent] = useState<string>("");
   const [error, setError] = useState("");
   const [historyOpen, setHistoryOpen] = useState<string | null>(null);
-  const [historyData, setHistoryData] = useState<Record<string, any[]>>({});
+  const [historyNotes, setHistoryNotes] = useState<Record<string, any[]>>({});
   const [historyLoading, setHistoryLoading] = useState<string | null>(null);
+  const [noteText, setNoteText] = useState<Record<string, string>>({});
+  const [noteSaving, setNoteSaving] = useState<string | null>(null);
 
   // page-level history
   const [showPageHistory, setShowPageHistory] = useState(false);
@@ -192,20 +194,47 @@ export default function ContactsManager({ initialContacts, agents, role, current
   }
 
   async function toggleHistory(contactId: string) {
-    if (historyOpen === contactId) {
-      setHistoryOpen(null);
-      return;
-    }
+    if (historyOpen === contactId) { setHistoryOpen(null); return; }
     setHistoryOpen(contactId);
-    if (historyData[contactId]) return;
+    if (historyNotes[contactId]) return;
     setHistoryLoading(contactId);
     try {
       const res = await fetch(`/api/contacts/${contactId}/history`);
       const data = await res.json();
-      setHistoryData((prev) => ({ ...prev, [contactId]: data }));
+      setHistoryNotes((prev) => ({ ...prev, [contactId]: data }));
     } finally {
       setHistoryLoading(null);
     }
+  }
+
+  async function handleAddNote(contactId: string) {
+    const text = noteText[contactId]?.trim();
+    if (!text) return;
+    setNoteSaving(contactId);
+    try {
+      const res = await fetch(`/api/contacts/${contactId}/history`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const note = await res.json();
+      setHistoryNotes((prev) => ({ ...prev, [contactId]: [note, ...(prev[contactId] ?? [])] }));
+      setNoteText((prev) => ({ ...prev, [contactId]: "" }));
+    } finally {
+      setNoteSaving(null);
+    }
+  }
+
+  async function handleDeleteNote(contactId: string, noteId: string) {
+    await fetch(`/api/contacts/${contactId}/history`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ noteId }),
+    });
+    setHistoryNotes((prev) => ({
+      ...prev,
+      [contactId]: (prev[contactId] ?? []).filter((n: any) => n.id !== noteId),
+    }));
   }
 
   const fmt = (d: string | null) =>
@@ -624,27 +653,48 @@ export default function ContactsManager({ initialContacts, agents, role, current
                 {historyOpen === c.id && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                      Виконані завдання
+                      Історія контакту
                     </p>
+
+                    {/* Add note input */}
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        value={noteText[c.id] ?? ""}
+                        onChange={(e) => setNoteText((p) => ({ ...p, [c.id]: e.target.value }))}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddNote(c.id)}
+                        placeholder="Додати запис..."
+                        className="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-navy-300"
+                      />
+                      <button
+                        onClick={() => handleAddNote(c.id)}
+                        disabled={noteSaving === c.id || !noteText[c.id]?.trim()}
+                        className="flex items-center gap-1 px-2.5 py-1.5 bg-navy-900 text-white text-xs rounded-lg hover:bg-navy-800 transition disabled:opacity-40"
+                      >
+                        <Send className="w-3 h-3" />
+                      </button>
+                    </div>
+
                     {historyLoading === c.id ? (
                       <p className="text-xs text-gray-400">Завантаження...</p>
-                    ) : !historyData[c.id] || historyData[c.id].length === 0 ? (
-                      <p className="text-xs text-gray-400">Немає виконаних завдань</p>
+                    ) : !historyNotes[c.id] || historyNotes[c.id].length === 0 ? (
+                      <p className="text-xs text-gray-400">Ще немає записів</p>
                     ) : (
-                      <div className="space-y-1.5">
-                        {historyData[c.id].map((t: any) => (
-                          <div key={t.id} className="flex items-start gap-2 text-xs text-gray-600">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 flex-shrink-0 mt-0.5" />
-                            <div className="min-w-0">
-                              <span className="font-medium line-through text-gray-400">{t.title}</span>
-                              {t.description && (
-                                <span className="text-gray-400"> · {t.description.slice(0, 60)}</span>
-                              )}
-                              <span className="text-gray-300 ml-1">
-                                · {new Date(t.updatedAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short" })}
-                                {t.user?.name && ` · ${t.user.name}`}
-                              </span>
+                      <div className="space-y-2">
+                        {historyNotes[c.id].map((n: any) => (
+                          <div key={n.id} className="flex items-start gap-2 group">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-gray-700">{n.text}</p>
+                              <p className="text-[10px] text-gray-400 mt-0.5">
+                                {new Date(n.createdAt).toLocaleDateString("uk-UA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                                {n.user?.name && ` · ${n.user.name}`}
+                              </p>
                             </div>
+                            <button
+                              onClick={() => handleDeleteNote(c.id, n.id)}
+                              className="opacity-0 group-hover:opacity-100 p-0.5 text-gray-300 hover:text-red-400 transition"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
                           </div>
                         ))}
                       </div>
