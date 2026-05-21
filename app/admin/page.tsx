@@ -89,12 +89,12 @@ function StatCard({
   icon: React.ReactNode; label: string; value: number; href: string; color: string;
 }) {
   return (
-    <Link href={href} className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
+    <Link href={href} className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all duration-200 flex items-center gap-4 cursor-pointer">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform duration-200`}>
         {icon}
       </div>
       <div>
-        <p className="text-2xl font-bold text-navy-900">{value}</p>
+        <p className="text-2xl font-bold text-navy-900 group-hover:text-gold-500 transition-colors duration-200">{value}</p>
         <p className="text-gray-500 text-sm">{label}</p>
       </div>
     </Link>
