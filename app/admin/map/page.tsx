@@ -82,37 +82,22 @@ export default async function AdminMapPage() {
     .filter(Boolean) as any[];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-navy-900 flex items-center gap-2">
-            <MapPin className="w-6 h-6 text-gold-500" />
-            Карта нерухомості
-          </h1>
-          <div className="flex flex-wrap gap-3 mt-1 text-xs text-gray-500">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-navy-900 inline-block" />
-              Точні GPS: <b className="text-navy-900 ml-0.5">{withExact}</b>
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-4">
+        <h1 className="text-2xl font-bold text-navy-900 flex items-center gap-2">
+          <MapPin className="w-6 h-6 text-gold-500" />
+          Карта нерухомості
+        </h1>
+        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+          <span className="flex items-center gap-1">📍 GPS: <b className="text-navy-900">{withExact}</b></span>
+          <span className="flex items-center gap-1">🏗 ЖК: <b className="text-blue-600">{withJk}</b></span>
+          <span className="flex items-center gap-1">📌 Район: <b className="text-amber-600">{withDistrict}</b></span>
+          {noCoords > 0 && (
+            <span className="text-red-400">
+              ⚠ Без адреси: <b>{noCoords}</b> —{" "}
+              <Link href="/admin/properties" className="underline">заповнити →</Link>
             </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
-              По ЖК: <b className="text-blue-600 ml-0.5">{withJk}</b>
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-              По районі: <b className="text-amber-600 ml-0.5">{withDistrict}</b>
-            </span>
-            {noCoords > 0 && (
-              <span className="flex items-center gap-1 text-red-400">
-                <span className="w-2 h-2 rounded-full bg-red-300 inline-block" />
-                Без адреси: <b className="ml-0.5">{noCoords}</b>
-                {" — "}
-                <Link href="/admin/properties" className="underline hover:text-red-600">
-                  заповнити →
-                </Link>
-              </span>
-            )}
-          </div>
+          )}
         </div>
       </div>
 
