@@ -154,8 +154,8 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
 
       const icon = L.divIcon({
         className: "",
-        html: `<div style="background:${bg};color:#fff;padding:5px 10px;border-radius:20px;font:800 12px/1 system-ui,sans-serif;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,0.45);border:2.5px solid #fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);">${label}</div>`,
-        iconAnchor: [50, 22],
+        html: `<div style="background:${bg};color:#fff;padding:4px 9px 4px 9px;border-radius:5px;font:700 13px/18px system-ui,sans-serif;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.45);">${label}</div>`,
+        iconAnchor: [30, 13],
         popupAnchor: [0, -18],
       });
 
