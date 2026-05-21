@@ -29,6 +29,17 @@ function loadCss(href: string) {
   }
 }
 
+function loadScript(src: string): Promise<void> {
+  if (document.querySelector(`script[src="${src}"]`)) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error(`Failed: ${src}`));
+    document.head.appendChild(s);
+  });
+}
+
 export default function PropertiesMap({ properties }: { properties: MapProperty[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
@@ -56,17 +67,17 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
     if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [activeId]);
 
-  // Filter: show/hide markers individually
+  // Show / hide markers when filter changes
   useEffect(() => {
     const map = mapInstance.current;
     if (!map) return;
     markersRef.current.forEach((marker, id) => {
       const p = properties.find((x) => x.id === id);
       if (!p) return;
-      const shouldShow = filter === "ALL" || p.listingType === filter;
+      const show = filter === "ALL" || p.listingType === filter;
       const onMap = map.hasLayer(marker);
-      if (shouldShow && !onMap) marker.addTo(map);
-      else if (!shouldShow && onMap) marker.remove();
+      if (show && !onMap) marker.addTo(map);
+      else if (!show && onMap) marker.remove();
     });
   }, [filter, properties]);
 
@@ -75,62 +86,56 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
     let cancelled = false;
 
     async function init() {
-      loadCss("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
-
-      const { default: L } = await import("leaflet");
-      if (cancelled || !mapRef.current) return;
-
-      // Clear any leftover Leaflet state on the container (strict mode / fast nav)
-      const container = mapRef.current as any;
-      if (container._leaflet_id) {
-        container._leaflet_id = undefined;
-      }
-
-      let map: any;
       try {
-        map = L.map(mapRef.current, { zoomControl: false }).setView([48.9226, 24.7111], 13);
-      } catch (e) {
-        console.error("[Map] L.map error:", e);
-        return;
+        loadCss("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
+        await loadScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js");
+
+        if (cancelled || !mapRef.current) return;
+
+        const L = (window as any).L;
+        if (!L) { console.error("[Map] window.L not defined"); return; }
+
+        // Clear leftover Leaflet state (React strict-mode / fast nav)
+        const container = mapRef.current as any;
+        if (container._leaflet_id) container._leaflet_id = undefined;
+
+        const map = L.map(mapRef.current, { zoomControl: false })
+          .setView([48.9226, 24.7111], 13);
+        mapInstance.current = map;
+
+        L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+          attribution: "© OpenStreetMap | © CARTO",
+          subdomains: "abcd", maxZoom: 19,
+        }).addTo(map);
+
+        L.control.zoom({ position: "bottomright" }).addTo(map);
+
+        buildMarkers(L, map, properties);
+
+        const exact = properties.filter((p) => p.coordsSource === "exact");
+        const fit = exact.length > 0 ? exact : properties;
+        if (fit.length > 0) {
+          const bounds = L.latLngBounds(fit.map((p) => [p.latitude, p.longitude]));
+          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+        }
+
+        setTimeout(() => { if (mapInstance.current) mapInstance.current.invalidateSize(); }, 200);
+      } catch (err) {
+        console.error("[Map] init error:", err);
       }
-      mapInstance.current = map;
-
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        attribution: "© OpenStreetMap | © CARTO",
-        subdomains: "abcd", maxZoom: 19,
-      }).addTo(map);
-
-      L.control.zoom({ position: "bottomright" }).addTo(map);
-
-      buildMarkers(L, map, properties);
-
-      // fitBounds only on GPS-exact properties
-      const exactProps = properties.filter((p) => p.coordsSource === "exact");
-      const fittable = exactProps.length > 0 ? exactProps : properties;
-      if (fittable.length > 0) {
-        const bounds = L.latLngBounds(fittable.map((p) => [p.latitude, p.longitude]));
-        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
-      }
-
-      // Force size recalculation after flex layout settles
-      setTimeout(() => { if (mapInstance.current) mapInstance.current.invalidateSize(); }, 150);
     }
 
-    init().catch((e) => console.error("[Map] init failed:", e));
-
+    init();
     return () => {
       cancelled = true;
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
+      if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
       markersRef.current.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function buildMarkers(L: any, map: any, props: MapProperty[]) {
-    // Jitter: spread markers at identical coordinates around a small circle
+    // Jitter: spread markers that share the same coordinate
     const coordCount: Record<string, number> = {};
     props.forEach((p) => {
       const k = `${p.latitude.toFixed(4)}_${p.longitude.toFixed(4)}`;
@@ -148,15 +153,16 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
       const idx = coordIdx[k];
       const total = coordCount[k];
       const angle = (2 * Math.PI * idx) / Math.max(total, 1);
-      const radius = total > 1 ? 0.00022 : 0;
-      const lat = p.latitude + radius * Math.sin(angle);
-      const lng = p.longitude + radius * Math.cos(angle);
+      const r = total > 1 ? 0.00022 : 0;
+      const lat = p.latitude + r * Math.sin(angle);
+      const lng = p.longitude + r * Math.cos(angle);
 
+      // lun.ua-style rectangular price label
       const icon = L.divIcon({
         className: "",
-        html: `<div style="display:inline-block;background:${bg};color:#fff;padding:6px 14px;border-radius:6px;font:900 15px/1.1 system-ui,sans-serif;white-space:nowrap;min-width:74px;text-align:center;border:3px solid #fff;box-shadow:0 3px 16px rgba(0,0,0,0.6);">${label}</div>`,
-        iconAnchor: [37, 27],
-        popupAnchor: [0, -20],
+        html: `<div style="display:inline-block;background:${bg};color:#fff;padding:6px 14px;border-radius:5px;font:800 14px/1 system-ui,sans-serif;white-space:nowrap;min-width:80px;text-align:center;border:2.5px solid rgba(255,255,255,0.95);box-shadow:0 2px 12px rgba(0,0,0,0.55);">${label}</div>`,
+        iconAnchor: [40, 13],
+        popupAnchor: [0, -22],
       });
 
       const imgUrl = p.imageUrl
