@@ -39,9 +39,6 @@ export async function GET(req: NextRequest) {
   }
 
   const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const endOfDay = new Date(startOfDay);
-  endOfDay.setDate(endOfDay.getDate() + 1);
 
   let contactsSent = 0;
   let propertiesSent = 0;
@@ -50,7 +47,7 @@ export async function GET(req: NextRequest) {
   // ── 1. Contact follow-up reminders ──────────────────────────────
   const dueContacts = await prisma.contact.findMany({
     where: {
-      followUpAt: { gte: startOfDay, lt: endOfDay },
+      followUpAt: { lte: now },
       followUpSent: false,
       deletedAt: null,
     },
@@ -99,13 +96,15 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // ── 2. Property 30-day reminder ──────────────────────────────────
+  // ── 2. Property 30-day reminder (only once a day at 8:00 Ukraine = 5:00 UTC) ──
+  const utcHour = now.getUTCHours();
+  const utcMin = now.getUTCMinutes();
   const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const thirtyOneDaysAgo = new Date(thirtyDaysAgo);
   thirtyOneDaysAgo.setDate(thirtyOneDaysAgo.getDate() - 1);
 
-  const oldProperties = await prisma.property.findMany({
+  const oldProperties = (utcHour === 5 && utcMin < 10) ? await prisma.property.findMany({
     where: {
       status: "ACTIVE",
       createdAt: { gte: thirtyOneDaysAgo, lt: thirtyDaysAgo },
@@ -114,7 +113,7 @@ export async function GET(req: NextRequest) {
     include: {
       assignedUser: { select: { name: true, telegramChatId: true } },
     },
-  });
+  }) : [];
 
   for (const property of oldProperties) {
     const chatId = property.assignedUser?.telegramChatId;
@@ -150,7 +149,7 @@ export async function GET(req: NextRequest) {
     where: {
       isDone: false,
       reminderSent: false,
-      dueAt: { gte: startOfDay, lt: endOfDay },
+      dueAt: { lte: now },
     },
     include: {
       user: { select: { telegramChatId: true } },
