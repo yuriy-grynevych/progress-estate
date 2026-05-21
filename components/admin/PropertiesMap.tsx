@@ -3,46 +3,51 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { cloudinaryUrl } from "@/lib/cloudinary";
 
 export interface MapProperty {
-  id: string;
-  slug: string;
-  titleUk: string;
-  price: number;
-  currency: string;
-  type: string;
-  listingType: string;
-  district: string | null;
-  latitude: number;
-  longitude: number;
+  id: string; slug: string; titleUk: string;
+  price: number; currency: string; type: string; listingType: string;
+  district: string | null; latitude: number; longitude: number;
   imageUrl: string | null;
-  coordsSource: "exact" | "jk" | "district";
-  sourceName?: string;
+  coordsSource: "exact" | "jk" | "district"; sourceName?: string;
 }
 
 type FilterType = "ALL" | "SALE" | "RENT";
 
 function shortPrice(price: number, currency: string) {
   if (currency === "UAH") {
-    if (price >= 1_000_000) return `${(price / 1_000_000).toFixed(1).replace(/\.0$/, "")} млн грн`;
-    if (price >= 1000) return `${Math.round(price / 1000)}к грн`;
+    if (price >= 1_000_000) return `${(price / 1_000_000).toFixed(1).replace(/\.0$/, "")} млн`;
+    if (price >= 1000) return `${Math.round(price / 1000)}к`;
   }
   if (price >= 1_000_000) return `${(price / 1_000_000).toFixed(2).replace(/\.?0+$/, "")}M ${currency}`;
   if (price >= 1000) return `${Math.round(price / 1000)}к ${currency}`;
   return `${price} ${currency}`;
 }
 
+// Завантажити скрипт/стиль через CDN
+function loadCss(href: string) {
+  if (!document.querySelector(`link[href="${href}"]`)) {
+    const l = document.createElement("link"); l.rel = "stylesheet"; l.href = href;
+    document.head.appendChild(l);
+  }
+}
+function loadScript(src: string): Promise<void> {
+  if (document.querySelector(`script[src="${src}"]`)) return Promise.resolve();
+  return new Promise((res) => {
+    const s = document.createElement("script"); s.src = src;
+    s.onload = () => res(); document.head.appendChild(s);
+  });
+}
+
 export default function PropertiesMap({ properties }: { properties: MapProperty[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markersMapRef = useRef<Map<string, any>>(new Map());
+  const clusterRef = useRef<any>(null);
 
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [activeId, setActiveId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const visible = properties.filter((p) =>
-    filter === "ALL" ? true : p.listingType === filter
-  );
-
+  const visible = properties.filter((p) => filter === "ALL" || p.listingType === filter);
   const saleCount = properties.filter((p) => p.listingType === "SALE").length;
   const rentCount = properties.filter((p) => p.listingType === "RENT").length;
 
@@ -54,7 +59,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
     setActiveId(p.id);
   }, []);
 
-  // scroll list to active
   useEffect(() => {
     if (!activeId || !listRef.current) return;
     const el = listRef.current.querySelector(`[data-id="${activeId}"]`) as HTMLElement;
@@ -64,47 +68,30 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
 
-    // Load Leaflet + MarkerCluster CSS/JS
-    async function initMap() {
-      if (!document.querySelector('link[href*="leaflet.css"]')) {
-        const lf = document.createElement("link");
-        lf.rel = "stylesheet";
-        lf.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-        document.head.appendChild(lf);
-      }
-      if (!document.querySelector('link[href*="MarkerCluster.css"]')) {
-        ["MarkerCluster.css", "MarkerCluster.Default.css"].forEach((f) => {
-          const l = document.createElement("link");
-          l.rel = "stylesheet";
-          l.href = `https://unpkg.com/leaflet.markercluster@1.5.3/dist/${f}`;
-          document.head.appendChild(l);
-        });
-      }
-      if (!document.querySelector('script[src*="markercluster"]')) {
-        await new Promise<void>((res) => {
-          const s = document.createElement("script");
-          s.src = "https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js";
-          s.onload = () => res();
-          document.head.appendChild(s);
-        });
-      }
+    async function init() {
+      // Завантажуємо все через CDN — гарантовано один глобальний window.L
+      loadCss("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
+      loadCss("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css");
+      loadCss("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css");
+      await loadScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js");
+      await loadScript("https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js");
 
-      const L = (await import("leaflet")).default ?? (await import("leaflet"));
-      if (!mapRef.current) return;
+      const L = (window as any).L;
+      if (!mapRef.current || !L) return;
 
       const map = L.map(mapRef.current, { zoomControl: false }).setView([48.9226, 24.7111], 13);
       mapInstance.current = map;
 
       L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
         attribution: "© OpenStreetMap | © CARTO",
-        subdomains: "abcd",
-        maxZoom: 19,
+        subdomains: "abcd", maxZoom: 19,
       }).addTo(map);
 
       L.control.zoom({ position: "bottomright" }).addTo(map);
 
       buildMarkers(L, map, properties);
 
+      // fitBounds тільки по GPS-точних об'єктах
       const exactProps = properties.filter((p) => p.coordsSource === "exact");
       const fittable = exactProps.length > 0 ? exactProps : properties;
       if (fittable.length > 0) {
@@ -113,33 +100,32 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
       }
     }
 
-    initMap();
-
+    init();
     return () => {
       if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const clusterRef = useRef<any>(null);
-
-  // filter: rebuild cluster
+  // Фільтр — перемалювати кластер
   useEffect(() => {
     if (!mapInstance.current || !clusterRef.current) return;
+    const L = (window as any).L;
+    if (!L) return;
     clusterRef.current.clearLayers();
     markersMapRef.current.forEach((marker, id) => {
       const p = properties.find((x) => x.id === id);
-      if (!p) return;
-      if (filter === "ALL" || p.listingType === filter) clusterRef.current.addLayer(marker);
+      if (p && (filter === "ALL" || p.listingType === filter)) {
+        clusterRef.current.addLayer(marker);
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
   function buildMarkers(L: any, map: any, props: MapProperty[]) {
-    // Cluster group з кастомним стилем
-    const LMC = (window as any).L ?? L;
-    const cluster = LMC.markerClusterGroup({
-      maxClusterRadius: 40,
+    // Кластер з кастомною іконкою
+    const cluster = L.markerClusterGroup({
+      maxClusterRadius: 45,
       spiderfyOnMaxZoom: true,
       showCoverageOnHover: false,
       zoomToBoundsOnClick: true,
@@ -147,54 +133,37 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
         const cnt = c.getChildCount();
         return L.divIcon({
           className: "",
-          html: `<div style="background:#e05a1e;color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 14px/1 system-ui;box-shadow:0 2px 10px rgba(224,90,30,0.6);border:3px solid #fff;">${cnt}</div>`,
-          iconSize: [36, 36],
-          iconAnchor: [18, 18],
+          html: `<div style="background:#e05a1e;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 14px/1 system-ui,sans-serif;box-shadow:0 3px 10px rgba(224,90,30,0.55);border:3px solid #fff;">${cnt}</div>`,
+          iconSize: [38, 38], iconAnchor: [19, 19],
         });
       },
     });
     clusterRef.current = cluster;
     map.addLayer(cluster);
 
-    // Jitter — lekkie przesunięcie jeśli wiele obiektów w tej samej lokalizacji
+    // Jitter: розсипати об'єкти з однаковими координатами по колу
     const coordCount: Record<string, number> = {};
-    props.forEach((p) => {
-      const key = `${p.latitude.toFixed(4)}_${p.longitude.toFixed(4)}`;
-      coordCount[key] = (coordCount[key] ?? 0) + 1;
-    });
+    props.forEach((p) => { const k = `${p.latitude.toFixed(4)}_${p.longitude.toFixed(4)}`; coordCount[k] = (coordCount[k] ?? 0) + 1; });
     const coordIdx: Record<string, number> = {};
 
     props.forEach((p) => {
       const isSale = p.listingType === "SALE";
-      const isExact = p.coordsSource === "exact";
       const bg = isSale ? "#e05a1e" : "#1a5fc8";
       const label = shortPrice(p.price, p.currency);
 
-      // Jitter dla nakładających się markerów
-      const key = `${p.latitude.toFixed(4)}_${p.longitude.toFixed(4)}`;
-      coordIdx[key] = (coordIdx[key] ?? -1) + 1;
-      const idx = coordIdx[key];
-      const total = coordCount[key];
+      const k = `${p.latitude.toFixed(4)}_${p.longitude.toFixed(4)}`;
+      coordIdx[k] = (coordIdx[k] ?? -1) + 1;
+      const idx = coordIdx[k];
+      const total = coordCount[k];
       const angle = (2 * Math.PI * idx) / Math.max(total, 1);
-      const radius = total > 1 ? 0.00030 : 0;
+      const radius = total > 1 ? 0.00025 : 0;
       const lat = p.latitude + radius * Math.sin(angle);
       const lng = p.longitude + radius * Math.cos(angle);
 
       const icon = L.divIcon({
         className: "",
-        html: `<div style="
-          background:${bg};
-          color:#fff;
-          padding:5px 11px;
-          border-radius:20px;
-          font:700 12px/1 system-ui,sans-serif;
-          white-space:nowrap;
-          box-shadow:0 3px 12px rgba(0,0,0,0.45);
-          border:2.5px solid rgba(255,255,255,0.95);
-          text-shadow:0 1px 2px rgba(0,0,0,0.3);
-          ${!isExact ? "opacity:0.85;" : ""}
-        ">${label}</div>`,
-        iconAnchor: [45, 14],
+        html: `<div style="background:${bg};color:#fff;padding:5px 12px;border-radius:20px;font:800 12px/1 system-ui,sans-serif;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,0.50);border:2.5px solid #fff;text-shadow:0 1px 3px rgba(0,0,0,0.4);">${label}</div>`,
+        iconAnchor: [46, 14],
         popupAnchor: [0, -18],
       });
 
@@ -224,9 +193,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           </div>
         </div>`;
 
-      const marker = L.marker([lat, lng], { icon })
-        .bindPopup(popup, { maxWidth: 265 });
-
+      const marker = L.marker([lat, lng], { icon }).bindPopup(popup, { maxWidth: 265 });
       marker.on("click", () => setActiveId(p.id));
       markersMapRef.current.set(p.id, marker);
       cluster.addLayer(marker);
@@ -234,19 +201,14 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
   }
 
   const btnCls = (active: boolean) =>
-    `px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-      active ? "bg-navy-900 text-white border-navy-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"
-    }`;
+    `px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${active ? "bg-navy-900 text-white border-navy-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"}`;
 
   return (
-    <div
-      className="flex rounded-2xl overflow-hidden border border-gray-200 shadow-sm"
-      style={{ height: "calc(100vh - 190px)", minHeight: 520 }}
-    >
-      {/* ── LEFT PANEL ── */}
+    <div className="flex rounded-2xl overflow-hidden border border-gray-200 shadow-sm" style={{ height: "calc(100vh - 190px)", minHeight: 520 }}>
+
+      {/* LEFT PANEL */}
       <div className="w-[300px] flex-shrink-0 flex flex-col bg-gray-50 border-r border-gray-200">
-        {/* filters */}
-        <div className="p-2.5 border-b border-gray-200 bg-white flex gap-1.5 items-center">
+        <div className="p-2.5 border-b border-gray-200 bg-white flex gap-1.5 items-center flex-wrap">
           {(["ALL", "SALE", "RENT"] as FilterType[]).map((f) => (
             <button key={f} onClick={() => setFilter(f)} className={btnCls(filter === f)}>
               {f === "ALL" ? `Всі (${properties.length})` : f === "SALE" ? `Продаж (${saleCount})` : `Оренда (${rentCount})`}
@@ -254,7 +216,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           ))}
         </div>
 
-        {/* list — big photo cards */}
         <div ref={listRef} className="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
           {visible.map((p) => {
             const isSale = p.listingType === "SALE";
@@ -266,35 +227,19 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
 
             return (
               <div
-                key={p.id}
-                data-id={p.id}
-                onClick={() => flyTo(p)}
-                className={`relative rounded-xl overflow-hidden cursor-pointer flex-shrink-0 transition-all duration-150 ${
-                  isActive ? "ring-2 ring-orange-400 shadow-lg scale-[1.01]" : "hover:shadow-md hover:scale-[1.005]"
-                }`}
+                key={p.id} data-id={p.id} onClick={() => flyTo(p)}
+                className={`relative rounded-xl overflow-hidden cursor-pointer flex-shrink-0 transition-all duration-150 ${isActive ? "ring-2 ring-orange-400 shadow-lg scale-[1.01]" : "hover:shadow-md hover:scale-[1.005]"}`}
                 style={{ height: 180 }}
               >
-                {/* photo */}
                 {imgUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={imgUrl}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
+                  <img src={imgUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
                 ) : (
                   <div className="absolute inset-0 bg-gray-200 flex items-center justify-center text-4xl text-gray-300">🏠</div>
                 )}
-
-                {/* gradient overlay */}
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,0.72) 75%, rgba(0,0,0,0.88) 100%)" }} />
-
-                {/* top badges */}
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0) 35%,rgba(0,0,0,0.72) 75%,rgba(0,0,0,0.88) 100%)" }} />
                 <div className="absolute top-2 left-2 flex items-center gap-1.5">
-                  <span
-                    className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: bg }}
-                  >
+                  <span className="text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: bg }}>
                     {isSale ? "Продаж" : "Оренда"}
                   </span>
                   {p.coordsSource !== "exact" && (
@@ -303,8 +248,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
                     </span>
                   )}
                 </div>
-
-                {/* bottom text */}
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <div className="text-white font-bold text-[13px] leading-tight line-clamp-2 mb-1 drop-shadow">
                     {p.titleUk}
@@ -313,9 +256,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
                     {shortPrice(p.price, p.currency)}
                   </div>
                   {p.district && (
-                    <div className="text-white/70 text-[10px] mt-0.5 flex items-center gap-0.5">
-                      <span>📍</span> {p.district}
-                    </div>
+                    <div className="text-white/70 text-[10px] mt-0.5 flex items-center gap-0.5">📍 {p.district}</div>
                   )}
                 </div>
               </div>
@@ -324,7 +265,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
         </div>
       </div>
 
-      {/* ── MAP ── */}
+      {/* MAP */}
       <div ref={mapRef} className="flex-1" />
     </div>
   );
