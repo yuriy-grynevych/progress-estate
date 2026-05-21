@@ -40,8 +40,12 @@ interface SearchParams {
 async function getProperties(sp: SearchParams) {
   const page = Number(sp.page ?? 1);
 
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const where: Prisma.PropertyWhereInput = {
-    status: "ACTIVE",
+    OR: [
+      { status: "ACTIVE" },
+      { status: "SOLD", updatedAt: { gte: oneDayAgo } },
+    ],
     ...(sp.listingType && { listingType: sp.listingType as any }),
     ...(sp.type && { type: sp.type as any }),
     ...(sp.district && { district: sp.district }),

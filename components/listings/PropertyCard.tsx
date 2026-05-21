@@ -68,12 +68,17 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
             )}
             {/* Badges */}
             <div className="absolute top-3 right-3 flex flex-col items-end gap-1">
-              {fresh && (
+              {property.status === "SOLD" && (
+                <span className="flex items-center gap-1 text-xs font-bold bg-green-600 text-white px-2.5 py-1 rounded-lg shadow">
+                  ✅ {isUk ? "ПРОДАНО" : "SOLD"}
+                </span>
+              )}
+              {fresh && property.status !== "SOLD" && (
                 <span className="flex items-center gap-1 text-xs font-bold bg-emerald-500 text-white px-2.5 py-1 rounded-lg">
                   <Sparkles className="w-3 h-3" /> {isUk ? "НОВИНКА" : "NEW"}
                 </span>
               )}
-              {property.isFeatured && (
+              {property.isFeatured && property.status !== "SOLD" && (
                 <span className="flex items-center gap-1 text-xs font-bold bg-red-500 text-white px-2.5 py-1 rounded-lg">
                   <Flame className="w-3 h-3" /> {isUk ? "ГАРЯЧА" : "HOT"}
                 </span>

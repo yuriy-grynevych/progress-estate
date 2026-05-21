@@ -28,6 +28,7 @@ export default function NewSalePage() {
   const [note, setNote] = useState("");
 
   // EXTERNAL form state
+  const [extAgency, setExtAgency] = useState("");
   const [extName, setExtName] = useState("");
   const [extAddress, setExtAddress] = useState("");
   const [extClientContact, setExtClientContact] = useState("");
@@ -48,6 +49,10 @@ export default function NewSalePage() {
       setError("Оберіть клієнта — продаж без клієнта неможливий.");
       return;
     }
+    if (tab === "EXTERNAL" && !extAgency.trim()) {
+      setError("Вкажіть назву агенції — це обов'язкове поле.");
+      return;
+    }
     setSaving(true);
     setError("");
     const body = tab === "OWN" ? {
@@ -58,6 +63,7 @@ export default function NewSalePage() {
       commissionType, currency, saleDate, note,
     } : {
       saleType: "EXTERNAL",
+      externalAgency: extAgency,
       externalName: extName,
       externalAddress: extAddress,
       clientContactId: extClientContact || null,
@@ -111,17 +117,23 @@ export default function NewSalePage() {
               {properties.length === 0 && <p className="text-xs text-amber-600 mt-1">Немає об&apos;єктів зі статусом &quot;Завдаток&quot;</p>}
             </div>
             <div>
-              <label className={labelCls}>Покупець (з бази клієнтів)</label>
-              <select value={selectedClient} onChange={e => setSelectedClient(e.target.value)} className={inputCls}>
+              <label className={labelCls}>Покупець (з бази клієнтів) <span className="text-red-500">*</span></label>
+              <select value={selectedClient} onChange={e => setSelectedClient(e.target.value)} className={`${inputCls} ${!selectedClient ? "border-red-200" : ""}`}>
                 <option value="">— Оберіть клієнта —</option>
                 {contacts.map(c => (
                   <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>
                 ))}
               </select>
+              {!selectedClient && <p className="text-xs text-red-400 mt-1">Обов'язкове поле</p>}
             </div>
           </>
         ) : (
           <>
+            <div>
+              <label className={labelCls}>Назва агенції <span className="text-red-500">*</span></label>
+              <input value={extAgency} onChange={e => setExtAgency(e.target.value)} placeholder="напр. АН «Нова Хата»" className={`${inputCls} ${!extAgency.trim() ? "border-red-200" : ""}`} />
+              {!extAgency.trim() && <p className="text-xs text-red-400 mt-1">Обов'язкове поле</p>}
+            </div>
             <div>
               <label className={labelCls}>Назва нерухомості *</label>
               <input value={extName} onChange={e => setExtName(e.target.value)} required placeholder="напр. 2-кімн. квартира на вул. Незалежності" className={inputCls} />

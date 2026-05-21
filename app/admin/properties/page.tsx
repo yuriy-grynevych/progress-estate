@@ -52,7 +52,13 @@ async function getProperties(opts: {
     ];
   }
   if (listingType) where.listingType = listingType;
-  if (status) where.status = status;
+  if (status) {
+    where.status = status;
+  } else {
+    // Hide SOLD properties older than 1 day by default (they go to archive)
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    where.NOT = { AND: [{ status: "SOLD" }, { updatedAt: { lt: oneDayAgo } }] };
+  }
   if (mine) where.assignedUserId = userId;
   if (rooms) where.rooms = parseInt(rooms) || undefined;
   if (type) where.type = type;
@@ -163,13 +169,21 @@ export default async function AdminPropertiesPage({
             </span>
           )}
         </h1>
-        <Link
-          href="/admin/properties/new"
-          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black/90 transition"
-        >
-          <PlusCircle className="w-4 h-4" />
-          Додати
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/properties?status=SOLD"
+            className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+          >
+            🏛️ Архів
+          </Link>
+          <Link
+            href="/admin/properties/new"
+            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black/90 transition"
+          >
+            <PlusCircle className="w-4 h-4" />
+            Додати
+          </Link>
+        </div>
       </div>
 
       {/* Filters at the top */}
