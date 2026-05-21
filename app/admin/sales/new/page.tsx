@@ -44,6 +44,10 @@ export default function NewSalePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (tab === "OWN" && !selectedClient) {
+      setError("Оберіть клієнта — продаж без клієнта неможливий.");
+      return;
+    }
     setSaving(true);
     setError("");
     const body = tab === "OWN" ? {

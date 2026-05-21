@@ -261,6 +261,11 @@ export default async function AdminPropertiesPage({
                               <span className="text-base font-extrabold uppercase tracking-wide">🔒 Завдаток</span>
                             </div>
                           )}
+                          {property.status === "SOLD" && (
+                            <div className="flex items-center gap-1.5 mt-0.5 text-green-600">
+                              <span className="text-base font-extrabold uppercase tracking-wide">✅ Продано</span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Title — links to agent view */}

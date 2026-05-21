@@ -17,11 +17,12 @@ interface Props {
   title: string;
   isNew?: boolean;
   isRent?: boolean;
-  linkToSlug?: string;   // "На сайті" button inside lightbox
-  navigateTo?: string;   // when set: click navigates here instead of opening lightbox
+  linkToSlug?: string;
+  navigateTo?: string;
+  minHeight?: number;
 }
 
-export default function AdminPropertyGallery({ images, title, isNew, isRent, linkToSlug, navigateTo }: Props) {
+export default function AdminPropertyGallery({ images, title, isNew, isRent, linkToSlug, navigateTo, minHeight = 175 }: Props) {
   const router = useRouter();
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -55,7 +56,7 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent, lin
   return (
     <>
       {/* Gallery — fills grid cell completely */}
-      <div className={`grid w-full h-full min-h-[175px] ${thumbs.length > 0 ? "sm:grid-cols-[62%_38%]" : ""}`}>
+      <div className={`grid w-full h-full ${thumbs.length > 0 ? "sm:grid-cols-[62%_38%]" : ""}`} style={{ minHeight }}>
         {/* Main image — fills its grid cell */}
         <div
           className="relative overflow-hidden cursor-pointer bg-gray-100"

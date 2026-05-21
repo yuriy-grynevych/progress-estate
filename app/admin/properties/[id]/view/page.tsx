@@ -152,6 +152,7 @@ export default async function AgentPropertyViewPage({
               title={property.titleUk}
               isRent={property.listingType === "RENT" || property.listingType === "DAILY_RENT"}
               isNew={Date.now() - new Date(property.createdAt).getTime() < 4 * 24 * 60 * 60 * 1000}
+              minHeight={420}
             />
           </div>
 

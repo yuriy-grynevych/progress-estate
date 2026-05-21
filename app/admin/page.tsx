@@ -325,23 +325,23 @@ export default async function AdminDashboard() {
 
       {/* Quick links */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Link href="/admin/properties/new" className="bg-black text-white rounded-2xl p-5 hover:bg-black/90 transition">
-          <Building2 className="w-6 h-6 mb-2" />
-          <p className="font-semibold">Додати нерухомість</p>
-          <p className="text-white/60 text-sm mt-0.5">Нове оголошення</p>
+        <Link href="/admin/properties/new" className="group bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+          <Building2 className="w-6 h-6 mb-2 text-indigo-600 group-hover:scale-110 transition-all duration-200" />
+          <p className="font-semibold text-navy-900">Додати нерухомість</p>
+          <p className="text-gray-400 text-sm mt-0.5">Нове оголошення</p>
         </Link>
-        <Link href="/admin/contacts" className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-          <Users className="w-6 h-6 mb-2 text-navy-900" />
+        <Link href="/admin/contacts" className="group bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+          <Users className="w-6 h-6 mb-2 text-blue-500 group-hover:scale-110 transition-all duration-200" />
           <p className="font-semibold text-navy-900">Контакти</p>
           <p className="text-gray-400 text-sm mt-0.5">Клієнти та власники</p>
         </Link>
-        <Link href="/admin/inquiries" className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-          <MessageSquare className="w-6 h-6 mb-2 text-navy-900" />
+        <Link href="/admin/inquiries" className="group bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+          <MessageSquare className="w-6 h-6 mb-2 text-amber-500 group-hover:scale-110 transition-all duration-200" />
           <p className="font-semibold text-navy-900">Запити клієнтів</p>
           <p className="text-gray-400 text-sm mt-0.5">Переглянути всі</p>
         </Link>
-        <Link href="/admin/properties?status=SOLD" className="bg-white rounded-2xl p-5 shadow-sm hover:shadow-md transition">
-          <TrendingUp className="w-6 h-6 mb-2 text-emerald-600" />
+        <Link href="/admin/properties?status=SOLD" className="group bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+          <TrendingUp className="w-6 h-6 mb-2 text-emerald-600 group-hover:scale-110 transition-all duration-200" />
           <p className="font-semibold text-navy-900">Мої продажі</p>
           <p className="text-gray-400 text-sm mt-0.5">Продані об'єкти</p>
         </Link>
