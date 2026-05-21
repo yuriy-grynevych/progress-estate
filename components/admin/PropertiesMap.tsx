@@ -22,26 +22,17 @@ function shortPrice(price: number, currency: string) {
   return `${price} ${currency}`;
 }
 
-// Завантажити скрипт/стиль через CDN
 function loadCss(href: string) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     const l = document.createElement("link"); l.rel = "stylesheet"; l.href = href;
     document.head.appendChild(l);
   }
 }
-function loadScript(src: string): Promise<void> {
-  if (document.querySelector(`script[src="${src}"]`)) return Promise.resolve();
-  return new Promise((res) => {
-    const s = document.createElement("script"); s.src = src;
-    s.onload = () => res(); document.head.appendChild(s);
-  });
-}
 
 export default function PropertiesMap({ properties }: { properties: MapProperty[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
-  const markersMapRef = useRef<Map<string, any>>(new Map());
-  const clusterRef = useRef<any>(null);
+  const markersRef = useRef<Map<string, any>>(new Map());
 
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -54,7 +45,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
   const flyTo = useCallback((p: MapProperty) => {
     if (!mapInstance.current) return;
     mapInstance.current.flyTo([p.latitude, p.longitude], 16, { duration: 0.5 });
-    const marker = markersMapRef.current.get(p.id);
+    const marker = markersRef.current.get(p.id);
     if (marker) setTimeout(() => marker.openPopup(), 550);
     setActiveId(p.id);
   }, []);
@@ -65,21 +56,43 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
     if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [activeId]);
 
+  // Filter: show/hide markers individually
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+    markersRef.current.forEach((marker, id) => {
+      const p = properties.find((x) => x.id === id);
+      if (!p) return;
+      const shouldShow = filter === "ALL" || p.listingType === filter;
+      const onMap = map.hasLayer(marker);
+      if (shouldShow && !onMap) marker.addTo(map);
+      else if (!shouldShow && onMap) marker.remove();
+    });
+  }, [filter, properties]);
+
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
+    let cancelled = false;
 
     async function init() {
-      // Завантажуємо все через CDN — гарантовано один глобальний window.L
       loadCss("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
-      loadCss("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css");
-      loadCss("https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css");
-      await loadScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js");
-      await loadScript("https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js");
 
-      const L = (window as any).L;
-      if (!mapRef.current || !L) return;
+      const { default: L } = await import("leaflet");
+      if (cancelled || !mapRef.current) return;
 
-      const map = L.map(mapRef.current, { zoomControl: false }).setView([48.9226, 24.7111], 13);
+      // Clear any leftover Leaflet state on the container (strict mode / fast nav)
+      const container = mapRef.current as any;
+      if (container._leaflet_id) {
+        container._leaflet_id = undefined;
+      }
+
+      let map: any;
+      try {
+        map = L.map(mapRef.current, { zoomControl: false }).setView([48.9226, 24.7111], 13);
+      } catch (e) {
+        console.error("[Map] L.map error:", e);
+        return;
+      }
       mapInstance.current = map;
 
       L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
@@ -91,59 +104,38 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
 
       buildMarkers(L, map, properties);
 
-      // fitBounds тільки по GPS-точних об'єктах
+      // fitBounds only on GPS-exact properties
       const exactProps = properties.filter((p) => p.coordsSource === "exact");
       const fittable = exactProps.length > 0 ? exactProps : properties;
       if (fittable.length > 0) {
         const bounds = L.latLngBounds(fittable.map((p) => [p.latitude, p.longitude]));
         map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
       }
+
+      // Force size recalculation after flex layout settles
+      setTimeout(() => { if (mapInstance.current) mapInstance.current.invalidateSize(); }, 150);
     }
 
-    init();
+    init().catch((e) => console.error("[Map] init failed:", e));
+
     return () => {
-      if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
+      cancelled = true;
+      if (mapInstance.current) {
+        mapInstance.current.remove();
+        mapInstance.current = null;
+      }
+      markersRef.current.clear();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Фільтр — перемалювати кластер
-  useEffect(() => {
-    if (!mapInstance.current || !clusterRef.current) return;
-    const L = (window as any).L;
-    if (!L) return;
-    clusterRef.current.clearLayers();
-    markersMapRef.current.forEach((marker, id) => {
-      const p = properties.find((x) => x.id === id);
-      if (p && (filter === "ALL" || p.listingType === filter)) {
-        clusterRef.current.addLayer(marker);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
-
   function buildMarkers(L: any, map: any, props: MapProperty[]) {
-    // Кластер з кастомною іконкою
-    const cluster = L.markerClusterGroup({
-      maxClusterRadius: 45,
-      spiderfyOnMaxZoom: true,
-      showCoverageOnHover: false,
-      zoomToBoundsOnClick: true,
-      iconCreateFunction: (c: any) => {
-        const cnt = c.getChildCount();
-        return L.divIcon({
-          className: "",
-          html: `<div style="background:#e05a1e;color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:800 14px/1 system-ui,sans-serif;box-shadow:0 3px 10px rgba(224,90,30,0.55);border:3px solid #fff;">${cnt}</div>`,
-          iconSize: [38, 38], iconAnchor: [19, 19],
-        });
-      },
-    });
-    clusterRef.current = cluster;
-    map.addLayer(cluster);
-
-    // Jitter: розсипати об'єкти з однаковими координатами по колу
+    // Jitter: spread markers at identical coordinates around a small circle
     const coordCount: Record<string, number> = {};
-    props.forEach((p) => { const k = `${p.latitude.toFixed(4)}_${p.longitude.toFixed(4)}`; coordCount[k] = (coordCount[k] ?? 0) + 1; });
+    props.forEach((p) => {
+      const k = `${p.latitude.toFixed(4)}_${p.longitude.toFixed(4)}`;
+      coordCount[k] = (coordCount[k] ?? 0) + 1;
+    });
     const coordIdx: Record<string, number> = {};
 
     props.forEach((p) => {
@@ -156,14 +148,14 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
       const idx = coordIdx[k];
       const total = coordCount[k];
       const angle = (2 * Math.PI * idx) / Math.max(total, 1);
-      const radius = total > 1 ? 0.00025 : 0;
+      const radius = total > 1 ? 0.00022 : 0;
       const lat = p.latitude + radius * Math.sin(angle);
       const lng = p.longitude + radius * Math.cos(angle);
 
       const icon = L.divIcon({
         className: "",
-        html: `<div style="background:${bg};color:#fff;padding:5px 12px;border-radius:20px;font:800 12px/1 system-ui,sans-serif;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,0.50);border:2.5px solid #fff;text-shadow:0 1px 3px rgba(0,0,0,0.4);">${label}</div>`,
-        iconAnchor: [46, 14],
+        html: `<div style="background:${bg};color:#fff;padding:5px 10px;border-radius:20px;font:800 12px/1 system-ui,sans-serif;white-space:nowrap;box-shadow:0 3px 12px rgba(0,0,0,0.45);border:2.5px solid #fff;text-shadow:0 1px 3px rgba(0,0,0,0.5);">${label}</div>`,
+        iconAnchor: [50, 22],
         popupAnchor: [0, -18],
       });
 
@@ -195,8 +187,8 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
 
       const marker = L.marker([lat, lng], { icon }).bindPopup(popup, { maxWidth: 265 });
       marker.on("click", () => setActiveId(p.id));
-      markersMapRef.current.set(p.id, marker);
-      cluster.addLayer(marker);
+      markersRef.current.set(p.id, marker);
+      marker.addTo(map);
     });
   }
 
