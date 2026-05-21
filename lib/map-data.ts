@@ -85,12 +85,25 @@ export function inferCoords(
 ): { lat: number; lng: number; source: "jk" | "district" | null; sourceName?: string } {
   const text = `${titleUk} ${address ?? ""}`.toLowerCase();
 
+  // 1. Спочатку витягнути назву після «ЖК» і шукати її окремо
+  const jkMatch = text.match(/жк\s+[«"']?([^,\n·|!?]+?)[«"']?\s*(?:бізнес|клас|готов|будів|збудов|секц|поверх|центр|–|-|$)/);
+  if (jkMatch) {
+    const extracted = jkMatch[1].trim();
+    for (const jk of JK_PATTERNS) {
+      if (jk.patterns.some((p) => extracted.includes(p) || p.includes(extracted.split(" ")[0]))) {
+        return { lat: jk.lat, lng: jk.lng, source: "jk", sourceName: jk.name };
+      }
+    }
+  }
+
+  // 2. Повний текст — шукаємо будь-який патерн
   for (const jk of JK_PATTERNS) {
     if (jk.patterns.some((p) => text.includes(p))) {
       return { lat: jk.lat, lng: jk.lng, source: "jk", sourceName: jk.name };
     }
   }
 
+  // 3. Fallback на район
   if (district) {
     const d = DISTRICT_COORDS[district];
     if (d) return { lat: d.lat, lng: d.lng, source: "district", sourceName: district };
