@@ -270,17 +270,19 @@ export default function ContactsManager({ initialContacts, agents, role, current
           )}
         </div>
         <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={handleTogglePageHistory}
-            className={`flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl transition border ${
-              showPageHistory
-                ? "bg-purple-100 text-purple-700 border-purple-200"
-                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-            }`}
-          >
-            <History className="w-4 h-4" />
-            Історія контактів
-          </button>
+          {role === "ADMIN" && (
+            <button
+              onClick={handleTogglePageHistory}
+              className={`flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl transition border ${
+                showPageHistory
+                  ? "bg-purple-100 text-purple-700 border-purple-200"
+                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              <History className="w-4 h-4" />
+              Історія контактів
+            </button>
+          )}
           <button
             onClick={() => { setShowForm(true); setError(""); }}
             className="flex items-center justify-center gap-2 bg-black hover:bg-black/90 text-white text-sm font-medium px-4 py-2.5 rounded-xl transition"
@@ -613,13 +615,15 @@ export default function ContactsManager({ initialContacts, agents, role, current
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
-                    <button
-                      onClick={() => handleDelete(c.id)}
-                      disabled={deleting === c.id}
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {role === "ADMIN" && (
+                      <button
+                        onClick={() => handleDelete(c.id)}
+                        disabled={deleting === c.id}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition disabled:opacity-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
