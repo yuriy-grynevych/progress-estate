@@ -121,7 +121,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           attribution: "© OpenStreetMap | © CARTO",
           subdomains: "abcd", maxZoom: 19,
         }).addTo(map);
-        L.control.zoom({ position: "bottomright" }).addTo(map);
+        L.control.zoom({ position: "bottomleft" }).addTo(map);
 
         buildMarkers(L, map, properties);
 
@@ -147,18 +147,31 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
 
           const placed: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
 
+          const hits = (a: { x1: number; y1: number; x2: number; y2: number }) =>
+            placed.some((b) => !(a.x2 < b.x1 || a.x1 > b.x2 || a.y2 < b.y1 || a.y1 > b.y2));
+
+          // iconAnchor for label: [LABEL_W/2, LABEL_H+11] → label bottom is 11px above geo point
+          const ANCHOR_Y = LABEL_H + 11; // 41
+
           entries.forEach(({ entry, x, y }) => {
-            const x1 = x - LABEL_W / 2 - LABEL_GAP;
-            const y1 = y - LABEL_H / 2 - LABEL_GAP;
-            const x2 = x + LABEL_W / 2 + LABEL_GAP;
-            const y2 = y + LABEL_H / 2 + LABEL_GAP;
+            const labelBox = {
+              x1: x - LABEL_W / 2 - LABEL_GAP,
+              y1: y - ANCHOR_Y - LABEL_GAP,
+              x2: x + LABEL_W / 2 + LABEL_GAP,
+              y2: y - 11 + LABEL_GAP,
+            };
+            const dotBox = { x1: x - 9, y1: y - 9, x2: x + 9, y2: y + 9 };
 
-            const overlaps = placed.some(
-              (b) => !(x2 < b.x1 || x1 > b.x2 || y2 < b.y1 || y1 > b.y2)
-            );
-
-            entry.marker.setIcon(overlaps ? entry.dotIcon : entry.labelIcon);
-            if (!overlaps) placed.push({ x1, y1, x2, y2 });
+            if (!hits(labelBox)) {
+              entry.marker.setIcon(entry.labelIcon);
+              entry.marker.setZIndexOffset(500); // labels always on top of dots
+              placed.push(labelBox);
+              placed.push(dotBox);
+            } else {
+              entry.marker.setIcon(entry.dotIcon);
+              entry.marker.setZIndexOffset(0);
+              placed.push(dotBox);
+            }
           });
         }
 
@@ -217,9 +230,10 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
 
       const labelIcon = L.divIcon({
         className: "",
-        html: `<div style="display:inline-block;background:${bg};color:#fff;padding:6px 14px;border-radius:5px;font:800 14px/1 system-ui,sans-serif;white-space:nowrap;min-width:80px;text-align:center;border:2.5px solid rgba(255,255,255,0.95);box-shadow:0 2px 12px rgba(0,0,0,0.55);">${label}</div>`,
-        iconAnchor: [40, 13],
-        popupAnchor: [0, -22],
+        html: `<div style="width:${LABEL_W}px;height:${LABEL_H}px;display:flex;align-items:center;justify-content:center;background:${bg};color:#fff;border-radius:5px;font:800 13px/1 system-ui,sans-serif;text-align:center;border:2.5px solid rgba(255,255,255,0.95);box-shadow:0 2px 12px rgba(0,0,0,0.55);box-sizing:border-box;">${label}</div>`,
+        iconSize: [LABEL_W, LABEL_H],
+        iconAnchor: [Math.round(LABEL_W / 2), LABEL_H + 11],
+        popupAnchor: [0, -(LABEL_H + 14)],
       });
 
       const imgUrl = p.imageUrl
