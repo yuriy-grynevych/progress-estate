@@ -12,6 +12,9 @@ export interface MapProperty {
 
 type FilterType = "ALL" | "SALE" | "RENT";
 
+// zoom < LABEL_ZOOM → dot,  zoom >= LABEL_ZOOM → price label
+const LABEL_ZOOM = 14;
+
 function shortPrice(price: number, currency: string) {
   if (currency === "UAH") {
     if (price >= 1_000_000) return `${(price / 1_000_000).toFixed(1).replace(/\.0$/, "")} млн`;
@@ -40,10 +43,12 @@ function loadScript(src: string): Promise<void> {
   });
 }
 
+type MarkerEntry = { marker: any; dotIcon: any; labelIcon: any };
+
 export default function PropertiesMap({ properties }: { properties: MapProperty[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
-  const markersRef = useRef<Map<string, any>>(new Map());
+  const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
 
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -56,8 +61,8 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
   const flyTo = useCallback((p: MapProperty) => {
     if (!mapInstance.current) return;
     mapInstance.current.flyTo([p.latitude, p.longitude], 16, { duration: 0.5 });
-    const marker = markersRef.current.get(p.id);
-    if (marker) setTimeout(() => marker.openPopup(), 550);
+    const entry = markersRef.current.get(p.id);
+    if (entry) setTimeout(() => entry.marker.openPopup(), 550);
     setActiveId(p.id);
   }, []);
 
@@ -67,11 +72,11 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
     if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [activeId]);
 
-  // Show / hide markers when filter changes
+  // Show / hide markers on filter change
   useEffect(() => {
     const map = mapInstance.current;
     if (!map) return;
-    markersRef.current.forEach((marker, id) => {
+    markersRef.current.forEach(({ marker }, id) => {
       const p = properties.find((x) => x.id === id);
       if (!p) return;
       const show = filter === "ALL" || p.listingType === filter;
@@ -95,7 +100,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
         const L = (window as any).L;
         if (!L) { console.error("[Map] window.L not defined"); return; }
 
-        // Clear leftover Leaflet state (React strict-mode / fast nav)
         const container = mapRef.current as any;
         if (container._leaflet_id) container._leaflet_id = undefined;
 
@@ -119,6 +123,14 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
         }
 
+        // Swap dot ↔ label on zoom
+        map.on("zoomend", () => {
+          const zoom = map.getZoom();
+          markersRef.current.forEach(({ marker, dotIcon, labelIcon }) => {
+            marker.setIcon(zoom >= LABEL_ZOOM ? labelIcon : dotIcon);
+          });
+        });
+
         setTimeout(() => { if (mapInstance.current) mapInstance.current.invalidateSize(); }, 200);
       } catch (err) {
         console.error("[Map] init error:", err);
@@ -135,13 +147,14 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
   }, []);
 
   function buildMarkers(L: any, map: any, props: MapProperty[]) {
-    // Jitter: spread markers that share the same coordinate
     const coordCount: Record<string, number> = {};
     props.forEach((p) => {
       const k = `${p.latitude.toFixed(4)}_${p.longitude.toFixed(4)}`;
       coordCount[k] = (coordCount[k] ?? 0) + 1;
     });
     const coordIdx: Record<string, number> = {};
+
+    const currentZoom = map.getZoom();
 
     props.forEach((p) => {
       const isSale = p.listingType === "SALE";
@@ -157,8 +170,17 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
       const lat = p.latitude + r * Math.sin(angle);
       const lng = p.longitude + r * Math.cos(angle);
 
-      // lun.ua-style rectangular price label
-      const icon = L.divIcon({
+      // Small dot icon for low zoom
+      const dotIcon = L.divIcon({
+        className: "",
+        html: `<div style="width:14px;height:14px;border-radius:50%;background:${bg};border:2.5px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.45);"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+        popupAnchor: [0, -10],
+      });
+
+      // Full price label for high zoom (like lun.ua)
+      const labelIcon = L.divIcon({
         className: "",
         html: `<div style="display:inline-block;background:${bg};color:#fff;padding:6px 14px;border-radius:5px;font:800 14px/1 system-ui,sans-serif;white-space:nowrap;min-width:80px;text-align:center;border:2.5px solid rgba(255,255,255,0.95);box-shadow:0 2px 12px rgba(0,0,0,0.55);">${label}</div>`,
         iconAnchor: [40, 13],
@@ -191,9 +213,10 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           </div>
         </div>`;
 
-      const marker = L.marker([lat, lng], { icon }).bindPopup(popup, { maxWidth: 265 });
+      const marker = L.marker([lat, lng], { icon: currentZoom >= LABEL_ZOOM ? labelIcon : dotIcon })
+        .bindPopup(popup, { maxWidth: 265 });
       marker.on("click", () => setActiveId(p.id));
-      markersRef.current.set(p.id, marker);
+      markersRef.current.set(p.id, { marker, dotIcon, labelIcon });
       marker.addTo(map);
     });
   }
@@ -202,7 +225,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
     `px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${active ? "bg-navy-900 text-white border-navy-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"}`;
 
   return (
-    <div className="flex rounded-2xl overflow-hidden border border-gray-200 shadow-sm" style={{ height: "calc(100vh - 190px)", minHeight: 520 }}>
+    <div className="flex rounded-2xl overflow-hidden border border-gray-200 shadow-sm h-full" style={{ minHeight: 480 }}>
 
       {/* LEFT PANEL */}
       <div className="w-[300px] flex-shrink-0 flex flex-col bg-gray-50 border-r border-gray-200">
