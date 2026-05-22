@@ -113,7 +113,7 @@ export default async function AdminMapPage() {
           {noCoords > 0 && (
             <span className="text-red-400">
               ⚠ Без адреси: <b>{noCoords}</b> —{" "}
-              <Link href="/admin/properties" className="underline">заповнити →</Link>
+              <Link href="/admin/properties?noCoords=1" className="underline">заповнити →</Link>
             </span>
           )}
         </div>

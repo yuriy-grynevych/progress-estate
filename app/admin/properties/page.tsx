@@ -40,8 +40,9 @@ async function getProperties(opts: {
   priceSqmMax?: string;
   renovationType?: string;
   buildingStage?: string;
+  noCoords?: boolean;
 }) {
-  const { search, listingType, status, mine, userId, rooms, type, district, priceMin, priceMax, areaMin, areaMax, floorMin, floorMax, priceSqmMin, priceSqmMax, renovationType, buildingStage } = opts;
+  const { search, listingType, status, mine, userId, rooms, type, district, priceMin, priceMax, areaMin, areaMax, floorMin, floorMax, priceSqmMin, priceSqmMax, renovationType, buildingStage, noCoords } = opts;
 
   const where: any = {};
 
@@ -80,6 +81,7 @@ async function getProperties(opts: {
   }
   if (renovationType) where.renovationType = renovationType;
   if (buildingStage) where.buildingStage = buildingStage;
+  if (noCoords) where.AND = [{ latitude: null }, { longitude: null }];
 
   let result = await prisma.property.findMany({
     where,
@@ -122,6 +124,7 @@ export default async function AdminPropertiesPage({
     floorMin?: string; floorMax?: string;
     priceSqmMin?: string; priceSqmMax?: string;
     renovationType?: string; buildingStage?: string;
+    noCoords?: string;
   };
 }) {
   const session = await getServerSession(authOptions);
@@ -147,6 +150,7 @@ export default async function AdminPropertiesPage({
     priceSqmMax: searchParams.priceSqmMax,
     renovationType: searchParams.renovationType,
     buildingStage: searchParams.buildingStage,
+    noCoords: searchParams.noCoords === "1",
   });
 
   const featuredCount = properties.filter((p) => p.isFeatured).length;
@@ -185,6 +189,14 @@ export default async function AdminPropertiesPage({
           </Link>
         </div>
       </div>
+
+      {/* noCoords banner */}
+      {searchParams.noCoords === "1" && (
+        <div className="mb-4 flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium">
+          <span>⚠️ Показані лише об&apos;єкти <b>без GPS-координат</b> — додайте адресу або координати щоб вони з&apos;явились на карті.</span>
+          <Link href="/admin/properties" className="ml-auto text-xs underline whitespace-nowrap">Скинути фільтр</Link>
+        </div>
+      )}
 
       {/* Filters at the top */}
       <Suspense fallback={<div className="h-10 mb-4" />}>
