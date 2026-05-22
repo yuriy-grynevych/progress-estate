@@ -75,6 +75,12 @@ export default function EditCollectionPage() {
   const [listingType, setListingType] = useState("");
   const [rooms, setRooms] = useState("");
   const [district, setDistrict] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [areaMin, setAreaMin] = useState("");
+  const [areaMax, setAreaMax] = useState("");
+  const [districts, setDistricts] = useState<{ value: string; labelUk: string }[]>([]);
+  const [complexes, setComplexes] = useState<string[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -90,25 +96,38 @@ export default function EditCollectionPage() {
       setSlug(col.slug);
       setSelectedIds(new Set(col.items.map((item) => item.property.id)));
     }
+    async function loadMeta() {
+      const [dRes, cRes] = await Promise.all([
+        fetch("/api/districts"),
+        fetch("/api/properties/complexes"),
+      ]);
+      if (dRes.ok) setDistricts(await dRes.json());
+      if (cRes.ok) setComplexes(await cRes.json());
+    }
     loadCollection();
+    loadMeta();
   }, [id]);
 
   const fetchProperties = useCallback(async () => {
     setLoading(true);
     const p = new URLSearchParams();
-    const combined = [search, jk].filter(Boolean).join(" ");
-    if (combined) p.set("search", combined);
+    if (search) p.set("search", search);
+    if (jk) p.set("jk", jk);
     if (type) p.set("type", type);
     if (listingType) p.set("listingType", listingType);
     if (rooms) p.set("rooms", rooms);
     if (district) p.set("district", district);
+    if (priceMin) p.set("priceMin", priceMin);
+    if (priceMax) p.set("priceMax", priceMax);
+    if (areaMin) p.set("areaMin", areaMin);
+    if (areaMax) p.set("areaMax", areaMax);
     try {
       const res = await fetch(`/api/properties/list?${p}`);
       if (res.ok) setProperties(await res.json());
     } finally {
       setLoading(false);
     }
-  }, [search, jk, type, listingType, rooms, district]);
+  }, [search, jk, type, listingType, rooms, district, priceMin, priceMax, areaMin, areaMax]);
 
   useEffect(() => {
     const t = setTimeout(fetchProperties, 300);
@@ -212,66 +231,50 @@ export default function EditCollectionPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5">
-        <p className="text-sm font-semibold text-navy-900 mb-3">
-          Фільтри ({selectedIds.size} обрано)
-        </p>
+        <p className="text-sm font-semibold text-navy-900 mb-3">Фільтри ({selectedIds.size} обрано)</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Пошук за назвою…"
-              className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
-            />
+            <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Пошук за назвою…"
+              className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900" />
           </div>
-          <input
-            type="text"
-            value={jk}
-            onChange={(e) => setJk(e.target.value)}
-            placeholder="ЖК (напр. Княгинин)"
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
-          />
-          <input
-            type="text"
-            value={district}
-            onChange={(e) => setDistrict(e.target.value)}
-            placeholder="Район…"
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
-          />
+          <select value={jk} onChange={(e) => setJk(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900">
+            <option value="">Всі ЖК</option>
+            {complexes.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={district} onChange={(e) => setDistrict(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900">
+            <option value="">Всі райони</option>
+            {districts.map((d) => <option key={d.value} value={d.value}>{d.labelUk}</option>)}
+          </select>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
-          >
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
+          <select value={type} onChange={(e) => setType(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900">
             <option value="">Всі типи</option>
-            {Object.entries(TYPE_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
+            {Object.entries(TYPE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
-          <select
-            value={listingType}
-            onChange={(e) => setListingType(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
-          >
+          <select value={listingType} onChange={(e) => setListingType(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900">
             <option value="">Продаж/Оренда</option>
-            {Object.entries(LISTING_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
+            {Object.entries(LISTING_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
-          <select
-            value={rooms}
-            onChange={(e) => setRooms(e.target.value)}
-            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
-          >
-            <option value="">К-сть кімнат</option>
-            {[1, 2, 3, 4, 5].map((r) => (
-              <option key={r} value={r}>{r}+</option>
-            ))}
+          <select value={rooms} onChange={(e) => setRooms(e.target.value)}
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900">
+            <option value="">Кімнат</option>
+            {[1, 2, 3, 4, 5].map((r) => <option key={r} value={r}>{r}+</option>)}
           </select>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder="Ціна від ($)"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900" />
+          <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder="Ціна до ($)"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900" />
+          <input type="number" value={areaMin} onChange={(e) => setAreaMin(e.target.value)} placeholder="Площа від (м²)"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900" />
+          <input type="number" value={areaMax} onChange={(e) => setAreaMax(e.target.value)} placeholder="Площа до (м²)"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900" />
         </div>
       </div>
 

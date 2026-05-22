@@ -13,6 +13,11 @@ export async function GET(req: NextRequest) {
   const listingType = searchParams.get("listingType");
   const rooms = searchParams.get("rooms");
   const district = searchParams.get("district");
+  const jk = searchParams.get("jk");
+  const priceMin = searchParams.get("priceMin");
+  const priceMax = searchParams.get("priceMax");
+  const areaMin = searchParams.get("areaMin");
+  const areaMax = searchParams.get("areaMax");
 
   const where: any = {
     status: "ACTIVE",
@@ -20,6 +25,19 @@ export async function GET(req: NextRequest) {
     ...(listingType && { listingType }),
     ...(rooms && { rooms: parseInt(rooms) }),
     ...(district && { district: { contains: district, mode: "insensitive" } }),
+    ...(jk && { residentialComplex: { contains: jk, mode: "insensitive" } }),
+    ...((priceMin || priceMax) && {
+      price: {
+        ...(priceMin ? { gte: parseFloat(priceMin) } : {}),
+        ...(priceMax ? { lte: parseFloat(priceMax) } : {}),
+      },
+    }),
+    ...((areaMin || areaMax) && {
+      areaSqm: {
+        ...(areaMin ? { gte: parseFloat(areaMin) } : {}),
+        ...(areaMax ? { lte: parseFloat(areaMax) } : {}),
+      },
+    }),
     ...(search && {
       OR: [
         { titleUk: { contains: search, mode: "insensitive" } },
