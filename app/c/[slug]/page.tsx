@@ -158,7 +158,7 @@ export default async function PublicCollectionPage({
               return (
                 <div
                   key={p.id}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col sm:flex-row"
+                  className="bg-white rounded-2xl shadow-sm border-2 border-gold-200 hover:border-gold-400 transition-colors overflow-hidden flex flex-col sm:flex-row"
                 >
                   <Link
                     href={detailsHref}
@@ -179,7 +179,7 @@ export default async function PublicCollectionPage({
                         Фото відсутнє
                       </div>
                     )}
-                    <div className="absolute top-2 left-2 bg-navy-900 text-white px-2 py-0.5 rounded-lg text-xs font-bold">
+                    <div className="absolute top-2 left-2 bg-gold-500 text-navy-900 px-2 py-0.5 rounded-lg text-xs font-bold">
                       {TYPE_LABELS[p.type] ?? p.type}
                     </div>
                   </Link>
