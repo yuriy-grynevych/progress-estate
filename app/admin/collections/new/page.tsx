@@ -58,9 +58,11 @@ type Property = {
 export default function NewCollectionPage() {
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
+  const [jk, setJk] = useState("");
   const [type, setType] = useState("");
   const [listingType, setListingType] = useState("");
   const [rooms, setRooms] = useState("");
+  const [district, setDistrict] = useState("");
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -69,10 +71,12 @@ export default function NewCollectionPage() {
   const fetchProperties = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (search) params.set("search", search);
+    const combined = [search, jk].filter(Boolean).join(" ");
+    if (combined) params.set("search", combined);
     if (type) params.set("type", type);
     if (listingType) params.set("listingType", listingType);
     if (rooms) params.set("rooms", rooms);
+    if (district) params.set("district", district);
     try {
       const res = await fetch(`/api/properties/list?${params}`);
       if (res.ok) {
@@ -82,7 +86,7 @@ export default function NewCollectionPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, type, listingType, rooms]);
+  }, [search, jk, type, listingType, rooms, district]);
 
   useEffect(() => {
     const t = setTimeout(fetchProperties, 300);
@@ -152,17 +156,33 @@ export default function NewCollectionPage() {
         <p className="text-sm font-semibold text-navy-900 mb-3">
           Фільтри ({selectedIds.size} обрано)
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Пошук…"
+              placeholder="Пошук за назвою…"
               className="w-full border border-gray-200 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
             />
           </div>
+          <input
+            type="text"
+            value={jk}
+            onChange={(e) => setJk(e.target.value)}
+            placeholder="ЖК (напр. Княгинин)"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
+          />
+          <input
+            type="text"
+            value={district}
+            onChange={(e) => setDistrict(e.target.value)}
+            placeholder="Район…"
+            className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
+          />
+        </div>
+        <div className="grid grid-cols-3 gap-3">
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
@@ -210,8 +230,8 @@ export default function NewCollectionPage() {
             <div
               key={p.id}
               onClick={() => toggleSelect(p.id)}
-              className={`flex items-center gap-3 px-4 py-3 border-b border-gray-50 cursor-pointer transition ${
-                selected ? "bg-gold-50" : "hover:bg-gray-50"
+              className={`flex items-center gap-4 px-4 py-4 border-b border-gray-100 cursor-pointer transition ${
+                selected ? "bg-gold-50 border-l-4 border-l-gold-500" : "hover:bg-gray-50"
               }`}
             >
               <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${
@@ -219,22 +239,23 @@ export default function NewCollectionPage() {
               }`}>
                 {selected && <Check className="w-3 h-3 text-white" />}
               </div>
-              <div className="w-16 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+              <div className="w-36 h-24 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                 {img ? (
-                  <Image src={img} alt={p.titleUk} width={64} height={48} className="object-cover w-full h-full" unoptimized />
+                  <Image src={img} alt={p.titleUk} width={144} height={96} className="object-cover w-full h-full" unoptimized />
                 ) : (
                   <div className="w-full h-full bg-gray-200" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-navy-900 truncate">{p.titleUk}</p>
-                <p className="text-xs text-gray-400 truncate">
-                  {TYPE_LABELS[p.type] ?? p.type} · {p.areaSqm} м²
+                <p className="text-sm font-semibold text-navy-900 line-clamp-2 leading-snug mb-1">{p.titleUk}</p>
+                <p className="text-xs text-gray-500">
+                  {TYPE_LABELS[p.type] ?? p.type}
                   {p.rooms ? ` · ${p.rooms} кім.` : ""}
-                  {p.district ? ` · ${p.district}` : ""}
+                  {` · ${p.areaSqm} м²`}
                 </p>
+                {p.district && <p className="text-xs text-gray-400 mt-0.5">{p.district}</p>}
               </div>
-              <div className="text-sm font-bold text-navy-900 flex-shrink-0">
+              <div className="text-base font-bold text-navy-900 flex-shrink-0">
                 {formatPrice(p.price, p.currency)}
               </div>
             </div>
