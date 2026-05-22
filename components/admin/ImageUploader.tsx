@@ -177,7 +177,16 @@ export default function ImageUploader({
     }
   }
 
-  function handleRemove(id: string) {
+  async function handleRemove(id: string) {
+    try {
+      await fetch("/api/upload", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageId: id }),
+      });
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
     const updated = images.filter((img) => img.id !== id);
     if (updated.length > 0 && !updated.some((img) => img.isPrimary)) {
       updated[0].isPrimary = true;
