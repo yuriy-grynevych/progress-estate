@@ -81,7 +81,7 @@ async function getProperties(opts: {
   }
   if (renovationType) where.renovationType = renovationType;
   if (buildingStage) where.buildingStage = buildingStage;
-  if (noCoords) where.AND = [{ latitude: null }, { longitude: null }];
+  if (noCoords) { where.latitude = null; where.longitude = null; }
 
   let result = await prisma.property.findMany({
     where,
