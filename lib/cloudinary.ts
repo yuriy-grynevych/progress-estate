@@ -20,7 +20,8 @@ export function cloudinaryUrl(
  * These should be served directly — no Next.js re-processing.
  */
 export function isExternalImage(url: string): boolean {
-  return url.startsWith("http://") || url.startsWith("https://");
+  // Local uploads and external URLs both skip Next.js optimization
+  return url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/uploads/");
 }
 
 /**
