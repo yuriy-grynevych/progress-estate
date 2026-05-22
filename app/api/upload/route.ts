@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
 
     const compressed = await sharp(buffer)
       .resize({ width: 1600, withoutEnlargement: true })
-      .composite([{ input: wmBuffer, gravity: "northwest", top: 18, left: 18 }])
+      .composite([{ input: wmBuffer, gravity: "northwest", top: 50, left: 18 }])
       .webp({ quality: 82 })
       .toBuffer();
 
