@@ -38,6 +38,7 @@ model User {
   sales              Sale[]
   tasks              Task[]
   contactNotes       ContactNote[]
+  collections        Collection[]
 
   @@map("users")
 }
@@ -136,10 +137,11 @@ model Property {
   ownerContactId  String?
   ownerContact    Contact? @relation(fields: [ownerContactId], references: [id], onDelete: SetNull)
 
-  images    PropertyImage[]
-  inquiries Inquiry[]
-  auditLogs PropertyAuditLog[]
-  sales     Sale[]
+  images          PropertyImage[]
+  inquiries       Inquiry[]
+  auditLogs       PropertyAuditLog[]
+  sales           Sale[]
+  collectionItems CollectionItem[]
 
   @@index([listingType, status])
   @@index([type, status])
@@ -384,6 +386,35 @@ model Task {
   @@index([userId])
   @@index([dueAt])
   @@map("tasks")
+}
+
+// ──────────────────────────────────────────────
+// COLLECTIONS
+// ──────────────────────────────────────────────
+model Collection {
+  id        String           @id @default(cuid())
+  name      String
+  slug      String           @unique
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     CollectionItem[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@map("collections")
+}
+
+model CollectionItem {
+  id           String     @id @default(cuid())
+  collectionId String
+  propertyId   String
+  order        Int        @default(0)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  property     Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([collectionId, propertyId])
+  @@index([collectionId])
+  @@map("collection_items")
 }
 
 // ──────────────────────────────────────────────

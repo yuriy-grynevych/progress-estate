@@ -20,12 +20,14 @@ import {
   Kanban,
   BarChart2,
   TrendingUp,
+  FolderOpen,
 } from "lucide-react";
 
 const adminNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/stats", label: "Статистика", icon: BarChart2 },
   { href: "/admin/properties", label: "Нерухомість", icon: Building2 },
+  { href: "/admin/collections", label: "Колекції", icon: FolderOpen },
   { href: "/admin/sales", label: "Продажі", icon: TrendingUp },
   { href: "/admin/map", label: "Карта", icon: MapPin },
   { href: "/admin/inquiries/kanban", label: "Воронка", icon: Kanban },
@@ -41,6 +43,7 @@ const adminNavItems = [
 const employeeNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/properties", label: "Нерухомість", icon: Building2 },
+  { href: "/admin/collections", label: "Колекції", icon: FolderOpen },
   { href: "/admin/map", label: "Карта", icon: MapPin },
   { href: "/admin/inquiries/kanban", label: "Воронка", icon: Kanban },
   { href: "/admin/inquiries", label: "Мої запити", icon: MessageSquare },

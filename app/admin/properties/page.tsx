@@ -426,6 +426,7 @@ export default async function AdminPropertiesPage({
                               slug={property.slug}
                               locale="uk"
                               agentToken={currentUser.agentToken}
+                              propertyId={property.id}
                             />
                           )}
                           {canEdit && (
