@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Search, Check, Share2, ExternalLink } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
@@ -66,7 +66,6 @@ type Collection = {
 export default function EditCollectionPage() {
   const params = useParams();
   const id = params.id as string;
-  const router = useRouter();
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -83,7 +82,7 @@ export default function EditCollectionPage() {
   useEffect(() => {
     async function loadCollection() {
       const res = await fetch(`/api/collections/${id}`);
-      if (!res.ok) { router.push("/admin/collections"); return; }
+      if (!res.ok) { window.location.href = "/admin/collections"; return; }
       const col: Collection = await res.json();
       setName(col.name);
       setSlug(col.slug);
@@ -131,9 +130,10 @@ export default function EditCollectionPage() {
         body: JSON.stringify({ name: name.trim(), propertyIds: Array.from(selectedIds) }),
       });
       if (res.ok) {
-        router.push("/admin/collections");
+        window.location.href = "/admin/collections";
       } else {
-        alert("Помилка при збереженні");
+        const err = await res.json().catch(() => ({}));
+        alert("Помилка при збереженні: " + (err.error ?? res.status));
       }
     } finally {
       setSaving(false);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Search, Check } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
@@ -57,7 +56,6 @@ type Property = {
 };
 
 export default function NewCollectionPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
@@ -114,9 +112,10 @@ export default function NewCollectionPage() {
       });
       if (res.ok) {
         const col = await res.json();
-        router.push(`/admin/collections/${col.id}`);
+        window.location.href = `/admin/collections/${col.id}`;
       } else {
-        alert("Помилка при збереженні");
+        const err = await res.json().catch(() => ({}));
+        alert("Помилка при збереженні: " + (err.error ?? res.status));
       }
     } finally {
       setSaving(false);
