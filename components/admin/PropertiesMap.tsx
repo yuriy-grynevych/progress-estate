@@ -12,8 +12,10 @@ export interface MapProperty {
 
 type FilterType = "ALL" | "SALE" | "RENT";
 
-// zoom < LABEL_ZOOM → dot,  zoom >= LABEL_ZOOM → price label
-const LABEL_ZOOM = 14;
+// Label bounding box constants (px) — used for collision detection
+const LABEL_W = 115;
+const LABEL_H = 30;
+const LABEL_GAP = 8;
 
 function shortPrice(price: number, currency: string) {
   if (currency === "UAH") {
@@ -43,12 +45,15 @@ function loadScript(src: string): Promise<void> {
   });
 }
 
-type MarkerEntry = { marker: any; dotIcon: any; labelIcon: any };
+type MarkerEntry = { marker: any; dotIcon: any; labelIcon: any; price: number };
 
 export default function PropertiesMap({ properties }: { properties: MapProperty[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<any>(null);
   const markersRef = useRef<Map<string, MarkerEntry>>(new Map());
+  // Stores the live updateLabels function so filter effect can call it
+  const updateLabelsRef = useRef<() => void>(() => {});
+  const labelTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -72,7 +77,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
     if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [activeId]);
 
-  // Show / hide markers on filter change
+  // Show / hide markers on filter change, then re-run collision detection
   useEffect(() => {
     const map = mapInstance.current;
     if (!map) return;
@@ -84,7 +89,13 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
       if (show && !onMap) marker.addTo(map);
       else if (!show && onMap) marker.remove();
     });
-  }, [filter, properties]);
+    scheduleUpdateLabels();
+  }, [filter, properties]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function scheduleUpdateLabels(delay = 60) {
+    if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
+    labelTimerRef.current = setTimeout(() => updateLabelsRef.current(), delay);
+  }
 
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
@@ -94,7 +105,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
       try {
         loadCss("https://unpkg.com/leaflet@1.9.4/dist/leaflet.css");
         await loadScript("https://unpkg.com/leaflet@1.9.4/dist/leaflet.js");
-
         if (cancelled || !mapRef.current) return;
 
         const L = (window as any).L;
@@ -111,7 +121,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           attribution: "© OpenStreetMap | © CARTO",
           subdomains: "abcd", maxZoom: 19,
         }).addTo(map);
-
         L.control.zoom({ position: "bottomright" }).addTo(map);
 
         buildMarkers(L, map, properties);
@@ -123,14 +132,43 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
         }
 
-        // Swap dot ↔ label on zoom
-        map.on("zoomend", () => {
-          const zoom = map.getZoom();
-          markersRef.current.forEach(({ marker, dotIcon, labelIcon }) => {
-            marker.setIcon(zoom >= LABEL_ZOOM ? labelIcon : dotIcon);
+        // ── Collision-based label placement ──────────────────────────
+        function updateLabels() {
+          // Collect on-map markers with their current pixel positions
+          const entries: Array<{ entry: MarkerEntry; x: number; y: number }> = [];
+          markersRef.current.forEach((entry) => {
+            if (!map.hasLayer(entry.marker)) return;
+            const pt = map.latLngToContainerPoint(entry.marker.getLatLng());
+            entries.push({ entry, x: pt.x, y: pt.y });
           });
-        });
 
+          // Higher price → higher priority for showing its label first
+          entries.sort((a, b) => b.entry.price - a.entry.price);
+
+          const placed: Array<{ x1: number; y1: number; x2: number; y2: number }> = [];
+
+          entries.forEach(({ entry, x, y }) => {
+            const x1 = x - LABEL_W / 2 - LABEL_GAP;
+            const y1 = y - LABEL_H / 2 - LABEL_GAP;
+            const x2 = x + LABEL_W / 2 + LABEL_GAP;
+            const y2 = y + LABEL_H / 2 + LABEL_GAP;
+
+            const overlaps = placed.some(
+              (b) => !(x2 < b.x1 || x1 > b.x2 || y2 < b.y1 || y1 > b.y2)
+            );
+
+            entry.marker.setIcon(overlaps ? entry.dotIcon : entry.labelIcon);
+            if (!overlaps) placed.push({ x1, y1, x2, y2 });
+          });
+        }
+
+        updateLabelsRef.current = updateLabels;
+
+        // Re-run on zoom and pan
+        map.on("zoomend moveend", () => scheduleUpdateLabels(80));
+
+        // Initial placement after fitBounds settles
+        setTimeout(updateLabels, 600);
         setTimeout(() => { if (mapInstance.current) mapInstance.current.invalidateSize(); }, 200);
       } catch (err) {
         console.error("[Map] init error:", err);
@@ -140,6 +178,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
     init();
     return () => {
       cancelled = true;
+      if (labelTimerRef.current) clearTimeout(labelTimerRef.current);
       if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
       markersRef.current.clear();
     };
@@ -153,8 +192,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
       coordCount[k] = (coordCount[k] ?? 0) + 1;
     });
     const coordIdx: Record<string, number> = {};
-
-    const currentZoom = map.getZoom();
 
     props.forEach((p) => {
       const isSale = p.listingType === "SALE";
@@ -170,7 +207,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
       const lat = p.latitude + r * Math.sin(angle);
       const lng = p.longitude + r * Math.cos(angle);
 
-      // Small dot icon for low zoom
       const dotIcon = L.divIcon({
         className: "",
         html: `<div style="width:14px;height:14px;border-radius:50%;background:${bg};border:2.5px solid #fff;box-shadow:0 1px 6px rgba(0,0,0,0.45);"></div>`,
@@ -179,7 +215,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
         popupAnchor: [0, -10],
       });
 
-      // Full price label for high zoom (like lun.ua)
       const labelIcon = L.divIcon({
         className: "",
         html: `<div style="display:inline-block;background:${bg};color:#fff;padding:6px 14px;border-radius:5px;font:800 14px/1 system-ui,sans-serif;white-space:nowrap;min-width:80px;text-align:center;border:2.5px solid rgba(255,255,255,0.95);box-shadow:0 2px 12px rgba(0,0,0,0.55);">${label}</div>`,
@@ -213,10 +248,10 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           </div>
         </div>`;
 
-      const marker = L.marker([lat, lng], { icon: currentZoom >= LABEL_ZOOM ? labelIcon : dotIcon })
+      const marker = L.marker([lat, lng], { icon: dotIcon })
         .bindPopup(popup, { maxWidth: 265 });
       marker.on("click", () => setActiveId(p.id));
-      markersRef.current.set(p.id, { marker, dotIcon, labelIcon });
+      markersRef.current.set(p.id, { marker, dotIcon, labelIcon, price: p.price });
       marker.addTo(map);
     });
   }
