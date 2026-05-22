@@ -89,7 +89,7 @@ export default function EditCollectionPage() {
       setSelectedIds(new Set(col.items.map((item) => item.property.id)));
     }
     loadCollection();
-  }, [id, router]);
+  }, [id]);
 
   const fetchProperties = useCallback(async () => {
     setLoading(true);

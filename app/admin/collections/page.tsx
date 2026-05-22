@@ -67,16 +67,16 @@ export default async function CollectionsPage() {
               key={col.id}
               className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4"
             >
-              <div className="flex-1 min-w-0">
+              <Link href={`/admin/collections/${col.id}`} className="flex-1 min-w-0 hover:opacity-80 transition">
                 <div className="flex items-center gap-2 mb-1">
                   <FolderOpen className="w-4 h-4 text-gold-500 flex-shrink-0" />
-                  <span className="font-semibold text-navy-900 truncate">{col.name}</span>
+                  <span className="font-semibold text-navy-900 truncate hover:text-gold-600 transition">{col.name}</span>
                   <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full flex-shrink-0">
                     {col._count.items} об'єктів
                   </span>
                 </div>
                 <p className="text-xs text-gray-400">Створено: {fmtDate(col.createdAt)}</p>
-              </div>
+              </Link>
 
               <div className="flex items-center gap-1 flex-shrink-0">
                 <CopyCollectionLinkButton slug={col.slug} />
