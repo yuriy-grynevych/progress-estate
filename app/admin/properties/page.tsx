@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { inferCoords } from "@/lib/map-data";
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice } from "@/lib/utils";
@@ -103,7 +104,11 @@ async function getProperties(opts: {
   }
 
   if (noCoords) {
-    result = result.filter(p => p.latitude == null && p.longitude == null);
+    result = result.filter(p => {
+      if (p.latitude != null && p.longitude != null) return false;
+      const inferred = inferCoords(p.titleUk, p.address ?? "", p.district);
+      return !inferred.source;
+    });
   }
 
   return result;
