@@ -53,14 +53,26 @@ export async function POST(req: NextRequest) {
     // Get image dimensions to size watermark proportionally
     const meta = await sharp(buffer).metadata();
     const imgWidth = meta.width ?? 1600;
-    const wmWidth = Math.round(imgWidth * 0.22);
+    const wmWidth = Math.round(imgWidth * 0.30);
 
-    // White watermark: negate RGB channels (black→white), keep alpha intact
-    const wmBuffer = await sharp(join(process.cwd(), "public", "logo-progress.png"))
+    // Build a pure-white watermark preserving original alpha shape
+    const { data: rawData, info: rawInfo } = await sharp(join(process.cwd(), "public", "logo-progress.png"))
       .resize({ width: wmWidth, withoutEnlargement: false })
-      .negate({ alpha: false })
-      .png()
-      .toBuffer();
+      .ensureAlpha()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+
+    const pixels = Buffer.from(rawData);
+    for (let i = 0; i < pixels.length; i += 4) {
+      pixels[i] = 255;     // R → white
+      pixels[i + 1] = 255; // G → white
+      pixels[i + 2] = 255; // B → white
+      // pixels[i+3] = alpha unchanged
+    }
+
+    const wmBuffer = await sharp(pixels, {
+      raw: { width: rawInfo.width, height: rawInfo.height, channels: 4 },
+    }).png().toBuffer();
 
     const compressed = await sharp(buffer)
       .resize({ width: 1600, withoutEnlargement: true })
