@@ -160,13 +160,18 @@ export default async function PublicCollectionPage({
                   key={p.id}
                   className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col sm:flex-row"
                 >
-                  <div className="relative w-full sm:w-52 h-44 sm:h-auto flex-shrink-0">
+                  <Link
+                    href={detailsHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative w-full sm:w-52 h-44 sm:h-auto flex-shrink-0 block group"
+                  >
                     {img ? (
                       <Image
                         src={img}
                         alt={p.titleUk}
                         fill
-                        className="object-cover"
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                         unoptimized
                       />
                     ) : (
@@ -174,19 +179,21 @@ export default async function PublicCollectionPage({
                         Фото відсутнє
                       </div>
                     )}
-                    <div
-                      className="absolute top-2 left-2 px-2 py-0.5 rounded-lg text-xs font-bold text-white"
-                      style={{ backgroundColor: accentColor }}
-                    >
+                    <div className="absolute top-2 left-2 bg-navy-900 text-white px-2 py-0.5 rounded-lg text-xs font-bold">
                       {TYPE_LABELS[p.type] ?? p.type}
                     </div>
-                  </div>
+                  </Link>
 
                   <div className="p-4 flex flex-col justify-between flex-1 min-w-0">
                     <div>
-                      <h2 className="font-semibold text-gray-900 mb-1.5 line-clamp-2 leading-snug">
+                      <Link
+                        href={detailsHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block font-semibold text-navy-900 hover:text-gold-600 mb-1.5 line-clamp-2 leading-snug transition-colors"
+                      >
                         {p.titleUk}
-                      </h2>
+                      </Link>
                       {locationParts.length > 0 && (
                         <div className="flex items-start gap-1.5 text-xs text-gray-500 mb-2">
                           <MapPin className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" />
@@ -208,13 +215,14 @@ export default async function PublicCollectionPage({
                     </div>
 
                     <div className="flex items-center justify-between gap-3 flex-wrap">
-                      <span className="text-lg font-extrabold text-gray-900">
+                      <span className="text-lg font-extrabold text-navy-900">
                         {formatPrice(p.price, p.currency)}
                       </span>
                       <Link
                         href={detailsHref}
-                        className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition text-white"
-                        style={{ backgroundColor: accentColor }}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-xl transition bg-gold-500 hover:bg-gold-600 text-navy-900"
                       >
                         Деталі →
                       </Link>
