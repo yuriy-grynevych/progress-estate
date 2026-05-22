@@ -81,7 +81,6 @@ async function getProperties(opts: {
   }
   if (renovationType) where.renovationType = renovationType;
   if (buildingStage) where.buildingStage = buildingStage;
-  if (noCoords) { where.latitude = null; where.longitude = null; }
 
   let result = await prisma.property.findMany({
     where,
@@ -101,6 +100,10 @@ async function getProperties(opts: {
       if (priceSqmMax && sqm > Number(priceSqmMax)) return false;
       return true;
     });
+  }
+
+  if (noCoords) {
+    result = result.filter(p => p.latitude == null && p.longitude == null);
   }
 
   return result;
