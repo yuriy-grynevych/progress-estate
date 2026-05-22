@@ -49,10 +49,25 @@ export async function POST(req: NextRequest) {
     await writeFile(join(uploadDir, filename), buffer);
   } else {
     filename = `${randomUUID()}.webp`;
+
+    // Get image dimensions to size watermark proportionally
+    const meta = await sharp(buffer).metadata();
+    const imgWidth = meta.width ?? 1600;
+    const wmWidth = Math.round(imgWidth * 0.22);
+
+    // White watermark: negate RGB channels (black→white), keep alpha intact
+    const wmBuffer = await sharp(join(process.cwd(), "public", "logo-progress.png"))
+      .resize({ width: wmWidth, withoutEnlargement: false })
+      .negate({ alpha: false })
+      .png()
+      .toBuffer();
+
     const compressed = await sharp(buffer)
       .resize({ width: 1600, withoutEnlargement: true })
+      .composite([{ input: wmBuffer, gravity: "northwest", top: 18, left: 18 }])
       .webp({ quality: 82 })
       .toBuffer();
+
     await writeFile(join(uploadDir, filename), compressed);
   }
 
