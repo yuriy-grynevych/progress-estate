@@ -42,8 +42,12 @@ export default async function AdminMapPage() {
   let withDistrict = 0;
   let noCoords = 0;
 
+  const typeCounts: Record<string, number> = {};
+
   const mapProps = properties
     .map((p) => {
+      typeCounts[p.type] = (typeCounts[p.type] ?? 0) + 1;
+
       // 1. Manualne współrzędne — najdokładniejsze
       if (p.latitude != null && p.longitude != null) {
         withExact++;
@@ -89,6 +93,20 @@ export default async function AdminMapPage() {
           Карта нерухомості
         </h1>
         <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+          {[
+            { icon: "🏠", label: "Квартири", key: "APARTMENT" },
+            { icon: "🏡", label: "Будинки",  key: "HOUSE" },
+            { icon: "🏢", label: "Комерція", key: "COMMERCIAL" },
+            { icon: "🏗", label: "Офіси",    key: "OFFICE" },
+            { icon: "🌿", label: "Земля",    key: "LAND" },
+          ]
+            .filter(({ key }) => typeCounts[key])
+            .map(({ icon, label, key }) => (
+              <span key={key} className="flex items-center gap-1 bg-gray-100 px-2 py-0.5 rounded-full">
+                {icon} {label}: <b className="text-navy-900">{typeCounts[key]}</b>
+              </span>
+            ))}
+          <span className="w-px h-3 bg-gray-300 self-center" />
           <span className="flex items-center gap-1">📍 GPS: <b className="text-navy-900">{withExact}</b></span>
           <span className="flex items-center gap-1">🏗 ЖК: <b className="text-blue-600">{withJk}</b></span>
           <span className="flex items-center gap-1">📌 Район: <b className="text-amber-600">{withDistrict}</b></span>
