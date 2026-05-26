@@ -614,19 +614,22 @@ export default function PropertyForm({
               {/* ЖК — перший рядок, повна ширина */}
               <div>
                 <Label>Житловий комплекс (ЖК)</Label>
-                {(() => {
-                  const { onChange: rhfOnChange, ...restReg } = register("residentialComplex");
-                  return (
+                <Controller
+                  name="residentialComplex"
+                  control={control}
+                  render={({ field }) => (
                     <>
                       <input
-                        {...restReg}
+                        value={field.value ?? ""}
                         list="complexes-list"
                         placeholder="Назва ЖК або адреса..."
                         className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900 transition-all placeholder:text-gray-300"
+                        ref={field.ref}
+                        onBlur={field.onBlur}
                         onChange={(e) => {
-                          rhfOnChange(e);
-                          const val = e.target.value.trim();
-                          const jk = JK_DATA.find(j => j.name.toLowerCase() === val.toLowerCase());
+                          const val = e.target.value;
+                          field.onChange(val);
+                          const jk = JK_DATA.find(j => j.name.toLowerCase() === val.trim().toLowerCase());
                           if (jk) {
                             jkGeocodingRef.current = true;
                             if (jk.district) setValue("district", jk.district);
@@ -641,8 +644,8 @@ export default function PropertyForm({
                         {RESIDENTIAL_COMPLEXES_IF.map((n) => <option key={n} value={n} />)}
                       </datalist>
                     </>
-                  );
-                })()}
+                  )}
+                />
               </div>
               {/* Район + Вулиця */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
