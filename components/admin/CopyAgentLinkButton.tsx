@@ -51,24 +51,32 @@ export default function CopyAgentLinkButton({
 
   async function copyLink() {
     const url = `${window.location.origin}/${locale}/listings/${slug}?t=${agentToken}`;
+    let success = false;
     try {
-      if (navigator.clipboard && window.isSecureContext) {
+      if (navigator.clipboard) {
         await navigator.clipboard.writeText(url);
-      } else {
+        success = true;
+      }
+    } catch {}
+
+    if (!success) {
+      try {
         const el = document.createElement("textarea");
         el.value = url;
-        el.style.position = "fixed";
-        el.style.opacity = "0";
+        el.style.cssText = "position:fixed;top:0;left:0;width:2px;height:2px;opacity:0.01;";
         document.body.appendChild(el);
         el.focus();
         el.select();
-        document.execCommand("copy");
+        success = document.execCommand("copy");
         document.body.removeChild(el);
-      }
+      } catch {}
+    }
+
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      alert("Не вдалося скопіювати: " + url);
+    } else {
+      window.prompt("Скопіюйте посилання (Ctrl+C):", url);
     }
     setOpen(false);
   }

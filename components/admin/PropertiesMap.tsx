@@ -31,6 +31,10 @@ function propLabel(p: MapProperty): string {
   return p.residentialComplex || p.sourceName || p.district || "";
 }
 
+function getLocKey(p: MapProperty): string {
+  return `${p.latitude.toFixed(3)}_${p.longitude.toFixed(3)}`;
+}
+
 function loadCss(href: string) {
   if (!document.querySelector(`link[href="${href}"]`)) {
     const l = document.createElement("link"); l.rel = "stylesheet"; l.href = href;
@@ -65,18 +69,26 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
 
   const [filter, setFilter] = useState<FilterType>("ALL");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [locationFilterKey, setLocationFilterKey] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
   const visible = properties.filter((p) => filter === "ALL" || p.listingType === filter);
   const saleCount = properties.filter((p) => p.listingType === "SALE").length;
   const rentCount = properties.filter((p) => p.listingType === "RENT").length;
 
+  const visibleInPanel = locationFilterKey
+    ? visible.filter((p) => getLocKey(p) === locationFilterKey)
+    : visible;
+
+  const filterLabel = locationFilterKey && visibleInPanel.length > 0
+    ? (propLabel(visibleInPanel[0]) || visibleInPanel[0].district || "")
+    : null;
+
   const flyTo = useCallback((p: MapProperty) => {
     if (!mapInstance.current) return;
     mapInstance.current.flyTo([p.latitude, p.longitude], 16, { duration: 0.5 });
-    // Find cluster or single marker
-    const entry = markersRef.current.get(p.id) ?? markersRef.current.get(`cluster_${p.latitude.toFixed(3)}_${p.longitude.toFixed(3)}`);
-    if (entry) setTimeout(() => entry.marker.openPopup(), 550);
+    const entry = markersRef.current.get(p.id) ?? markersRef.current.get(`cluster_${getLocKey(p)}`);
+    if (entry && entry.kind === "single") setTimeout(() => entry.marker.openPopup(), 550);
     setActiveId(p.id);
   }, []);
 
@@ -107,7 +119,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
         if (show) {
           const icon = makeClusterIcon(L, matchingProps.length);
           entry.marker.setIcon(icon);
-          entry.marker.setPopupContent(makeClusterPopup(matchingProps));
           if (!onMap) entry.marker.addTo(map);
         } else if (!show && onMap) {
           entry.marker.remove();
@@ -127,31 +138,10 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
   function makeClusterIcon(L: any, count: number) {
     return L.divIcon({
       className: "",
-      html: `<div style="width:46px;height:46px;border-radius:50%;background:#111827;color:#fff;font:800 14px/1 system-ui,sans-serif;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,0.95);box-shadow:0 3px 16px rgba(0,0,0,0.55);">+${count}</div>`,
-      iconSize: [46, 46],
-      iconAnchor: [23, 23],
-      popupAnchor: [0, -27],
+      html: `<div style="width:20px;height:20px;border-radius:50%;background:#111827;color:#fff;font:700 9px/1 system-ui,sans-serif;display:flex;align-items:center;justify-content:center;border:2.5px solid rgba(255,255,255,0.9);box-shadow:0 1px 6px rgba(0,0,0,0.45);">+${count}</div>`,
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
     });
-  }
-
-  function makeClusterPopup(group: MapProperty[]): string {
-    const header = propLabel(group[0]);
-    const rows = group.map((p) => {
-      const loc = propLabel(p);
-      const isSale = p.listingType === "SALE";
-      const priceColor = isSale ? "#e05a1e" : "#1a5fc8";
-      return `<a href="/admin/properties/${p.id}" style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f3f4f6;text-decoration:none;gap:8px;">
-        <div style="flex:1;min-width:0;">
-          ${loc ? `<div style="font-size:11px;font-weight:700;color:#111827;margin-bottom:1px;">${loc}</div>` : ""}
-          <div style="font-size:11px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${p.titleUk}</div>
-        </div>
-        <div style="font-size:13px;font-weight:800;color:${priceColor};flex-shrink:0;">${shortPrice(p.price, p.currency)}</div>
-      </a>`;
-    }).join("");
-    return `<div style="min-width:220px;max-width:265px;font-family:system-ui,sans-serif;padding:2px 0;">
-      <div style="font-size:11px;font-weight:700;color:#9ca3af;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;">${header ? header + " · " : ""}${group.length} квартир</div>
-      ${rows}
-    </div>`;
   }
 
   useEffect(() => {
@@ -192,7 +182,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
         function updateLabels() {
           const entries: Array<{ entry: MarkerEntry; x: number; y: number }> = [];
           markersRef.current.forEach((entry, key) => {
-            if (entry.kind === "cluster") return; // clusters always show their badge
+            if (entry.kind === "cluster") return;
             if (!map.hasLayer(entry.marker)) return;
             const pt = map.latLngToContainerPoint(entry.marker.getLatLng());
             entries.push({ entry, x: pt.x, y: pt.y });
@@ -242,24 +232,27 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
   }, []);
 
   function buildMarkers(L: any, map: any, props: MapProperty[]) {
-    // Group by location (3 decimal places ≈ 100 m grid)
     const groups = new Map<string, MapProperty[]>();
     props.forEach((p) => {
-      const k = `${p.latitude.toFixed(3)}_${p.longitude.toFixed(3)}`;
+      const k = getLocKey(p);
       if (!groups.has(k)) groups.set(k, []);
       groups.get(k)!.push(p);
     });
 
     groups.forEach((group, locKey) => {
       if (group.length >= 2) {
-        // ── Cluster marker ─────────────────────────────────────────
+        // ── Cluster marker ──────────────────────────────────────────
         const lat = group.reduce((s, p) => s + p.latitude, 0) / group.length;
         const lng = group.reduce((s, p) => s + p.longitude, 0) / group.length;
 
         const icon = makeClusterIcon(L, group.length);
-        const popup = makeClusterPopup(group);
-        const marker = L.marker([lat, lng], { icon }).bindPopup(popup, { maxWidth: 280 });
-        marker.on("click", () => setActiveId(group[0].id));
+        const marker = L.marker([lat, lng], { icon });
+
+        marker.on("click", () => {
+          setLocationFilterKey(locKey);
+          setActiveId(group[0].id);
+          if (mapInstance.current) mapInstance.current.flyTo([lat, lng], 16, { duration: 0.5 });
+        });
 
         const clusterKey = `cluster_${locKey}`;
         markersRef.current.set(clusterKey, {
@@ -267,7 +260,6 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           price: Math.max(...group.map((p) => p.price)),
           clusterProps: group,
         });
-        // Map each property ID → cluster key so flyTo can find the marker
         group.forEach((p) => {
           markersRef.current.set(p.id, {
             marker, kind: "cluster",
@@ -316,14 +308,14 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
             <div style="font-size:13px;font-weight:700;color:#111;line-height:1.3;margin-bottom:5px;">${p.titleUk}</div>
             <div style="font-size:17px;font-weight:900;color:${bg};margin-bottom:6px;">${p.price.toLocaleString("uk-UA")} ${p.currency}</div>
             ${p.district ? `<div style="font-size:11px;color:#6b7280;margin-bottom:8px;">📍 ${p.district}</div>` : ""}
-            <div style="display:flex;gap:6px;">
-              <a href="/admin/properties/${p.id}" style="flex:1;background:#111;color:#fff;text-decoration:none;font-size:11px;font-weight:700;padding:7px 0;border-radius:8px;text-align:center;display:block;">✏️ Ред.</a>
-              <a href="/uk/listings/${p.slug}" target="_blank" style="flex:1;background:${bg};color:#fff;text-decoration:none;font-size:11px;font-weight:700;padding:7px 0;border-radius:8px;text-align:center;display:block;">Сайт →</a>
-            </div>
+            <a href="/admin/properties/${p.id}/view" style="display:block;background:${bg};color:#fff;text-decoration:none;font-size:11px;font-weight:700;padding:8px 0;border-radius:8px;text-align:center;">Переглянути →</a>
           </div>`;
 
         const marker = L.marker([p.latitude, p.longitude], { icon: dotIcon }).bindPopup(popup, { maxWidth: 265 });
-        marker.on("click", () => setActiveId(p.id));
+        marker.on("click", () => {
+          setActiveId(p.id);
+          setLocationFilterKey(locKey);
+        });
         markersRef.current.set(p.id, { marker, kind: "single", dotIcon, labelIcon, price: p.price });
         marker.addTo(map);
       }
@@ -345,8 +337,20 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
           ))}
         </div>
 
+        {/* Location filter label */}
+        {filterLabel !== null && (
+          <div className="px-2.5 py-1.5 bg-orange-50 border-b border-orange-100 flex items-center gap-2">
+            <span className="text-xs font-bold text-orange-700 truncate flex-1">{filterLabel}</span>
+            <span className="text-xs text-gray-500 flex-shrink-0">{visibleInPanel.length} об'єктів</span>
+            <button
+              onClick={() => setLocationFilterKey(null)}
+              className="flex-shrink-0 w-4 h-4 flex items-center justify-center rounded-full bg-orange-200 text-orange-700 hover:bg-orange-300 text-xs leading-none font-bold"
+            >×</button>
+          </div>
+        )}
+
         <div ref={listRef} className="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
-          {visible.map((p) => {
+          {visibleInPanel.map((p) => {
             const isSale = p.listingType === "SALE";
             const isActive = activeId === p.id;
             const imgUrl = p.imageUrl
@@ -356,7 +360,11 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
             const loc = propLabel(p);
             return (
               <div
-                key={p.id} data-id={p.id} onClick={() => flyTo(p)}
+                key={p.id} data-id={p.id}
+                onClick={() => {
+                  setLocationFilterKey(getLocKey(p));
+                  flyTo(p);
+                }}
                 className={`relative rounded-xl overflow-hidden cursor-pointer flex-shrink-0 transition-all duration-150 ${isActive ? "ring-2 ring-orange-400 shadow-lg scale-[1.01]" : "hover:shadow-md hover:scale-[1.005]"}`}
                 style={{ height: 180 }}
               >

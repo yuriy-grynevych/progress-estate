@@ -414,10 +414,9 @@ export default async function AdminPropertiesPage({
 
                         <div className="flex items-center gap-2">
                           <Link
-                            href={`/uk/listings/${property.slug}`}
-                            target="_blank"
+                            href={viewHref}
                             className="text-gray-400 hover:text-navy-900 transition p-1.5 rounded-lg hover:bg-gray-100"
-                            title="Переглянути на сайті"
+                            title="Переглянути"
                           >
                             <Eye className="w-4 h-4" />
                           </Link>
@@ -429,17 +428,8 @@ export default async function AdminPropertiesPage({
                               propertyId={property.id}
                             />
                           )}
-                          {canEdit && (
-                            <>
-                              <Link
-                                href={`/admin/properties/${property.id}`}
-                                className="text-gray-400 hover:text-navy-900 transition p-1.5 rounded-lg hover:bg-gray-100"
-                                title="Редагувати"
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </Link>
-                              {role === "ADMIN" && <DeletePropertyButton id={property.id} />}
-                            </>
+                          {canEdit && role === "ADMIN" && (
+                            <DeletePropertyButton id={property.id} />
                           )}
                         </div>
                       </div>

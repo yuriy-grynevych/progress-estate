@@ -14,6 +14,7 @@ import {
   Phone, Mail, MapPin, Lock,
 } from "lucide-react";
 import CopyDescriptionButton from "@/components/admin/CopyDescriptionButton";
+import CopyAgentLinkButton from "@/components/admin/CopyAgentLinkButton";
 
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE:   "Активне",
@@ -52,7 +53,7 @@ export default async function AgentPropertyViewPage({
 
   const currentUser = await prisma.user.findUnique({
     where: { id: currentUserId },
-    select: { phone: true },
+    select: { phone: true, agentToken: true },
   });
 
   const property = await prisma.property.findUnique({
@@ -122,6 +123,14 @@ export default async function AgentPropertyViewPage({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {currentUser?.agentToken && (
+            <CopyAgentLinkButton
+              slug={property.slug}
+              locale="uk"
+              agentToken={currentUser.agentToken}
+              propertyId={property.id}
+            />
+          )}
           <Link
             href={`/uk/listings/${property.slug}`}
             target="_blank"
