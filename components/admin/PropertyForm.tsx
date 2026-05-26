@@ -632,8 +632,8 @@ export default function PropertyForm({
                           const jk = JK_DATA.find(j => j.name.toLowerCase() === val.trim().toLowerCase());
                           if (jk) {
                             jkGeocodingRef.current = true;
-                            if (jk.district) setValue("district", jk.district);
-                            if (jk.address) setValue("address", jk.address);
+                            setValue("district", jk.district || "", { shouldDirty: true, shouldValidate: true });
+                            setValue("address", jk.address || "", { shouldDirty: true });
                             setValue("latitude", jk.lat);
                             setValue("longitude", jk.lng);
                             setTimeout(() => { jkGeocodingRef.current = false; }, 1500);
