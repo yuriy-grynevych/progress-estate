@@ -77,12 +77,10 @@ export const DISTRICTS_IF = [
   { value: "Озеро",               labelUk: "Озеро",               labelEn: "Ozero" },
   { value: "Парковий",            labelUk: "Парковий",            labelEn: "Parkovy" },
   { value: "Бельведер",           labelUk: "Бельведер",           labelEn: "Belveder" },
-  { value: "Новий світ",          labelUk: "Новий світ",          labelEn: "Novyi Svit" },
   { value: "Залізничний",         labelUk: "Залізничний",         labelEn: "Zaliznychnyi" },
   { value: "Південний бульвар",   labelUk: "Південний бульвар",   labelEn: "Southern Boulevard" },
   { value: "Північний бульвар",   labelUk: "Північний бульвар",   labelEn: "Northern Boulevard" },
   { value: "Кішлак",              labelUk: "Кішлак",              labelEn: "Kishlak" },
-  { value: "Патріот",             labelUk: "Патріот",             labelEn: "Patriot" },
   { value: "Софіївка",            labelUk: "Софіївка",            labelEn: "Sofiivka" },
   { value: "Городок",             labelUk: "Городок",             labelEn: "Horodok" },
   { value: "Кант",                labelUk: "Кант",                labelEn: "Kant" },
@@ -156,6 +154,8 @@ export const RESIDENTIAL_COMPLEXES_IF = [
   "Ренесанс",
   "Smart House",
   "Вілла Флоренція",
+  "Новий світ",
+  "Патріот",
 ] as const;
 
 export const SORT_OPTIONS = [

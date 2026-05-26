@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
-import { Building2, MessageSquare, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone, Users, TrendingUp, Quote, Pin } from "lucide-react";
+import { Building2, MessageSquare, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone, Users, TrendingUp, Quote, Pin, Banknote } from "lucide-react";
 import UnpinAnnouncementButton from "@/components/admin/UnpinAnnouncementButton";
 
 async function getTodayReminders(role: string, userId: string) {
@@ -28,7 +28,7 @@ async function getStats(role: string, userId: string) {
       ? {}
       : { OR: [{ propertyId: null }, { property: { assignedUserId: userId } }] };
 
-  const [activeProperties, totalProperties, newInquiries, totalContacts] = await Promise.all([
+  const [activeProperties, totalProperties, newInquiries, totalContacts, depositProperties] = await Promise.all([
     prisma.property.count({ where: { ...propertyWhere, status: "ACTIVE" } }),
     prisma.property.count({ where: propertyWhere }),
     prisma.inquiry.count({ where: { ...inquiryWhere, status: "NEW" } }),
@@ -37,6 +37,7 @@ async function getStats(role: string, userId: string) {
         ? { where: { deletedAt: null } }
         : { where: { assignedUserId: userId, deletedAt: null } }
     ),
+    prisma.property.count({ where: { ...propertyWhere, status: "DEPOSIT" } }),
   ]);
 
   const recentProperties = await prisma.property.findMany({
@@ -46,7 +47,7 @@ async function getStats(role: string, userId: string) {
     include: { images: { orderBy: { order: "asc" as const }, take: 1 } },
   });
 
-  return { activeProperties, totalProperties, newInquiries, totalContacts, recentProperties };
+  return { activeProperties, totalProperties, newInquiries, totalContacts, depositProperties, recentProperties };
 }
 
 async function getTestimonialsForAdmin() {
@@ -107,7 +108,7 @@ export default async function AdminDashboard() {
   const userId = (session?.user as any)?.id as string;
 
   const [
-    { activeProperties, totalProperties, newInquiries, totalContacts, recentProperties },
+    { activeProperties, totalProperties, newInquiries, totalContacts, depositProperties, recentProperties },
     todayReminders,
     testimonialsData,
     announcement,
@@ -140,14 +141,7 @@ export default async function AdminDashboard() {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard
-          icon={<Building2 className="w-6 h-6 text-navy-900" />}
-          label={role === "ADMIN" ? "Активні оголошення" : "Мої активні"}
-          value={activeProperties}
-          href="/admin/properties"
-          color="bg-navy-50"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           icon={<Building2 className="w-6 h-6 text-gray-500" />}
           label={role === "ADMIN" ? "Всього оголошень" : "Всього моїх"}
@@ -156,18 +150,18 @@ export default async function AdminDashboard() {
           color="bg-gray-100"
         />
         <StatCard
+          icon={<Banknote className="w-6 h-6 text-amber-600" />}
+          label="На завдатку"
+          value={depositProperties}
+          href="/admin/properties?status=DEPOSIT"
+          color="bg-amber-50"
+        />
+        <StatCard
           icon={<MessageSquare className="w-6 h-6 text-blue-600" />}
           label="Нові запити"
           value={newInquiries}
           href="/admin/inquiries"
           color="bg-blue-50"
-        />
-        <StatCard
-          icon={<Users className="w-6 h-6 text-emerald-600" />}
-          label={role === "ADMIN" ? "Контактів у базі" : "Мої контакти"}
-          value={totalContacts}
-          href="/admin/contacts"
-          color="bg-emerald-50"
         />
       </div>
 
