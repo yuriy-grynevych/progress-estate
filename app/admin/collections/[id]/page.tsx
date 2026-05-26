@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Search, Check, Share2, ExternalLink } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
+import { DISTRICTS_IF } from "@/lib/constants";
 
 const TYPE_LABELS: Record<string, string> = {
   APARTMENT: "Квартира",
@@ -79,7 +80,6 @@ export default function EditCollectionPage() {
   const [priceMax, setPriceMax] = useState("");
   const [areaMin, setAreaMin] = useState("");
   const [areaMax, setAreaMax] = useState("");
-  const [districts, setDistricts] = useState<{ value: string; labelUk: string }[]>([]);
   const [complexes, setComplexes] = useState<string[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -97,11 +97,7 @@ export default function EditCollectionPage() {
       setSelectedIds(new Set(col.items.map((item) => item.property.id)));
     }
     async function loadMeta() {
-      const [dRes, cRes] = await Promise.all([
-        fetch("/api/districts"),
-        fetch("/api/properties/complexes"),
-      ]);
-      if (dRes.ok) setDistricts(await dRes.json());
+      const cRes = await fetch("/api/properties/complexes");
       if (cRes.ok) setComplexes(await cRes.json());
     }
     loadCollection();
@@ -246,7 +242,7 @@ export default function EditCollectionPage() {
           <select value={district} onChange={(e) => setDistrict(e.target.value)}
             className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900">
             <option value="">Всі райони</option>
-            {districts.map((d) => <option key={d.value} value={d.value}>{d.labelUk}</option>)}
+            {DISTRICTS_IF.map((d) => <option key={d.value} value={d.value}>{d.labelUk}</option>)}
           </select>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-3">
@@ -278,51 +274,51 @@ export default function EditCollectionPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         {loading && (
           <div className="text-center py-10 text-gray-400 text-sm">Завантаження…</div>
         )}
         {!loading && properties.length === 0 && (
           <div className="text-center py-10 text-gray-400 text-sm">Об'єктів не знайдено</div>
         )}
-        {!loading && properties.map((p) => {
-          const selected = selectedIds.has(p.id);
-          const img = p.images[0]?.url;
-          return (
-            <div
-              key={p.id}
-              onClick={() => toggleSelect(p.id)}
-              className={`flex items-center gap-4 px-4 py-4 border-b border-gray-100 cursor-pointer transition ${
-                selected ? "bg-gold-50 border-l-4 border-l-gold-500" : "hover:bg-gray-50"
-              }`}
-            >
-              <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition ${
-                selected ? "bg-gold-500 border-gold-500" : "border-gray-300"
-              }`}>
-                {selected && <Check className="w-3 h-3 text-white" />}
-              </div>
-              <div className="w-36 h-24 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                {img ? (
-                  <Image src={img} alt={p.titleUk} width={144} height={96} className="object-cover w-full h-full" unoptimized />
-                ) : (
-                  <div className="w-full h-full bg-gray-200" />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-navy-900 line-clamp-2 leading-snug mb-1">{p.titleUk}</p>
-                <p className="text-xs text-gray-500">
-                  {TYPE_LABELS[p.type] ?? p.type}
-                  {p.rooms ? ` · ${p.rooms} кім.` : ""}
-                  {` · ${p.areaSqm} м²`}
-                </p>
-                {p.district && <p className="text-xs text-gray-400 mt-0.5">{p.district}</p>}
-              </div>
-              <div className="text-base font-bold text-navy-900 flex-shrink-0">
-                {formatPrice(p.price, p.currency)}
-              </div>
-            </div>
-          );
-        })}
+        {!loading && properties.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {properties.map((p) => {
+              const selected = selectedIds.has(p.id);
+              const img = p.images[0]?.url;
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => toggleSelect(p.id)}
+                  className={`relative rounded-xl overflow-hidden cursor-pointer transition-all ${
+                    selected ? "ring-2 ring-gold-500 shadow-md" : "hover:shadow-md hover:-translate-y-0.5"
+                  }`}
+                >
+                  <div className="relative aspect-[4/3] bg-gray-100">
+                    {img ? (
+                      <Image src={img} alt={p.titleUk} fill className="object-cover" unoptimized sizes="25vw" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-3xl text-gray-300">🏠</div>
+                    )}
+                    <div className={`absolute top-2 right-2 w-5 h-5 rounded-md border-2 flex items-center justify-center transition ${
+                      selected ? "bg-gold-500 border-gold-500" : "bg-white/80 border-gray-300"
+                    }`}>
+                      {selected && <Check className="w-3 h-3 text-white" />}
+                    </div>
+                  </div>
+                  <div className="p-2.5">
+                    <p className="text-xs font-semibold text-navy-900 line-clamp-2 leading-snug mb-1">{p.titleUk}</p>
+                    <p className="text-[11px] text-gray-400 mb-0.5">
+                      {p.rooms ? `${p.rooms} кім. · ` : ""}{p.areaSqm} м²
+                    </p>
+                    {p.district && <p className="text-[10px] text-gray-400 truncate">{p.district}</p>}
+                    <p className="text-sm font-bold text-navy-900 mt-1">{formatPrice(p.price, p.currency)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
