@@ -110,7 +110,7 @@ function FSelect({ children, className = "", ...props }: React.SelectHTMLAttribu
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl border border-gold-300 shadow-sm overflow-hidden ${className}`}>
       {children}
     </div>
   );
