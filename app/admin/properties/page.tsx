@@ -254,9 +254,7 @@ export default async function AdminPropertiesPage({
               return (
                 <div
                   key={property.id}
-                  className={`bg-white rounded-2xl border shadow-sm hover:shadow-md transition overflow-hidden ${
-                    isOwn ? "border-gold-200" : "border-gray-100"
-                  }`}
+                  className="bg-white rounded-2xl border border-gold-300 shadow-sm hover:shadow-md transition overflow-hidden"
                 >
                   <div className="flex flex-col sm:grid sm:grid-cols-[55%_45%]">
                     {/* Gallery — click navigates to agent view */}

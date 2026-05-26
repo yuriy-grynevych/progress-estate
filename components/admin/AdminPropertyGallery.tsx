@@ -51,7 +51,66 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent, lin
     setTouchStart(null);
   }
 
-  const thumbRows = Math.min(Math.ceil(thumbs.length / 2), 2);
+  // Thumb cell helper
+  function ThumbCell({ thumb, cls = "" }: { thumb: GalleryImage; cls?: string }) {
+    return (
+      <div
+        className={`relative overflow-hidden cursor-pointer ${cls}`}
+        onClick={() => navigateTo ? router.push(navigateTo) : openAt(thumb)}
+      >
+        <Image
+          src={thumb.url} alt="" fill
+          className="object-cover hover:opacity-90 transition"
+          sizes="15vw" quality={45}
+          unoptimized={isExternalImage(thumb.url)} loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  // Thumbnail column — no empty cells regardless of count
+  function ThumbCol() {
+    if (thumbs.length === 0) return null;
+
+    if (thumbs.length === 1) {
+      return (
+        <div className="hidden sm:block relative overflow-hidden cursor-pointer bg-gray-100"
+          onClick={() => navigateTo ? router.push(navigateTo) : openAt(thumbs[0])}>
+          <Image src={thumbs[0].url} alt="" fill className="object-cover hover:opacity-90 transition"
+            sizes="15vw" quality={45} unoptimized={isExternalImage(thumbs[0].url)} loading="lazy" />
+        </div>
+      );
+    }
+
+    if (thumbs.length === 2) {
+      return (
+        <div className="hidden sm:grid grid-cols-2 gap-0.5 bg-gray-100">
+          <ThumbCell thumb={thumbs[0]} />
+          <ThumbCell thumb={thumbs[1]} />
+        </div>
+      );
+    }
+
+    if (thumbs.length === 3) {
+      // Top row: 2 images side-by-side; bottom row: 1 spanning full width
+      return (
+        <div className="hidden sm:grid grid-cols-2 gap-0.5 bg-gray-100"
+          style={{ gridTemplateRows: "1fr 1fr" }}>
+          <ThumbCell thumb={thumbs[0]} />
+          <ThumbCell thumb={thumbs[1]} />
+          <ThumbCell thumb={thumbs[2]} cls="col-span-2" />
+        </div>
+      );
+    }
+
+    // 4 thumbs — 2×2
+    return (
+      <div className="hidden sm:grid grid-cols-2 gap-0.5 bg-gray-100"
+        style={{ gridTemplateRows: "1fr 1fr" }}>
+        {thumbs.map((thumb, i) => <ThumbCell key={i} thumb={thumb} />)}
+      </div>
+    );
+  }
 
   return (
     <>
@@ -97,32 +156,7 @@ export default function AdminPropertyGallery({ images, title, isNew, isRent, lin
           </div>
         </div>
 
-        {/* Thumbnails 2×2 — 38% of gallery width (grid column), fills full height */}
-        {thumbs.length > 0 && (
-          <div
-            className="hidden sm:grid grid-cols-2 gap-0.5 bg-gray-100"
-            style={{ gridTemplateRows: `repeat(${thumbRows}, 1fr)` }}
-          >
-            {thumbs.map((thumb, i) => (
-              <div
-                key={i}
-                className="relative overflow-hidden cursor-pointer"
-                onClick={() => navigateTo ? router.push(navigateTo) : openAt(thumb)}
-              >
-                <Image
-                  src={thumb.url}
-                  alt=""
-                  fill
-                  className="object-cover hover:opacity-90 transition"
-                  sizes="15vw"
-                  quality={45}
-                  unoptimized={isExternalImage(thumb.url)}
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
-        )}
+        <ThumbCol />
       </div>
 
       {/* Lightbox */}
