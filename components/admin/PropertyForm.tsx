@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/constants";
 import ImageUploader from "./ImageUploader";
 import { cn } from "@/lib/utils";
+import { JK_DATA } from "@/lib/map-data";
 
 const TiptapEditor = dynamic(() => import("./TiptapEditor"), { ssr: false });
 const MapPicker    = dynamic(() => import("./MapPicker"),    { ssr: false });
@@ -202,6 +203,30 @@ export default function PropertyForm({
   const watchedListingType = watch("listingType");
   const watchedStatus      = watch("status");
   const watchedType        = watch("type");
+
+  const jkGeocodingRef = useRef(false);
+  const addressValue = watch("address");
+
+  useEffect(() => {
+    if (!addressValue || addressValue.length < 5 || jkGeocodingRef.current) return;
+    const timer = setTimeout(async () => {
+      if (jkGeocodingRef.current) return;
+      try {
+        const q = encodeURIComponent(`${addressValue}, Івано-Франківськ`);
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1&countrycodes=ua`,
+          { headers: { "Accept-Language": "uk" } }
+        );
+        const results = await res.json();
+        if (results[0]) {
+          setValue("latitude", parseFloat(results[0].lat));
+          setValue("longitude", parseFloat(results[0].lon));
+        }
+      } catch {}
+    }, 900);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addressValue]);
 
   async function addComment() {
     const text = commentInput.trim();
@@ -586,6 +611,40 @@ export default function PropertyForm({
           <Card>
             <CardHeader icon={<MapPin className="w-4 h-4" />} title="Розташування" />
             <div className="p-6 space-y-4">
+              {/* ЖК — перший рядок, повна ширина */}
+              <div>
+                <Label>Житловий комплекс (ЖК)</Label>
+                {(() => {
+                  const { onChange: rhfOnChange, ...restReg } = register("residentialComplex");
+                  return (
+                    <>
+                      <input
+                        {...restReg}
+                        list="complexes-list"
+                        placeholder="Назва ЖК або адреса..."
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900 transition-all placeholder:text-gray-300"
+                        onChange={(e) => {
+                          rhfOnChange(e);
+                          const val = e.target.value.trim();
+                          const jk = JK_DATA.find(j => j.name.toLowerCase() === val.toLowerCase());
+                          if (jk) {
+                            jkGeocodingRef.current = true;
+                            if (jk.district) setValue("district", jk.district);
+                            if (jk.address) setValue("address", jk.address);
+                            setValue("latitude", jk.lat);
+                            setValue("longitude", jk.lng);
+                            setTimeout(() => { jkGeocodingRef.current = false; }, 1500);
+                          }
+                        }}
+                      />
+                      <datalist id="complexes-list">
+                        {RESIDENTIAL_COMPLEXES_IF.map((n) => <option key={n} value={n} />)}
+                      </datalist>
+                    </>
+                  );
+                })()}
+              </div>
+              {/* Район + Вулиця */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label required>Район</Label>
@@ -599,6 +658,7 @@ export default function PropertyForm({
                   <Input {...register("address")} placeholder="вул. Незалежності, 15" />
                 </div>
               </div>
+              {/* Номери */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <Label>Номер будинку</Label>
@@ -613,23 +673,15 @@ export default function PropertyForm({
                   <Input {...register("apartmentLetter")} placeholder="А" />
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label>Житловий комплекс</Label>
-                  <input {...register("residentialComplex")} list="complexes-list"
-                    placeholder="Назва ЖК або адреса..."
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-navy-900/15 focus:border-navy-900 transition-all placeholder:text-gray-300" />
-                  <datalist id="complexes-list">
-                    {RESIDENTIAL_COMPLEXES_IF.map((n) => <option key={n} value={n} />)}
-                  </datalist>
-                </div>
-                <div>
-                  <Label>Орієнтир</Label>
-                  <Input {...register("landmark")} placeholder="Поруч із ТЦ Атріум..." />
-                </div>
+              {/* Орієнтир */}
+              <div>
+                <Label>Орієнтир</Label>
+                <Input {...register("landmark")} placeholder="Поруч із ТЦ Атріум..." />
               </div>
+              {/* Карта */}
               <div>
                 <Label>Позначте на карті</Label>
+                <p className="text-xs text-gray-400 mb-1.5">Заповніть ЖК або адресу — карта оновиться автоматично. Можна також клікнути або перетягнути маркер вручну.</p>
                 <div className="rounded-xl overflow-hidden border border-gray-200">
                   <MapPicker
                     lat={watch("latitude") ?? null}
