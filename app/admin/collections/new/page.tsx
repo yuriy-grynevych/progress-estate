@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Search, Check } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import { DISTRICTS_IF } from "@/lib/constants";
+import { DISTRICTS_IF, RESIDENTIAL_COMPLEXES_IF } from "@/lib/constants";
 
 const TYPE_LABELS: Record<string, string> = {
   APARTMENT: "Квартира",
@@ -75,7 +75,14 @@ export default function NewCollectionPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetch("/api/properties/complexes").then(r => r.ok ? r.json() : []).then(setComplexes).catch(() => {});
+    // Merge DB complexes with static list for full coverage
+    fetch("/api/properties/complexes")
+      .then(r => r.ok ? r.json() : [])
+      .then((dbList: string[]) => {
+        const merged = Array.from(new Set([...dbList, ...RESIDENTIAL_COMPLEXES_IF])).sort((a, b) => a.localeCompare(b, "uk"));
+        setComplexes(merged);
+      })
+      .catch(() => setComplexes([...RESIDENTIAL_COMPLEXES_IF].sort((a, b) => a.localeCompare(b, "uk"))));
   }, []);
 
   const fetchProperties = useCallback(async () => {

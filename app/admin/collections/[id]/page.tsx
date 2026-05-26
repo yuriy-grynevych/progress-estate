@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Search, Check, Share2, ExternalLink } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
-import { DISTRICTS_IF } from "@/lib/constants";
+import { DISTRICTS_IF, RESIDENTIAL_COMPLEXES_IF } from "@/lib/constants";
 
 const TYPE_LABELS: Record<string, string> = {
   APARTMENT: "Квартира",
@@ -97,8 +97,13 @@ export default function EditCollectionPage() {
       setSelectedIds(new Set(col.items.map((item) => item.property.id)));
     }
     async function loadMeta() {
-      const cRes = await fetch("/api/properties/complexes");
-      if (cRes.ok) setComplexes(await cRes.json());
+      fetch("/api/properties/complexes")
+        .then(r => r.ok ? r.json() : [])
+        .then((dbList: string[]) => {
+          const merged = Array.from(new Set([...dbList, ...RESIDENTIAL_COMPLEXES_IF])).sort((a, b) => a.localeCompare(b, "uk"));
+          setComplexes(merged);
+        })
+        .catch(() => setComplexes([...RESIDENTIAL_COMPLEXES_IF].sort((a, b) => a.localeCompare(b, "uk"))));
     }
     loadCollection();
     loadMeta();
