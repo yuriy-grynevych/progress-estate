@@ -95,8 +95,7 @@ export default async function PublicCollectionPage({
       <div className="max-w-3xl mx-auto px-4 py-10">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-8 flex items-center gap-5">
           <div
-            className="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 border-4"
-            style={{ borderColor: accentColor }}
+            className="w-20 h-20 rounded-full overflow-hidden flex-shrink-0 border-4 border-gold-500"
           >
             {user.photoUrl ? (
               <Image
