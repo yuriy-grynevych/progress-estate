@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import Image from "next/image";
 import { TrendingUp, Plus } from "lucide-react";
 
 export default async function SalesPage() {
@@ -12,7 +13,12 @@ export default async function SalesPage() {
     orderBy: { createdAt: "desc" },
     take: 50,
     include: {
-      property: { select: { id: true, titleUk: true, slug: true } },
+      property: {
+        select: {
+          id: true, titleUk: true, slug: true,
+          images: { orderBy: { order: "asc" as const }, take: 1, select: { url: true } },
+        },
+      },
       clientContact: { select: { name: true, phone: true } },
       agent: { select: { name: true } },
     },
@@ -65,10 +71,16 @@ export default async function SalesPage() {
                     : "bg-gray-100 text-gray-500";
                 return (
                   <div key={s.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition group">
-                    {/* Icon */}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm ${isOwn ? "bg-navy-100 text-navy-700" : isDev ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
-                      {propertyTitle[0]?.toUpperCase() ?? "?"}
-                    </div>
+                    {/* Icon / photo */}
+                    {isOwn && s.property?.images?.[0]?.url ? (
+                      <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                        <Image src={s.property.images[0].url} alt={propertyTitle} width={40} height={40} className="object-cover w-full h-full" unoptimized />
+                      </div>
+                    ) : (
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm ${isOwn ? "bg-navy-100 text-navy-700" : isDev ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
+                        {propertyTitle[0]?.toUpperCase() ?? "?"}
+                      </div>
+                    )}
                     {/* Property */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
