@@ -14,6 +14,7 @@ const DEVELOPERS = [
 ].sort((a, b) => a.localeCompare(b, "uk"));
 
 interface DepositProperty { id: string; titleUk: string; district?: string; price: string; currency: string; areaSqm: number; }
+interface AllProperty { id: string; titleUk: string; district?: string; }
 interface Contact { id: string; name: string; phone?: string; }
 
 type Tab = "OWN" | "EXTERNAL" | "DEVELOPER";
@@ -29,6 +30,7 @@ export default function NewSalePage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("OWN");
   const [properties, setProperties] = useState<DepositProperty[]>([]);
+  const [allProperties, setAllProperties] = useState<AllProperty[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -68,6 +70,7 @@ export default function NewSalePage() {
 
   useEffect(() => {
     fetch("/api/properties/deposit").then(r => r.json()).then(setProperties).catch(() => {});
+    fetch("/api/properties/list").then(r => r.json()).then(setAllProperties).catch(() => {});
     fetch("/api/contacts?type=CLIENT&limit=200").then(r => r.json()).then(d => setContacts(d.contacts ?? d ?? [])).catch(() => {});
   }, []);
 
@@ -196,8 +199,21 @@ export default function NewSalePage() {
             </div>
             <div>
               <label className={lbl}>Назва нерухомості *</label>
-              <input value={extName} onChange={e => setExtName(e.target.value)} required
-                placeholder="напр. 2-кімн. квартира на вул. Незалежності" className={inp} />
+              <input
+                list="prop-list"
+                value={extName}
+                onChange={e => setExtName(e.target.value)}
+                required
+                placeholder="Оберіть з наших або введіть вручну..."
+                className={inp}
+              />
+              <datalist id="prop-list">
+                {allProperties.map(p => (
+                  <option key={p.id} value={p.titleUk}>
+                    {p.district ? p.district : ""}
+                  </option>
+                ))}
+              </datalist>
             </div>
             <div>
               <label className={lbl}>Адреса</label>
