@@ -155,7 +155,7 @@ export default async function AgentPropertyViewPage({
         {/* Left column */}
         <div className="lg:col-span-2 space-y-4">
           {/* Gallery — lightbox is active (no linkToSlug) */}
-          <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gold-300">
             <AdminPropertyGallery
               images={property.images}
               title={property.titleUk}
@@ -166,7 +166,7 @@ export default async function AgentPropertyViewPage({
           </div>
 
           {/* Price + badges */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 flex-wrap mb-2">
@@ -208,7 +208,7 @@ export default async function AgentPropertyViewPage({
 
           {/* Specs */}
           {specs.length > 0 && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
               <h2 className="text-base font-bold text-navy-900 mb-3">Характеристики</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {specs.map((spec, i) => (
@@ -223,7 +223,7 @@ export default async function AgentPropertyViewPage({
 
           {/* Description */}
           {property.descriptionUk && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-bold text-navy-900">Опис</h2>
                 <CopyDescriptionButton
@@ -240,7 +240,7 @@ export default async function AgentPropertyViewPage({
 
           {/* Features */}
           {property.features.length > 0 && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
               <h2 className="text-base font-bold text-navy-900 mb-3">Зручності</h2>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {property.features.map((feature) => {
@@ -258,7 +258,7 @@ export default async function AgentPropertyViewPage({
 
           {/* Map */}
           {property.latitude && property.longitude && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
               <h2 className="text-base font-bold text-navy-900 mb-3">Розташування</h2>
               <PropertyMap lat={property.latitude} lng={property.longitude} title={property.titleUk} />
             </div>
@@ -274,7 +274,7 @@ export default async function AgentPropertyViewPage({
         {/* Right column */}
         <div className="space-y-4">
           {/* Agent card */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Агент</p>
             {agent ? (
               <>
@@ -376,7 +376,7 @@ export default async function AgentPropertyViewPage({
 
           {/* Internal note */}
           {(property as any).internalNote && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Внутрішня примітка</p>
               <p className="text-sm text-gray-600 leading-relaxed">{(property as any).internalNote}</p>
             </div>
@@ -384,7 +384,7 @@ export default async function AgentPropertyViewPage({
 
           {/* Commission */}
           {(property as any).commissionAmount != null && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Комісія</p>
               <p className="text-lg font-bold text-navy-900">
                 {(property as any).commissionAmount}
@@ -396,7 +396,7 @@ export default async function AgentPropertyViewPage({
           )}
 
           {/* Dates */}
-          <div className="bg-white rounded-2xl p-5 shadow-sm">
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
             <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Дати</p>
             <div className="space-y-1 text-sm">
               <p>
