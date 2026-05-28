@@ -733,33 +733,17 @@ export default function PropertyForm({
             <div className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <Label>Опис (UA) — автоматично перекладається</Label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={copyForMessenger}
-                    disabled={copying}
-                    title="Скопіювати для месенджера (з емодзі та контактом)"
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition shadow-sm"
-                  >
-                    {copying
-                      ? <><Loader2 className="w-3 h-3 animate-spin" /> Копіюю...</>
-                      : copied
-                        ? <><Check className="w-3 h-3" /> Скопійовано!</>
-                        : <><ClipboardCopy className="w-3 h-3" /> Месенджер</>
-                    }
-                  </button>
-                  <button
-                    type="button"
-                    onClick={generateDescription}
-                    disabled={generating}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 transition shadow-sm"
-                  >
-                    {generating
-                      ? <><Loader2 className="w-3 h-3 animate-spin" /> Генерую...</>
-                      : <><Sparkles className="w-3 h-3" /> AI опис</>
-                    }
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={generateDescription}
+                  disabled={generating}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 transition shadow-sm"
+                >
+                  {generating
+                    ? <><Loader2 className="w-3 h-3 animate-spin" /> Генерую...</>
+                    : <><Sparkles className="w-3 h-3" /> AI опис</>
+                  }
+                </button>
               </div>
               <Controller name="descriptionUk" control={control}
                 render={({ field }) => <TiptapEditor value={field.value} onChange={field.onChange} />} />
