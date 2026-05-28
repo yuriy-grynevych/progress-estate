@@ -35,8 +35,10 @@ export async function POST(req: NextRequest) {
     data: {
       saleType: body.saleType ?? "OWN",
       propertyId: body.propertyId || null,
+      externalAgency: body.externalAgency || null,
       externalName: body.externalName || null,
       externalAddress: body.externalAddress || null,
+      dealPrice: body.dealPrice ? Number(body.dealPrice) : null,
       clientContactId: body.clientContactId || null,
       clientName: body.clientName || null,
       clientPhone: body.clientPhone || null,

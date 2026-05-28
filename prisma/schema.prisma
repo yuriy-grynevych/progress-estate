@@ -319,15 +319,17 @@ model ChatMessage {
 // ──────────────────────────────────────────────
 model Sale {
   id              String    @id @default(cuid())
-  saleType        String    @default("OWN") // OWN | EXTERNAL
+  saleType        String    @default("OWN") // OWN | EXTERNAL | DEVELOPER
 
   // OWN type — link to our property
   propertyId      String?
   property        Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
-  // EXTERNAL type — manually entered
-  externalName    String?
+  // EXTERNAL / DEVELOPER type — manually entered
+  externalAgency  String?   // Agency name (EXTERNAL) or Developer name (DEVELOPER)
+  externalName    String?   // Property name (EXTERNAL) or ЖК name (DEVELOPER)
   externalAddress String?
+  dealPrice       Float?    // Base amount for % commission calculation
 
   // Buyer (from contacts or manual)
   clientContactId String?

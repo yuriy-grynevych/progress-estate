@@ -46,13 +46,27 @@ export default async function SalesPage() {
             </div>
             <div className="divide-y divide-gray-50">
               {sales.map(s => {
-                const propertyTitle = s.saleType === "OWN" ? (s.property?.titleUk ?? "—") : (s.externalName ?? "—");
+                const isDev = s.saleType === "DEVELOPER";
                 const isOwn = s.saleType === "OWN";
+                const propertyTitle = isOwn
+                  ? (s.property?.titleUk ?? "—")
+                  : ((s as any).externalName ?? "—");
+                const subLabel = isDev
+                  ? ((s as any).externalAgency ? `Забудовник: ${(s as any).externalAgency}` : null)
+                  : !isOwn && (s as any).externalAgency
+                    ? `АН: ${(s as any).externalAgency}`
+                    : null;
                 const clientName = s.clientContact?.name ?? s.clientName ?? null;
+                const typeLabel = isOwn ? "Наша" : isDev ? "Забудовник" : "Агенція";
+                const typeColor = isOwn
+                  ? "bg-navy-100 text-navy-700"
+                  : isDev
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-gray-100 text-gray-500";
                 return (
                   <div key={s.id} className="flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition group">
                     {/* Icon */}
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm ${isOwn ? "bg-navy-100 text-navy-700" : "bg-gray-100 text-gray-500"}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-sm ${isOwn ? "bg-navy-100 text-navy-700" : isDev ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
                       {propertyTitle[0]?.toUpperCase() ?? "?"}
                     </div>
                     {/* Property */}
@@ -65,10 +79,11 @@ export default async function SalesPage() {
                         ) : (
                           <span className="font-semibold text-sm text-navy-900 line-clamp-1">{propertyTitle}</span>
                         )}
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${isOwn ? "bg-navy-100 text-navy-700" : "bg-gray-100 text-gray-500"}`}>
-                          {isOwn ? "Наша" : "Зовнішня"}
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${typeColor}`}>
+                          {typeLabel}
                         </span>
                       </div>
+                      {subLabel && <p className="text-xs text-gray-400 mt-0.5">{subLabel}</p>}
                       {clientName && (
                         <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
                           <span>👤</span> {clientName}
