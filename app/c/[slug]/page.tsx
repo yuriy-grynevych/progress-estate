@@ -152,7 +152,7 @@ export default async function PublicCollectionPage({
             {items.map(({ property: p }) => {
               const img = p.images[0]?.url;
               const locationParts = [p.address, p.district, p.city].filter(Boolean);
-              const detailsHref = `/uk/listings/${p.slug}${user.agentToken ? `?t=${user.agentToken}` : ""}`;
+              const detailsHref = `/p/${p.slug}${user.agentToken ? `?t=${user.agentToken}` : ""}`;
 
               return (
                 <div
