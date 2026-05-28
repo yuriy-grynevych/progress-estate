@@ -1,7 +1,10 @@
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import ChatWidget from "@/components/ChatWidget";
+import SessionProvider from "@/components/admin/SessionProvider";
 
 const locales = ["uk", "en"];
 
@@ -14,13 +17,15 @@ export default async function LocaleLayout({
 }) {
   if (!locales.includes(locale)) notFound();
   setRequestLocale(locale);
-  const messages = await getMessages();
+  const [messages, session] = await Promise.all([getMessages(), getServerSession(authOptions)]);
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      {children}
-      <ChatWidget />
-    </NextIntlClientProvider>
+    <SessionProvider session={session}>
+      <NextIntlClientProvider messages={messages}>
+        {children}
+        <ChatWidget />
+      </NextIntlClientProvider>
+    </SessionProvider>
   );
 }
 

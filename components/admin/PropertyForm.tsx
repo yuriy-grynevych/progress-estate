@@ -651,10 +651,16 @@ export default function PropertyForm({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label required>Район</Label>
-                  <FSelect {...register("district")}>
-                    <option value="">— Оберіть район —</option>
-                    {DISTRICTS_IF.map((d) => <option key={d.value} value={d.value}>{d.labelUk}</option>)}
-                  </FSelect>
+                  <Controller
+                    name="district"
+                    control={control}
+                    render={({ field }) => (
+                      <FSelect value={field.value ?? ""} onChange={field.onChange} onBlur={field.onBlur}>
+                        <option value="">— Оберіть район —</option>
+                        {DISTRICTS_IF.map((d) => <option key={d.value} value={d.value}>{d.labelUk}</option>)}
+                      </FSelect>
+                    )}
+                  />
                 </div>
                 <div>
                   <Label>Вулиця / Адреса</Label>

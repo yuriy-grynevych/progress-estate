@@ -263,7 +263,12 @@ function AddTaskModal({ contactOptions, onClose, onAdd }: {
       const res = await fetch("/api/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, dueAt: dueAt || null, contactId: contactId || null }),
+        body: JSON.stringify({
+          title,
+          description,
+          dueAt: dueAt ? new Date(dueAt).toISOString() : null,
+          contactId: contactId || null,
+        }),
       });
       if (!res.ok) { setError("Помилка збереження"); return; }
       const task = await res.json();
@@ -448,7 +453,7 @@ export default function RemindersManager({ initialContacts, initialTasks, contac
       await fetch(`/api/tasks/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "snooze", snoozeDate: `${date}T09:00:00` }),
+        body: JSON.stringify({ action: "snooze", snoozeDate: new Date(`${date}T09:00:00`).toISOString() }),
       });
       router.refresh();
     } finally { setLoadingId(null); }

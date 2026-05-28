@@ -3,10 +3,11 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { useState, useEffect, useRef } from "react";
-import { Menu, X, PhoneCall } from "lucide-react";
+import { Menu, X, PhoneCall, KeyRound } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { COMPANY } from "@/lib/constants";
+import { useSession } from "next-auth/react";
 
 type CompanyData = { phone: string; email: string; address: string; instagram: string; facebook: string };
 
@@ -20,6 +21,7 @@ export default function Navbar() {
   const locale = useLocale();
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [logoVisible, setLogoVisible] = useState(false);
@@ -117,6 +119,13 @@ export default function Navbar() {
               <PhoneCall className="w-4 h-4" />
               {company.phone}
             </a>
+            <Link
+              href={session ? "/admin" : "/auth/signin"}
+              className="text-white/40 hover:text-white/80 transition-colors ml-1"
+              title={session ? "Панель адміністратора" : "Увійти"}
+            >
+              <KeyRound className="w-4 h-4" />
+            </Link>
           </div>
 
           <button className="md:hidden ml-auto" onClick={() => setIsOpen(!isOpen)}>

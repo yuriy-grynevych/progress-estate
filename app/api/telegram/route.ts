@@ -248,7 +248,7 @@ export async function POST(req: NextRequest) {
       const taskId = data.replace("task_snooze_", "");
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      tomorrow.setHours(9, 0, 0, 0);
+      tomorrow.setHours(6, 0, 0, 0); // 9:00 Ukraine (UTC+3)
       try {
         await prisma.task.update({
           where: { id: taskId },
