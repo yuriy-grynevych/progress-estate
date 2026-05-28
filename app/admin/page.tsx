@@ -36,9 +36,9 @@ async function getStats(role: string, userId: string) {
   ]);
 
   const recentProperties = await prisma.property.findMany({
-    where: propertyWhere,
+    where: { ...propertyWhere, status: { not: "SOLD" } },
     take: 3,
-    orderBy: { updatedAt: "desc" },
+    orderBy: { createdAt: "desc" },
     include: { images: { orderBy: { order: "asc" as const }, take: 1 } },
   });
 
