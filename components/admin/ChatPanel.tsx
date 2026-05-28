@@ -348,7 +348,7 @@ export default function ChatPanel() {
       }
       if (msg.type === "property" && msg.propertySlug) {
         return (
-          <a href={`/admin/properties/${msg.propertySlug}`} target="_blank" rel="noreferrer"
+          <a href={`/p/${msg.propertySlug}`} target="_blank" rel="noreferrer"
             className="flex items-center gap-2 text-sm underline">
             <Home className="w-3.5 h-3.5 flex-shrink-0" />
             {msg.propertyTitle ?? msg.propertySlug}
