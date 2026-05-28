@@ -7,6 +7,7 @@ import { formatPrice, getPropertyTypeLabel, getListingTypeLabel } from "@/lib/ut
 import { PROPERTY_FEATURES } from "@/lib/constants";
 import { Bed, Bath, Maximize2, Layers, Calendar, MapPin, Home, Flame, Wrench, Building2, ChefHat } from "lucide-react";
 import type { PropertyImage } from "@prisma/client";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
@@ -77,11 +78,8 @@ export default async function SharedPropertyPage({
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       {/* Minimal header — no full site navbar */}
-      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 flex items-center gap-3 flex-shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-navy-900 flex items-center justify-center flex-shrink-0">
-          <span className="text-white font-bold text-sm">П</span>
-        </div>
-        <span className="font-semibold text-gray-800 text-sm">Житлова компанія Progress</span>
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-2 flex items-center flex-shrink-0">
+        <Image src="/logo-progress.png" alt="Житлова компанія Progress" width={140} height={42} className="object-contain" />
       </div>
 
       <main className="flex-1">
