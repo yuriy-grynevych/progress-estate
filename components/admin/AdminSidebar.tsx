@@ -88,17 +88,9 @@ export default function AdminSidebar({ onClose, role = "EMPLOYEE" }: AdminSideba
       {/* Quick action */}
       <div className="px-4 py-4">
         <Link
-          href="/admin/properties/new"
-          onClick={onClose}
-          className="flex items-center gap-2 bg-gold-500 hover:bg-gold-600 text-navy-900 font-semibold text-sm px-4 py-2.5 rounded-xl w-full transition"
-        >
-          <PlusCircle className="w-4 h-4" />
-          Додати нерухомість
-        </Link>
-        <Link
           href="/admin/sales/new"
           onClick={onClose}
-          className="flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white/80 hover:text-white font-semibold text-sm px-4 py-2 rounded-xl w-full transition mt-1.5"
+          className="flex items-center gap-2 bg-white/10 hover:bg-white/15 text-white/80 hover:text-white font-semibold text-sm px-4 py-2 rounded-xl w-full transition"
         >
           <TrendingUp className="w-4 h-4" />
           Записати продаж

@@ -53,7 +53,7 @@ export default async function AgentPropertyViewPage({
 
   const currentUser = await prisma.user.findUnique({
     where: { id: currentUserId },
-    select: { phone: true, agentToken: true },
+    select: { name: true, phone: true, agentToken: true },
   });
 
   const property = await prisma.property.findUnique({
@@ -227,8 +227,26 @@ export default async function AgentPropertyViewPage({
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-bold text-navy-900">Опис</h2>
                 <CopyDescriptionButton
-                  html={property.descriptionUk}
+                  agentName={currentUser?.name ?? null}
                   agentPhone={currentUser?.phone ?? null}
+                  propertyParams={{
+                    type: property.type,
+                    listingType: property.listingType,
+                    district: property.district ?? undefined,
+                    address: property.address ?? undefined,
+                    residentialComplex: (property as any).residentialComplex ?? undefined,
+                    areaSqm: property.areaSqm,
+                    kitchenSqm: (property as any).kitchenSqm ?? null,
+                    rooms: property.rooms,
+                    bedrooms: property.bedrooms,
+                    bathrooms: property.bathrooms,
+                    floor: property.floor,
+                    totalFloors: property.totalFloors,
+                    yearBuilt: property.yearBuilt,
+                    renovationType: (property as any).renovationType ?? null,
+                    price: Number(property.price),
+                    currency: property.currency,
+                  }}
                 />
               </div>
               <div
