@@ -74,7 +74,7 @@ export default async function StatsPage() {
           { label: "Всього продажів", value: sales.length, color: "bg-emerald-50 text-emerald-600" },
           { label: "Комісія всього", value: sales.reduce((s, x) => s + (x.commission ?? 0), 0).toLocaleString("uk-UA") + " USD", color: "bg-purple-50 text-purple-600", small: true },
         ].map((k) => (
-          <div key={k.label} className="bg-white rounded-2xl p-4 shadow-sm">
+          <div key={k.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gold-300">
             <p className="text-xs text-gray-400 mb-1">{k.label}</p>
             <p className={`font-bold ${k.small ? "text-lg" : "text-2xl"} ${k.color.split(" ")[1]}`}>{k.value}</p>
           </div>
@@ -88,7 +88,7 @@ export default async function StatsPage() {
       </div>
 
       {/* Sales bar chart — by agent */}
-      <div className="bg-white rounded-2xl shadow-sm p-5">
+      <div className="bg-white rounded-2xl shadow-sm p-5 border border-gold-300">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-semibold text-navy-900">Продажі по працівниках</h2>
@@ -119,7 +119,7 @@ export default async function StatsPage() {
       {/* Source details grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Inquiries detail */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gold-300">
           <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
             <h2 className="font-semibold text-navy-900 text-sm">Деталі — Заявки</h2>
           </div>
@@ -144,7 +144,7 @@ export default async function StatsPage() {
         </div>
 
         {/* Properties detail */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gold-300">
           <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
             <h2 className="font-semibold text-navy-900 text-sm">Деталі — Об'єкти</h2>
           </div>

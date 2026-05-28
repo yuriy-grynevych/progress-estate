@@ -17,7 +17,7 @@ export default function SourcePieChart({ data, title }: Props) {
 
   if (total === 0) {
     return (
-      <div className="bg-white rounded-2xl p-5 shadow-sm flex flex-col items-center justify-center min-h-[260px]">
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300 flex flex-col items-center justify-center min-h-[260px]">
         <p className="text-sm font-semibold text-navy-900 mb-1">{title}</p>
         <p className="text-gray-400 text-sm">Немає даних</p>
       </div>
@@ -25,7 +25,7 @@ export default function SourcePieChart({ data, title }: Props) {
   }
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm">
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
       <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">{title}</p>
       <ResponsiveContainer width="100%" height={240}>
         <PieChart>
