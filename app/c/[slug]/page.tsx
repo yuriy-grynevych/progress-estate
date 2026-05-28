@@ -37,6 +37,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 async function getCollection(slug: string) {
+  const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   return prisma.collection.findUnique({
     where: { slug },
     include: {
@@ -50,6 +51,11 @@ async function getCollection(slug: string) {
         },
       },
       items: {
+        where: {
+          property: {
+            NOT: { AND: [{ status: "SOLD" }, { updatedAt: { lt: oneDayAgo } }] },
+          },
+        },
         orderBy: { order: "asc" },
         include: {
           property: {

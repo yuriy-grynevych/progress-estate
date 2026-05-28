@@ -163,6 +163,22 @@ export default async function AdminPropertiesPage({
 
   const featuredCount = properties.filter((p) => p.isFeatured).length;
 
+  // When viewing archive, fetch sale info for each property
+  const salesMap: Record<string, { saleDate: Date; agentName: string | null }> = {};
+  if (searchParams.status === "SOLD" && properties.length > 0) {
+    const propIds = properties.map(p => p.id);
+    const sales = await prisma.sale.findMany({
+      where: { propertyId: { in: propIds } },
+      orderBy: { saleDate: "desc" },
+      select: { propertyId: true, saleDate: true, agent: { select: { name: true } } },
+    });
+    for (const s of sales) {
+      if (s.propertyId && !salesMap[s.propertyId]) {
+        salesMap[s.propertyId] = { saleDate: s.saleDate, agentName: s.agent?.name ?? null };
+      }
+    }
+  }
+
   const currentUser = await prisma.user.findUnique({
     where: { id: userId },
     select: { agentToken: true },
@@ -172,22 +188,38 @@ export default async function AdminPropertiesPage({
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-navy-900 flex items-center gap-3 flex-wrap">
-          Нерухомість
-          <span className="text-gray-400 font-normal text-base">({properties.length})</span>
-          {featuredCount > 0 && (
-            <span className="text-xs font-medium bg-orange-100 text-orange-600 px-2.5 py-1 rounded-full">
-              🔥 {featuredCount}
-            </span>
-          )}
-        </h1>
+        {searchParams.status === "SOLD" ? (
+          <h1 className="text-2xl font-bold text-navy-900 flex items-center gap-3 flex-wrap">
+            🏛️ Архів — продані
+            <span className="text-gray-400 font-normal text-base">({properties.length})</span>
+          </h1>
+        ) : (
+          <h1 className="text-2xl font-bold text-navy-900 flex items-center gap-3 flex-wrap">
+            Нерухомість
+            <span className="text-gray-400 font-normal text-base">({properties.length})</span>
+            {featuredCount > 0 && (
+              <span className="text-xs font-medium bg-orange-100 text-orange-600 px-2.5 py-1 rounded-full">
+                🔥 {featuredCount}
+              </span>
+            )}
+          </h1>
+        )}
         <div className="flex items-center gap-2">
-          <Link
-            href="/admin/properties?status=SOLD"
-            className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
-          >
-            🏛️ Архів
-          </Link>
+          {searchParams.status === "SOLD" ? (
+            <Link
+              href="/admin/properties"
+              className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+            >
+              ← Назад
+            </Link>
+          ) : (
+            <Link
+              href="/admin/properties?status=SOLD"
+              className="flex items-center gap-2 border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition"
+            >
+              🏛️ Архів
+            </Link>
+          )}
           <Link
             href="/admin/properties/new"
             className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-black/90 transition"
@@ -349,6 +381,12 @@ export default async function AdminPropertiesPage({
                             <> · <span className="font-medium text-gray-500">Ред.:</span> {fmtDate(property.updatedAt)}</>
                           )}
                         </p>
+                        {salesMap[property.id] && (
+                          <p className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                            ✅ Продано: {fmtDate(salesMap[property.id].saleDate)}
+                            {salesMap[property.id].agentName && ` — ${salesMap[property.id].agentName}`}
+                          </p>
+                        )}
                         <AgentCommentsToggle comments={(property.agentComments as any) ?? []} />
                       </div>
 
