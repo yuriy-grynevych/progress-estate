@@ -68,7 +68,7 @@ export default function CopyAgentLinkButton({
   }
 
   async function copyLink() {
-    const url = `${window.location.origin}/p/${slug}`;
+    const url = `${window.location.origin}/p/${slug}?t=${agentToken}`;
     let success = false;
     try {
       if (navigator.clipboard) {

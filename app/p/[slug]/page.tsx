@@ -1,10 +1,29 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import Image from "next/image";
-import { formatPrice, getPropertyTypeLabel } from "@/lib/utils";
-import { MapPin, Maximize2, BedDouble, Bath, Layers, Calendar, Phone, MessageCircle } from "lucide-react";
+import PropertyGallery from "@/components/property/PropertyGallery";
+import PropertyMap from "@/components/property/PropertyMap";
+import ContactForm from "@/components/property/ContactForm";
+import { formatPrice, getPropertyTypeLabel, getListingTypeLabel } from "@/lib/utils";
+import { PROPERTY_FEATURES } from "@/lib/constants";
+import { Bed, Bath, Maximize2, Layers, Calendar, MapPin, Home, Flame, Wrench, Building2, ChefHat } from "lucide-react";
+import type { PropertyImage } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
+
+function formatDescription(text: string): string {
+  if (!text) return "";
+  if (/<[a-z][\s\S]*>/i.test(text)) return text;
+  const parts = text.split("•");
+  if (parts.length <= 1) return `<p>${text.replace(/\n/g, "<br>")}</p>`;
+  let html = "";
+  const intro = parts[0].trim();
+  if (intro) {
+    html += intro.split(/\n+/).filter(Boolean).map((p) => `<p>${p.trim()}</p>`).join("");
+  }
+  const items = parts.slice(1).map((s) => s.trim()).filter(Boolean);
+  if (items.length > 0) html += `<ul>${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+  return html;
+}
 
 async function getProperty(slug: string) {
   return prisma.property.findUnique({
@@ -12,193 +31,174 @@ async function getProperty(slug: string) {
     include: {
       images: { orderBy: { order: "asc" } },
       assignedUser: {
-        select: { name: true, phone: true, photoUrl: true, accentColor: true, instagram: true },
+        select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true },
       },
     },
   });
 }
 
-export default async function PublicPropertyPage({ params }: { params: { slug: string } }) {
-  const p = await getProperty(params.slug);
-  if (!p) notFound();
+async function getAgentByToken(token: string) {
+  return prisma.user.findUnique({
+    where: { agentToken: token },
+    select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true },
+  });
+}
 
-  const agent = p.assignedUser;
-  const accentColor = agent?.accentColor ?? "#C9A84C";
-  const primaryImage = p.images.find(i => i.isPrimary) ?? p.images[0];
-  const otherImages = p.images.filter(i => i.id !== primaryImage?.id).slice(0, 4);
-  const locationParts = [p.address, p.district, p.city].filter(Boolean);
+export default async function SharedPropertyPage({
+  params: { slug },
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams: { t?: string };
+}) {
+  const property = await getProperty(slug);
+  if (!property) notFound();
+
+  const agent = searchParams.t
+    ? await getAgentByToken(searchParams.t)
+    : property.assignedUser ?? null;
+
+  const title = property.titleUk;
+  const description = property.descriptionUk;
+
+  const specs = [
+    property.areaSqm != null && { icon: <Maximize2 className="w-4 h-4" />, label: "Площа", value: `${property.areaSqm} м²` },
+    (property as any).kitchenSqm != null && { icon: <ChefHat className="w-4 h-4" />, label: "Кухня", value: `${(property as any).kitchenSqm} м²` },
+    property.rooms != null && { icon: <Home className="w-4 h-4" />, label: "Кімнати", value: property.rooms },
+    property.bedrooms != null && { icon: <Bed className="w-4 h-4" />, label: "Спальні", value: property.bedrooms },
+    property.bathrooms != null && { icon: <Bath className="w-4 h-4" />, label: "Санвузли", value: property.bathrooms },
+    property.floor != null && { icon: <Layers className="w-4 h-4" />, label: "Поверх", value: property.totalFloors ? `${property.floor} / ${property.totalFloors}` : property.floor },
+    property.yearBuilt != null && { icon: <Calendar className="w-4 h-4" />, label: "Рік будівлі", value: property.yearBuilt },
+    (property as any).renovationType && { icon: <Wrench className="w-4 h-4" />, label: "Ремонт", value: (property as any).renovationType },
+    (property as any).wallType && { icon: <Building2 className="w-4 h-4" />, label: "Тип стін", value: (property as any).wallType },
+    (property as any).gasType && { icon: <Flame className="w-4 h-4" />, label: "Газ", value: (property as any).gasType },
+  ].filter(Boolean) as { icon: React.ReactNode; label: string; value: string | number }[];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg flex-shrink-0" style={{ backgroundColor: accentColor }}>
-          <div className="w-full h-full flex items-center justify-center text-white font-bold text-sm">П</div>
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      {/* Minimal header — no full site navbar */}
+      <div className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3 flex items-center gap-3 flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-navy-900 flex items-center justify-center flex-shrink-0">
+          <span className="text-white font-bold text-sm">П</span>
         </div>
         <span className="font-semibold text-gray-800 text-sm">Житлова компанія Progress</span>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <main className="flex-1">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-        {/* Photo gallery */}
-        {primaryImage && (
-          <div className="rounded-2xl overflow-hidden bg-gray-200">
-            <div className="relative w-full" style={{ paddingBottom: "60%" }}>
-              <Image
-                src={primaryImage.url}
-                alt={p.titleUk}
-                fill
-                className="object-cover"
-                unoptimized
-                priority
-              />
-              <div className="absolute top-3 left-3 flex gap-2">
-                <span className="bg-white/90 backdrop-blur-sm text-navy-900 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-                  {getPropertyTypeLabel(p.type)}
-                </span>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full shadow-sm"
-                  style={{ backgroundColor: accentColor, color: "#1a2744" }}>
-                  {p.listingType === "SALE" ? "Продаж" : p.listingType === "RENT" ? "Оренда" : "Добова оренда"}
-                </span>
-              </div>
-            </div>
+            {/* Left: gallery + details */}
+            <div className="lg:col-span-2 space-y-6">
+              <PropertyGallery images={property.images as PropertyImage[]} title={title} />
 
-            {otherImages.length > 0 && (
-              <div className="flex gap-1 p-1 bg-gray-100">
-                {otherImages.map(img => (
-                  <div key={img.id} className="relative flex-1" style={{ paddingBottom: "20%" }}>
-                    <Image
-                      src={img.url}
-                      alt=""
-                      fill
-                      className="object-cover rounded"
-                      unoptimized
-                    />
+              {/* Title + price */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-black text-white">
+                        {getListingTypeLabel(property.listingType, "uk")}
+                      </span>
+                      <span className="text-xs font-semibold px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                        {getPropertyTypeLabel(property.type, "uk")}
+                      </span>
+                    </div>
+                    <h1 className="text-2xl font-bold text-navy-900">{title}</h1>
+                    {(property.address || property.district) && (
+                      <div className="flex items-center gap-1.5 mt-1 text-gray-500 text-sm">
+                        <MapPin className="w-4 h-4 flex-shrink-0" />
+                        {[property.district, property.address].filter(Boolean).join(", ")}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Price & title */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <p className="text-2xl font-extrabold text-navy-900 mb-1">
-            {formatPrice(p.price, p.currency)}
-          </p>
-          <h1 className="text-base font-semibold text-gray-700 leading-snug mb-3">{p.titleUk}</h1>
-
-          {locationParts.length > 0 && (
-            <div className="flex items-start gap-1.5 text-sm text-gray-500">
-              <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-400" />
-              <span>{locationParts.join(", ")}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Key params */}
-        <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Параметри</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Maximize2 className="w-4 h-4 text-gray-400" />
-              <span><strong>{p.areaSqm}</strong> м² загальна</span>
-            </div>
-            {p.rooms != null && (
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <BedDouble className="w-4 h-4 text-gray-400" />
-                <span><strong>{p.rooms}</strong> кімнат</span>
-              </div>
-            )}
-            {p.bedrooms != null && (
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <BedDouble className="w-4 h-4 text-gray-400" />
-                <span><strong>{p.bedrooms}</strong> спалень</span>
-              </div>
-            )}
-            {p.bathrooms != null && (
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <Bath className="w-4 h-4 text-gray-400" />
-                <span><strong>{p.bathrooms}</strong> санвузлів</span>
-              </div>
-            )}
-            {p.floor != null && (
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <Layers className="w-4 h-4 text-gray-400" />
-                <span><strong>{p.floor}</strong>{p.totalFloors ? `/${p.totalFloors}` : ""} поверх</span>
-              </div>
-            )}
-            {p.yearBuilt != null && (
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span>{p.yearBuilt} р. побудови</span>
-              </div>
-            )}
-            {p.kitchenSqm != null && (
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <span className="w-4 h-4 flex-shrink-0 text-gray-400 text-center font-bold text-xs">К</span>
-                <span><strong>{p.kitchenSqm}</strong> м² кухня</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Description */}
-        {p.descriptionUk && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Опис</h2>
-            <div
-              className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: p.descriptionUk.replace(/\n/g, "<br>") }}
-            />
-          </div>
-        )}
-
-        {/* Agent card */}
-        {agent && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4">Ваш агент</h2>
-            <div className="flex items-center gap-4">
-              <div className="relative w-14 h-14 rounded-full overflow-hidden flex-shrink-0 border-2"
-                style={{ borderColor: accentColor }}>
-                {agent.photoUrl ? (
-                  <Image src={agent.photoUrl} alt={agent.name ?? ""} fill className="object-cover" unoptimized />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-lg font-bold"
-                    style={{ backgroundColor: accentColor }}>
-                    {agent.name?.[0]?.toUpperCase() ?? "А"}
+                  <div className="text-right">
+                    <p className="text-3xl font-bold text-gold-500">
+                      {formatPrice(Number(property.price), property.currency)}
+                    </p>
+                    {property.areaSqm && (
+                      <p className="text-sm text-gray-400 mt-1">
+                        {formatPrice(Math.round(Number(property.price) / property.areaSqm), property.currency)} / м²
+                      </p>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-navy-900">{agent.name}</p>
-                <p className="text-xs text-gray-400">Житлова компанія Progress</p>
-              </div>
+
+              {/* Specs */}
+              {specs.length > 0 && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-navy-900 mb-4">Характеристики</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    {specs.map((spec, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                        <div className="text-gold-500">{spec.icon}</div>
+                        <div>
+                          <p className="text-xs text-gray-500">{spec.label}</p>
+                          <p className="font-semibold text-navy-900">{spec.value}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              {description && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-navy-900 mb-4">Опис</h2>
+                  <div
+                    className="prose prose-sm max-w-none text-gray-600"
+                    dangerouslySetInnerHTML={{ __html: formatDescription(description) }}
+                  />
+                </div>
+              )}
+
+              {/* Features */}
+              {property.features.length > 0 && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-navy-900 mb-4">Зручності</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {property.features.map((feature) => {
+                      const found = PROPERTY_FEATURES.find((f) => f.value === feature);
+                      return (
+                        <div key={feature} className="flex items-center gap-2 text-sm text-gray-700">
+                          <span className="w-2 h-2 rounded-full bg-gold-400 flex-shrink-0" />
+                          {found ? found.labelUk : feature}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Map */}
+              {property.latitude && property.longitude && (
+                <div className="bg-white rounded-2xl p-6 shadow-sm">
+                  <h2 className="text-lg font-bold text-navy-900 mb-4">Розташування</h2>
+                  <PropertyMap lat={property.latitude} lng={property.longitude} title={title} />
+                </div>
+              )}
             </div>
 
-            {agent.phone && (
-              <div className="mt-4 flex flex-col gap-2">
-                <a href={`tel:${agent.phone}`}
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm text-white transition"
-                  style={{ backgroundColor: accentColor }}>
-                  <Phone className="w-4 h-4" />
-                  Зателефонувати
-                </a>
-                <a href={`https://wa.me/${agent.phone.replace(/\D/g, "")}`}
-                  target="_blank" rel="noreferrer"
-                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-semibold text-sm border border-gray-200 text-gray-700 hover:bg-gray-50 transition">
-                  <MessageCircle className="w-4 h-4 text-green-500" />
-                  WhatsApp
-                </a>
+            {/* Right: contact form */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-6">
+                <ContactForm
+                  propertyId={property.id}
+                  propertyTitle={title}
+                  locale="uk"
+                  agent={agent}
+                />
               </div>
-            )}
+            </div>
           </div>
-        )}
+        </div>
+      </main>
 
-        <p className="text-center text-xs text-gray-400 pb-4">
-          Житлова компанія Progress · Івано-Франківськ
-        </p>
-      </div>
+      <footer className="border-t border-gray-100 bg-white py-4 text-center text-xs text-gray-400">
+        Житлова компанія Progress · Івано-Франківськ
+      </footer>
     </div>
   );
 }
