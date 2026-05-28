@@ -73,11 +73,11 @@ export default async function SalesPage() {
                   <div key={s.id} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition group">
                     {/* Photo */}
                     {isOwn && s.property?.images?.[0]?.url ? (
-                      <div className="w-28 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
-                        <Image src={s.property.images[0].url} alt={propertyTitle} width={112} height={80} className="object-cover w-full h-full" unoptimized />
+                      <div className="w-48 h-32 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                        <Image src={s.property.images[0].url} alt={propertyTitle} width={192} height={128} className="object-cover w-full h-full" unoptimized />
                       </div>
                     ) : (
-                      <div className={`w-28 h-20 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-lg ${isOwn ? "bg-navy-100 text-navy-700" : isDev ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
+                      <div className={`w-48 h-32 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-2xl ${isOwn ? "bg-navy-100 text-navy-700" : isDev ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
                         {propertyTitle[0]?.toUpperCase() ?? "?"}
                       </div>
                     )}
