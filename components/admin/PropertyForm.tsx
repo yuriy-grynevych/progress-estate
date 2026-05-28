@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   MessageSquarePlus, MapPin, Home, Building2, Layers, DollarSign,
-  FileText, Image, Info, ChevronLeft, Save, Loader2, X, Tag, Sparkles,
+  FileText, Image, Info, ChevronLeft, Save, Loader2, X, Tag, Sparkles, ClipboardCopy, Check,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import {
@@ -147,6 +147,8 @@ export default function PropertyForm({
   const [commentInput, setCommentInput] = useState("");
   const [commentSaving, setCommentSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [copied, setCopied] = useState(false);
   const isEdit = Boolean(initialData?.id);
 
   function getCategoryFromType(t: string): string {
@@ -269,32 +271,55 @@ export default function PropertyForm({
     }
   }
 
-  async function generateDescription() {
-    setGenerating(true);
+  function getParams() {
     const v = watch();
+    return {
+      type: v.type, listingType: v.listingType, district: v.district,
+      address: v.address, residentialComplex: (v as any).residentialComplex,
+      areaSqm: v.areaSqm, kitchenSqm: (v as any).kitchenSqm,
+      rooms: v.rooms, bedrooms: v.bedrooms, bathrooms: v.bathrooms,
+      floor: v.floor, totalFloors: v.totalFloors, yearBuilt: v.yearBuilt,
+      renovationType: (v as any).renovationType, heatingType: (v as any).heatingType,
+      price: v.price, currency: v.currency,
+    };
+  }
+
+  async function copyForMessenger() {
+    setCopying(true);
     try {
       const res = await fetch("/api/generate-description", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: v.type,
-          listingType: v.listingType,
-          district: v.district,
-          address: v.address,
-          residentialComplex: (v as any).residentialComplex,
-          areaSqm: v.areaSqm,
-          kitchenSqm: (v as any).kitchenSqm,
-          rooms: v.rooms,
-          bedrooms: v.bedrooms,
-          bathrooms: v.bathrooms,
-          floor: v.floor,
-          totalFloors: v.totalFloors,
-          yearBuilt: v.yearBuilt,
-          renovationType: (v as any).renovationType,
-          heatingType: (v as any).heatingType,
-          price: v.price,
-          currency: v.currency,
-        }),
+        body: JSON.stringify({ ...getParams(), mode: "copy" }),
+      });
+      if (res.ok) {
+        const { text } = await res.json();
+        if (text) {
+          await navigator.clipboard.writeText(text).catch(() => {
+            const el = document.createElement("textarea");
+            el.value = text;
+            el.style.cssText = "position:fixed;opacity:0.01;top:0;left:0;";
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand("copy");
+            document.body.removeChild(el);
+          });
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2500);
+        }
+      }
+    } finally {
+      setCopying(false);
+    }
+  }
+
+  async function generateDescription() {
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...getParams(), mode: "website" }),
       });
       if (res.ok) {
         const { html } = await res.json();
@@ -708,17 +733,33 @@ export default function PropertyForm({
             <div className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <Label>Опис (UA) — автоматично перекладається</Label>
-                <button
-                  type="button"
-                  onClick={generateDescription}
-                  disabled={generating}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 transition shadow-sm"
-                >
-                  {generating
-                    ? <><Loader2 className="w-3 h-3 animate-spin" /> Генерую...</>
-                    : <><Sparkles className="w-3 h-3" /> AI опис</>
-                  }
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={copyForMessenger}
+                    disabled={copying}
+                    title="Скопіювати для месенджера (з емодзі та контактом)"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 transition shadow-sm"
+                  >
+                    {copying
+                      ? <><Loader2 className="w-3 h-3 animate-spin" /> Копіюю...</>
+                      : copied
+                        ? <><Check className="w-3 h-3" /> Скопійовано!</>
+                        : <><ClipboardCopy className="w-3 h-3" /> Месенджер</>
+                    }
+                  </button>
+                  <button
+                    type="button"
+                    onClick={generateDescription}
+                    disabled={generating}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl hover:from-violet-600 hover:to-purple-700 disabled:opacity-50 transition shadow-sm"
+                  >
+                    {generating
+                      ? <><Loader2 className="w-3 h-3 animate-spin" /> Генерую...</>
+                      : <><Sparkles className="w-3 h-3" /> AI опис</>
+                    }
+                  </button>
+                </div>
               </div>
               <Controller name="descriptionUk" control={control}
                 render={({ field }) => <TiptapEditor value={field.value} onChange={field.onChange} />} />
