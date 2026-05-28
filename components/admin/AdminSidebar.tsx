@@ -34,7 +34,6 @@ const adminNavItems = [
   { href: "/admin/inquiries", label: "Запити", icon: MessageSquare },
   { href: "/admin/contacts", label: "Контакти", icon: BookUser },
   { href: "/admin/reminders", label: "Завдання", icon: Bell },
-  { href: "/admin/testimonials", label: "Відгуки", icon: Star },
   { href: "/admin/users", label: "Працівники", icon: Users },
   { href: "/admin/settings", label: "Налаштування", icon: Settings },
   { href: "/admin/profile", label: "Мій профіль", icon: UserCircle },

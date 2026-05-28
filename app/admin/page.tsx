@@ -239,51 +239,6 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      {/* Testimonials — ADMIN ONLY */}
-      {role === "ADMIN" && testimonialsData && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gold-300">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <div className="flex items-center gap-2">
-              <Quote className="w-4 h-4 text-gold-500" />
-              <h2 className="font-semibold text-navy-900">Відгуки клієнтів</h2>
-              <span className="text-xs font-semibold bg-gold-100 text-gold-700 px-2 py-0.5 rounded-full">
-                {testimonialsData.published} опубл. / {testimonialsData.total} всього
-              </span>
-            </div>
-            <Link href="/admin/testimonials" className="text-sm text-gold-500 hover:text-gold-600">
-              Управляти →
-            </Link>
-          </div>
-          {testimonialsData.recent.length === 0 ? (
-            <p className="text-gray-400 text-sm px-6 py-4">Відгуків ще немає</p>
-          ) : (
-            <div className="divide-y divide-gray-50">
-              {testimonialsData.recent.map((t) => (
-                <div key={t.id} className="px-6 py-4 flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gold-100 flex items-center justify-center flex-shrink-0 text-gold-700 font-bold text-sm">
-                    {t.authorName[0]?.toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="font-medium text-sm text-navy-900">{t.authorName}</span>
-                      {t.authorRole && <span className="text-xs text-gray-400">{t.authorRole}</span>}
-                      <span className="flex gap-0.5 ml-1">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`w-3 h-3 ${i < t.rating ? "text-gold-400 fill-gold-400" : "text-gray-200 fill-gray-200"}`} />
-                        ))}
-                      </span>
-                      {!t.isPublished && (
-                        <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">Чернетка</span>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-500 line-clamp-2">{t.contentUk}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Reminders widget */}
       {todayReminders.length > 0 && (
