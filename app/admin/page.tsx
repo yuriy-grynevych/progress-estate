@@ -3,8 +3,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
-import { Building2, MessageSquare, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone, Users, TrendingUp, Quote, Pin, Banknote } from "lucide-react";
+import { Building2, MessageSquare, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone, Users, TrendingUp, Quote, Pin, Banknote, Target } from "lucide-react";
 import UnpinAnnouncementButton from "@/components/admin/UnpinAnnouncementButton";
+import { getSalesPlan } from "@/lib/company";
 
 async function getTodayReminders(role: string, userId: string) {
   const now = new Date();
@@ -23,15 +24,9 @@ async function getTodayReminders(role: string, userId: string) {
 
 async function getStats(role: string, userId: string) {
   const propertyWhere = role === "ADMIN" ? {} : { assignedUserId: userId };
-  const inquiryWhere =
-    role === "ADMIN"
-      ? {}
-      : { OR: [{ propertyId: null }, { property: { assignedUserId: userId } }] };
 
-  const [activeProperties, totalProperties, newInquiries, totalContacts, depositProperties] = await Promise.all([
-    prisma.property.count({ where: { ...propertyWhere, status: "ACTIVE" } }),
+  const [totalProperties, totalContacts, depositProperties] = await Promise.all([
     prisma.property.count({ where: propertyWhere }),
-    prisma.inquiry.count({ where: { ...inquiryWhere, status: "NEW" } }),
     prisma.contact.count(
       role === "ADMIN"
         ? { where: { deletedAt: null } }
@@ -47,7 +42,7 @@ async function getStats(role: string, userId: string) {
     include: { images: { orderBy: { order: "asc" as const }, take: 1 } },
   });
 
-  return { activeProperties, totalProperties, newInquiries, totalContacts, depositProperties, recentProperties };
+  return { totalProperties, totalContacts, depositProperties, recentProperties };
 }
 
 async function getTestimonialsForAdmin() {
@@ -108,16 +103,23 @@ export default async function AdminDashboard() {
   const userId = (session?.user as any)?.id as string;
 
   const [
-    { activeProperties, totalProperties, newInquiries, totalContacts, depositProperties, recentProperties },
+    { totalProperties, totalContacts, depositProperties, recentProperties },
     todayReminders,
     testimonialsData,
     announcement,
+    plan,
   ] = await Promise.all([
     getStats(role, userId),
     getTodayReminders(role, userId),
     role === "ADMIN" ? getTestimonialsForAdmin() : Promise.resolve(null),
     getPinnedAnnouncement(),
+    getSalesPlan(),
   ]);
+
+  const salesWhere = role === "ADMIN"
+    ? (plan.from ? { saleDate: { gte: new Date(plan.from) } } : {})
+    : (plan.from ? { saleDate: { gte: new Date(plan.from) }, agentId: userId } : { agentId: userId });
+  const soldCount = await prisma.sale.count({ where: salesWhere });
 
   const isNew = (d: Date) => Date.now() - new Date(d).getTime() < 4 * 24 * 60 * 60 * 1000;
 
@@ -156,13 +158,23 @@ export default async function AdminDashboard() {
           href="/admin/properties?status=DEPOSIT"
           color="bg-amber-50"
         />
-        <StatCard
-          icon={<MessageSquare className="w-6 h-6 text-blue-600" />}
-          label="Нові запити"
-          value={newInquiries}
-          href="/admin/inquiries"
-          color="bg-blue-50"
-        />
+        <Link href="/admin/sales" className="group bg-white rounded-2xl p-6 shadow-sm border border-gold-300 hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all duration-200 flex items-center gap-4 cursor-pointer">
+          <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-50 group-hover:scale-110 transition-transform duration-200">
+            <Target className="w-6 h-6 text-emerald-600" />
+          </div>
+          <div>
+            {plan.target > 0 ? (
+              <p className="text-2xl font-bold leading-none">
+                <span className="text-emerald-500">{soldCount}</span>
+                <span className="text-gray-300 mx-0.5">/</span>
+                <span className="text-red-400">{plan.target}</span>
+              </p>
+            ) : (
+              <p className="text-2xl font-bold text-gray-300">—</p>
+            )}
+            <p className="text-gray-500 text-sm mt-0.5 line-clamp-1">{plan.label || "План продажів"}</p>
+          </div>
+        </Link>
       </div>
 
       {/* Recent properties — big cards */}

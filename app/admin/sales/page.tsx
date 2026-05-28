@@ -6,6 +6,8 @@ import { TrendingUp, Plus } from "lucide-react";
 
 export default async function SalesPage() {
   const session = await getServerSession(authOptions);
+  const role = (session?.user as any)?.role as string ?? "EMPLOYEE";
+  const isAdmin = role === "ADMIN";
   const sales = await prisma.sale.findMany({
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -36,7 +38,10 @@ export default async function SalesPage() {
             <div className="flex items-center gap-4 px-5 py-2 border-b border-gray-100 bg-gray-50">
               <div className="w-10 flex-shrink-0" />
               <div className="flex-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Об&apos;єкт / Клієнт</div>
-              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider text-right flex-shrink-0">Комісія / Агент</div>
+              {isAdmin
+                ? <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider text-right flex-shrink-0">Комісія / Агент</div>
+                : <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider text-right flex-shrink-0">Агент</div>
+              }
               <div className="w-20 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right flex-shrink-0">Дата</div>
             </div>
             <div className="divide-y divide-gray-50">
@@ -71,11 +76,13 @@ export default async function SalesPage() {
                         </p>
                       )}
                     </div>
-                    {/* Commission */}
+                    {/* Commission / Agent */}
                     <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-sm text-navy-900">
-                        {s.commission ? `${Number(s.commission).toLocaleString("uk-UA")} ${s.currency}` : "—"}
-                      </p>
+                      {isAdmin && (
+                        <p className="font-bold text-sm text-navy-900">
+                          {s.commission ? `${Number(s.commission).toLocaleString("uk-UA")} ${s.currency}` : "—"}
+                        </p>
+                      )}
                       <p className="text-xs text-gray-400">{s.agent?.name ?? "—"}</p>
                     </div>
                     {/* Date */}

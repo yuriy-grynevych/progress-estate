@@ -55,8 +55,12 @@ export async function POST(req: NextRequest) {
 
     await ensureTable();
     const body = await req.json() as Record<string, string>;
+    const ALLOWED = new Set([
+      ...Object.keys(DEFAULTS),
+      "sales_plan_target", "sales_plan_label", "sales_plan_from",
+    ]);
     for (const [key, value] of Object.entries(body)) {
-      if (key in DEFAULTS) {
+      if (ALLOWED.has(key)) {
         await prisma.$executeRawUnsafe(
           `INSERT INTO company_settings (key, value) VALUES ($1, $2)
            ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,

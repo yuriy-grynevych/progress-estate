@@ -67,16 +67,16 @@ export default async function StatsPage() {
       <h1 className="text-2xl font-bold text-navy-900">Статистика</h1>
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className={`grid gap-4 ${role === "ADMIN" ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-1 sm:grid-cols-3"}`}>
         {[
           { label: "Всього заявок", value: inquiries.length, color: "bg-blue-50 text-blue-600" },
           { label: "Всього об'єктів", value: properties.length, color: "bg-amber-50 text-amber-600" },
           { label: "Всього продажів", value: sales.length, color: "bg-emerald-50 text-emerald-600" },
-          { label: "Комісія всього", value: sales.reduce((s, x) => s + (x.commission ?? 0), 0).toLocaleString("uk-UA") + " USD", color: "bg-purple-50 text-purple-600", small: true },
+          ...(role === "ADMIN" ? [{ label: "Комісія всього", value: sales.reduce((s, x) => s + (x.commission ?? 0), 0).toLocaleString("uk-UA") + " USD", color: "bg-purple-50 text-purple-600", small: true }] : []),
         ].map((k) => (
           <div key={k.label} className="bg-white rounded-2xl p-4 shadow-sm border border-gold-300">
             <p className="text-xs text-gray-400 mb-1">{k.label}</p>
-            <p className={`font-bold ${k.small ? "text-lg" : "text-2xl"} ${k.color.split(" ")[1]}`}>{k.value}</p>
+            <p className={`font-bold ${(k as any).small ? "text-lg" : "text-2xl"} ${k.color.split(" ")[1]}`}>{k.value}</p>
           </div>
         ))}
       </div>

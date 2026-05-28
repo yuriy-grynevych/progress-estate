@@ -7,7 +7,8 @@ import DistrictsManager from "@/components/admin/DistrictsManager";
 import CompanySettingsForm from "@/components/admin/CompanySettingsForm";
 import EmailSettingsForm from "@/components/admin/EmailSettingsForm";
 import OlxSettingsForm from "@/components/admin/OlxSettingsForm";
-import { getCompanySettings } from "@/lib/company";
+import { getCompanySettings, getSalesPlan } from "@/lib/company";
+import SalesPlanForm from "@/components/admin/SalesPlanForm";
 
 async function getDistricts() {
   try {
@@ -24,10 +25,11 @@ export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   if ((session?.user as any)?.role !== "ADMIN") redirect("/admin");
 
-  const [features, districts, company] = await Promise.all([
+  const [features, districts, company, plan] = await Promise.all([
     prisma.feature.findMany({ orderBy: { order: "asc" } }),
     getDistricts(),
     getCompanySettings(),
+    getSalesPlan(),
   ]);
 
   return (
@@ -77,6 +79,15 @@ export default async function SettingsPage() {
           Підключіть OLX Partner API для публікації оголошень безпосередньо з картки нерухомості.
         </p>
         <OlxSettingsForm />
+      </div>
+
+      {/* Sales plan */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
+        <h2 className="font-semibold text-navy-900 mb-1">План продажів</h2>
+        <p className="text-xs text-gray-400 mb-5">
+          Ціль відображається на дашборді у вигляді "продано / ціль". Рахує продажі з вказаної дати.
+        </p>
+        <SalesPlanForm initial={{ target: String(plan.target), label: plan.label, from: plan.from ?? "" }} />
       </div>
 
       {/* Quick links */}
