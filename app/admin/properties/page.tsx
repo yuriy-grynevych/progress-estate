@@ -57,9 +57,14 @@ async function getProperties(opts: {
   if (status) {
     where.status = status;
   } else {
-    // Hide SOLD properties older than 1 day by default (they go to archive)
+    // Hide SOLD properties unless a sale was registered within the last day
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    where.NOT = { AND: [{ status: "SOLD" }, { updatedAt: { lt: oneDayAgo } }] };
+    where.NOT = {
+      AND: [
+        { status: "SOLD" },
+        { sales: { none: { createdAt: { gte: oneDayAgo } } } },
+      ],
+    };
   }
   if (mine) where.assignedUserId = userId;
   if (rooms) where.rooms = parseInt(rooms) || undefined;

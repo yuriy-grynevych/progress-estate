@@ -53,7 +53,12 @@ async function getCollection(slug: string) {
       items: {
         where: {
           property: {
-            NOT: { AND: [{ status: "SOLD" }, { updatedAt: { lt: oneDayAgo } }] },
+            NOT: {
+              AND: [
+                { status: "SOLD" },
+                { sales: { none: { createdAt: { gte: oneDayAgo } } } },
+              ],
+            },
           },
         },
         orderBy: { order: "asc" },
