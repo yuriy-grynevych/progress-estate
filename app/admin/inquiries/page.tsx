@@ -113,7 +113,7 @@ export default async function InquiriesPage({
       {/* List */}
       <div className="space-y-4">
         {inquiries.length === 0 && (
-          <div className="text-center py-12 text-gray-400 bg-white rounded-2xl shadow-sm">
+          <div className="text-center py-12 text-gray-400 bg-white rounded-2xl shadow-sm border border-gold-300">
             Немає запитів
           </div>
         )}
@@ -122,7 +122,7 @@ export default async function InquiriesPage({
           const isGeneral = !inq.propertyId;
 
           return (
-            <div key={inq.id} className="bg-white rounded-2xl p-5 shadow-sm">
+            <div key={inq.id} className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2 flex-wrap">

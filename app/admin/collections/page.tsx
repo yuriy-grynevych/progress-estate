@@ -49,7 +49,7 @@ export default async function CollectionsPage() {
       </div>
 
       {collections.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="text-center py-20 bg-white rounded-2xl border border-gold-300 shadow-sm border border-gold-300">
           <FolderOpen className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500 mb-4">Нема колекцій. Створіть першу →</p>
           <Link
@@ -65,7 +65,7 @@ export default async function CollectionsPage() {
           {collections.map((col) => (
             <div
               key={col.id}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-4"
+              className="bg-white rounded-2xl border border-gold-300 shadow-sm border border-gold-300 p-4 flex items-center gap-4"
             >
               <Link href={`/admin/collections/${col.id}`} className="flex-1 min-w-0 hover:opacity-80 transition">
                 <div className="flex items-center gap-2 mb-1">

@@ -326,7 +326,7 @@ export default function PropertiesMap({ properties }: { properties: MapProperty[
     `px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${active ? "bg-navy-900 text-white border-navy-900" : "bg-white text-gray-600 border-gray-200 hover:border-gray-400"}`;
 
   return (
-    <div className="flex rounded-2xl overflow-hidden border border-gray-200 shadow-sm h-full" style={{ minHeight: 480 }}>
+    <div className="flex rounded-2xl overflow-hidden border border-gray-200 shadow-sm border border-gold-300 h-full" style={{ minHeight: 480 }}>
       {/* LEFT PANEL */}
       <div className="w-[300px] flex-shrink-0 flex flex-col bg-gray-50 border-r border-gray-200">
         <div className="p-2.5 border-b border-gray-200 bg-white flex gap-1.5 items-center flex-wrap">

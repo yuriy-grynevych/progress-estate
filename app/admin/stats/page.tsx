@@ -88,7 +88,7 @@ export default async function StatsPage() {
       </div>
 
       {/* Sales bar chart — by agent */}
-      <div className="bg-white rounded-2xl shadow-sm p-5 border border-gold-300">
+      <div className="bg-white rounded-2xl shadow-sm border border-gold-300 p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-semibold text-navy-900">Продажі по працівниках</h2>

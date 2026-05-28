@@ -102,7 +102,7 @@ export default function UsersManager({ initialUsers }: { initialUsers: Employee[
 
       {/* Create form */}
       {showForm && (
-        <form onSubmit={createUser} className="bg-white rounded-2xl p-6 shadow-sm space-y-4">
+        <form onSubmit={createUser} className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300 space-y-4">
           <h2 className="font-semibold text-navy-900">Новий працівник</h2>
           {error && <p className="text-red-500 text-sm">{error}</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -171,12 +171,12 @@ export default function UsersManager({ initialUsers }: { initialUsers: Employee[
       {/* Users list */}
       <div className="space-y-3">
         {users.length === 0 && (
-          <div className="bg-white rounded-2xl shadow-sm px-6 py-8 text-center text-gray-400 text-sm">
+          <div className="bg-white rounded-2xl shadow-sm border border-gold-300 px-6 py-8 text-center text-gray-400 text-sm">
             Немає працівників. Додайте першого.
           </div>
         )}
         {users.map((u) => (
-          <div key={u.id} className="bg-white rounded-2xl shadow-sm p-5">
+          <div key={u.id} className="bg-white rounded-2xl shadow-sm border border-gold-300 p-5">
             <div className="flex items-start gap-4">
               {/* Avatar */}
               <div className="relative flex-shrink-0">

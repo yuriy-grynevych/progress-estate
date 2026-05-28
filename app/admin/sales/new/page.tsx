@@ -101,7 +101,7 @@ export default function NewSalePage() {
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gold-300 p-6 space-y-4">
         {tab === "OWN" ? (
           <>
             <div>

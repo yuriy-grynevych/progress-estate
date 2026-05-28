@@ -229,7 +229,7 @@ function Group({ title, icon, accent, children, count }: {
 }) {
   if (count === 0) return null;
   return (
-    <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl shadow-sm border border-gold-300 overflow-hidden">
       <div className={`flex items-center gap-2 px-5 py-3 border-b border-gray-100 ${accent}`}>
         {icon}
         <span className="font-semibold text-sm">{title}</span>
@@ -539,7 +539,7 @@ export default function RemindersManager({ initialContacts, initialTasks, contac
 
         {/* History panel */}
         {showHistory && (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm border border-gold-300 overflow-hidden">
             <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 bg-purple-50">
               <History className="w-4 h-4 text-purple-600" />
               <span className="font-semibold text-sm text-purple-700">Виконані завдання</span>
@@ -594,7 +594,7 @@ export default function RemindersManager({ initialContacts, initialTasks, contac
         {renderGroup("noDate",   "Без дати",       <ListTodo className="w-4 h-4" />,    "bg-purple-50 text-purple-700")}
 
         {totalContacts + totalTasks === 0 && (
-          <div className="bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center py-16 gap-3">
+          <div className="bg-white rounded-2xl shadow-sm border border-gold-300 flex flex-col items-center justify-center py-16 gap-3">
             <Bell className="w-10 h-10 text-gray-200" />
             <p className="text-gray-400 font-medium">Немає завдань</p>
             <p className="text-xs text-gray-300">Натисніть «Додати завдання» або встановіть дату нагадування у картці контакту</p>

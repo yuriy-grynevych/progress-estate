@@ -25,7 +25,7 @@ export default async function SalesPage() {
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border border-gold-300 overflow-hidden">
         {sales.length === 0 ? (
           <div className="px-6 py-12 text-center text-gray-400">
             <TrendingUp className="w-8 h-8 mx-auto mb-3 opacity-30" />

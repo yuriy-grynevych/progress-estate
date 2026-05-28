@@ -110,7 +110,7 @@ function FSelect({ children, className = "", ...props }: React.SelectHTMLAttribu
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`bg-white rounded-2xl border border-gold-300 shadow-sm overflow-hidden ${className}`}>
+    <div className={`bg-white rounded-2xl border border-gold-300 shadow-sm border border-gold-300 overflow-hidden ${className}`}>
       {children}
     </div>
   );
@@ -913,7 +913,7 @@ export default function PropertyForm({
 
           {/* Save button */}
           <button type="submit" disabled={saving}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-900 text-white rounded-2xl text-sm font-bold hover:bg-navy-800 transition disabled:opacity-60 shadow-sm">
+            className="w-full flex items-center justify-center gap-2 py-3 bg-navy-900 text-white rounded-2xl text-sm font-bold hover:bg-navy-800 transition disabled:opacity-60 shadow-sm border border-gold-300">
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             {saving ? "Збереження..." : isEdit ? "Зберегти зміни" : "Створити оголошення"}
           </button>

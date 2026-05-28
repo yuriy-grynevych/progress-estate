@@ -35,7 +35,7 @@ export default async function SettingsPage() {
       <h1 className="text-2xl font-bold text-navy-900 mb-6">Налаштування</h1>
 
       {/* Company settings — editable */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <h2 className="font-semibold text-navy-900 mb-1">Контактні дані компанії</h2>
         <p className="text-xs text-gray-400 mb-5">
           Відображаються на сайті у футері, навбарі та сторінці контактів.
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
       </div>
 
       {/* Features manager */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <h2 className="font-semibold text-navy-900 mb-1">Зручності нерухомості</h2>
         <p className="text-xs text-gray-400 mb-5">
           Список зручностей, які відображаються при додаванні нерухомості. Видалення не впливає на вже збережені об'єкти.
@@ -53,7 +53,7 @@ export default async function SettingsPage() {
       </div>
 
       {/* Districts manager */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <h2 className="font-semibold text-navy-900 mb-1">Райони міста</h2>
         <p className="text-xs text-gray-400 mb-5">
           Райони, які відображаються у пошуку та формі нерухомості.
@@ -62,7 +62,7 @@ export default async function SettingsPage() {
       </div>
 
       {/* Email SMTP settings */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <h2 className="font-semibold text-navy-900 mb-1">Email (SMTP)</h2>
         <p className="text-xs text-gray-400 mb-5">
           Налаштування для надсилання листів клієнтам з CRM. Підтримує Gmail, Outlook, і будь-який SMTP.
@@ -71,7 +71,7 @@ export default async function SettingsPage() {
       </div>
 
       {/* OLX integration settings */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <h2 className="font-semibold text-navy-900 mb-1">OLX інтеграція</h2>
         <p className="text-xs text-gray-400 mb-5">
           Підключіть OLX Partner API для публікації оголошень безпосередньо з картки нерухомості.
@@ -80,7 +80,7 @@ export default async function SettingsPage() {
       </div>
 
       {/* Quick links */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <h2 className="font-semibold text-navy-900 mb-3">Швидкі посилання</h2>
         <div className="flex flex-wrap gap-3">
           {[

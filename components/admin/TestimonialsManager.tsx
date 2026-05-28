@@ -111,7 +111,7 @@ export default function TestimonialsManager({ initialTestimonials }: Props) {
 
       {/* Form */}
       {showForm && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm mb-6">
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300 mb-6">
           <h2 className="text-lg font-semibold text-navy-900 mb-4">
             {editingId ? "Редагувати відгук" : "Новий відгук"}
           </h2>
@@ -218,14 +218,14 @@ export default function TestimonialsManager({ initialTestimonials }: Props) {
       {/* List */}
       <div className="space-y-4">
         {testimonials.length === 0 && (
-          <div className="text-center py-12 text-gray-400 bg-white rounded-2xl shadow-sm">
+          <div className="text-center py-12 text-gray-400 bg-white rounded-2xl shadow-sm border border-gold-300">
             Немає відгуків
           </div>
         )}
         {testimonials.map((t) => (
           <div
             key={t.id}
-            className={`bg-white rounded-2xl p-5 shadow-sm flex gap-4 items-start ${
+            className={`bg-white rounded-2xl p-5 shadow-sm border border-gold-300 flex gap-4 items-start ${
               !t.isPublished ? "opacity-60" : ""
             }`}
           >

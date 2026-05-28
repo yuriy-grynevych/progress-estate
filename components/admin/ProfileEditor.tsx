@@ -129,7 +129,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
   return (
     <div className="space-y-4">
       {/* Avatar + basic info */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <div className="flex items-start gap-6">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
@@ -223,7 +223,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
       </div>
 
       {/* Accent color */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <div className="flex items-center justify-between mb-1">
           <h2 className="font-semibold text-navy-900">Колір акценту</h2>
           {colorSaved && <span className="text-green-600 text-sm font-medium">Збережено ✓</span>}
@@ -280,7 +280,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
       </div>
 
       {/* Agent token */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <h2 className="font-semibold text-navy-900 mb-1">Мій токен агента</h2>
         <p className="text-sm text-gray-500 mb-4">
           Щоб надіслати клієнту посилання на конкретну нерухомість зі своїми контактними даними — перейдіть до{" "}
@@ -296,7 +296,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
       </div>
 
       {/* Telegram */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <h2 className="font-semibold text-navy-900 mb-1">Telegram сповіщення</h2>
         <p className="text-sm text-gray-500 mb-4">
           Підключіть Telegram, щоб отримувати нагадування про клієнтів та нерухомість.{" "}
@@ -341,7 +341,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
       </div>
 
       {/* Password change */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-navy-900">Змінити пароль</h2>
           {passwordSaved && <span className="text-green-600 text-sm font-medium">Пароль змінено ✓</span>}

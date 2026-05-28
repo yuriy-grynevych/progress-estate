@@ -340,7 +340,7 @@ export default async function AgentPropertyViewPage({
 
           {/* Owner — only for admin or assigned agent */}
           {canSeeOwner && property.ownerContact && (
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-amber-100">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300 border border-amber-100">
               <div className="flex items-center gap-1.5 mb-3">
                 <Lock className="w-3.5 h-3.5 text-amber-500" />
                 <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">Власник (приватно)</p>

@@ -48,7 +48,7 @@ export default function OlxPublishButton({ propertyId, initialAdId, initialPubli
   };
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm">
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="font-semibold text-navy-900 text-sm">OLX</h3>

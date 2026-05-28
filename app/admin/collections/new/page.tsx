@@ -160,7 +160,7 @@ export default function NewCollectionPage() {
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5">
+      <div className="bg-white rounded-2xl border border-gold-300 shadow-sm border border-gold-300 p-5 mb-5">
         <label className="block text-sm font-semibold text-navy-900 mb-1.5">
           Назва колекції
         </label>
@@ -173,7 +173,7 @@ export default function NewCollectionPage() {
         />
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5">
+      <div className="bg-white rounded-2xl border border-gold-300 shadow-sm border border-gold-300 p-5 mb-5">
         <p className="text-sm font-semibold text-navy-900 mb-3">
           Фільтри ({selectedIds.size} обрано)
         </p>
@@ -223,7 +223,7 @@ export default function NewCollectionPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div className="bg-white rounded-2xl border border-gold-300 shadow-sm border border-gold-300 p-4">
         {loading && (
           <div className="text-center py-10 text-gray-400 text-sm">Завантаження…</div>
         )}

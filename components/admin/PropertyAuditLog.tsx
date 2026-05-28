@@ -51,7 +51,7 @@ export default function PropertyAuditLog({ propertyId }: { propertyId: string })
     });
 
   return (
-    <div className="mt-6 bg-white rounded-2xl shadow-sm overflow-hidden">
+    <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gold-300 overflow-hidden">
       <button
         onClick={load}
         className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition"

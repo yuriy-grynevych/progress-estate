@@ -90,7 +90,7 @@ function StatCard({
   icon: React.ReactNode; label: string; value: number; href: string; color: string;
 }) {
   return (
-    <Link href={href} className="group bg-white rounded-2xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all duration-200 flex items-center gap-4 cursor-pointer">
+    <Link href={href} className="group bg-white rounded-2xl p-6 shadow-sm border border-gold-300 hover:shadow-xl hover:-translate-y-1 active:scale-95 transition-all duration-200 flex items-center gap-4 cursor-pointer">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform duration-200`}>
         {icon}
       </div>
@@ -127,7 +127,7 @@ export default async function AdminDashboard() {
 
       {/* Announcement banner */}
       {announcement && (
-        <div className="bg-navy-900 text-white rounded-2xl px-6 py-4 flex items-start gap-3 shadow-sm">
+        <div className="bg-navy-900 text-white rounded-2xl px-6 py-4 flex items-start gap-3 shadow-sm border border-gold-300">
           <Pin className="w-4 h-4 mt-0.5 text-gold-400 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-gold-400 mb-1">Оголошення від адміна</p>
@@ -166,7 +166,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Recent properties — big cards */}
-      <div className="bg-white rounded-2xl shadow-sm">
+      <div className="bg-white rounded-2xl shadow-sm border border-gold-300">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="font-semibold text-navy-900">Нові оголошення</h2>
           <Link href="/admin/properties" className="text-sm text-gold-500 hover:text-gold-600">
@@ -229,7 +229,7 @@ export default async function AdminDashboard() {
 
       {/* Testimonials — ADMIN ONLY */}
       {role === "ADMIN" && testimonialsData && (
-        <div className="bg-white rounded-2xl shadow-sm">
+        <div className="bg-white rounded-2xl shadow-sm border border-gold-300">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Quote className="w-4 h-4 text-gold-500" />
@@ -275,7 +275,7 @@ export default async function AdminDashboard() {
 
       {/* Reminders widget */}
       {todayReminders.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm">
+        <div className="bg-white rounded-2xl shadow-sm border border-gold-300">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-amber-500" />
@@ -319,22 +319,22 @@ export default async function AdminDashboard() {
 
       {/* Quick links */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Link href="/admin/properties/new" className="group bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+        <Link href="/admin/properties/new" className="group bg-white rounded-2xl p-5 shadow-sm border border-gold-300 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
           <Building2 className="w-6 h-6 mb-2 text-indigo-600 group-hover:scale-110 transition-all duration-200" />
           <p className="font-semibold text-navy-900">Додати нерухомість</p>
           <p className="text-gray-400 text-sm mt-0.5">Нове оголошення</p>
         </Link>
-        <Link href="/admin/contacts" className="group bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+        <Link href="/admin/contacts" className="group bg-white rounded-2xl p-5 shadow-sm border border-gold-300 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
           <Users className="w-6 h-6 mb-2 text-blue-500 group-hover:scale-110 transition-all duration-200" />
           <p className="font-semibold text-navy-900">Контакти</p>
           <p className="text-gray-400 text-sm mt-0.5">Клієнти та власники</p>
         </Link>
-        <Link href="/admin/inquiries" className="group bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+        <Link href="/admin/inquiries" className="group bg-white rounded-2xl p-5 shadow-sm border border-gold-300 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
           <MessageSquare className="w-6 h-6 mb-2 text-amber-500 group-hover:scale-110 transition-all duration-200" />
           <p className="font-semibold text-navy-900">Запити клієнтів</p>
           <p className="text-gray-400 text-sm mt-0.5">Переглянути всі</p>
         </Link>
-        <Link href="/admin/properties?status=SOLD" className="group bg-white rounded-2xl p-5 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+        <Link href="/admin/properties?status=SOLD" className="group bg-white rounded-2xl p-5 shadow-sm border border-gold-300 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
           <TrendingUp className="w-6 h-6 mb-2 text-emerald-600 group-hover:scale-110 transition-all duration-200" />
           <p className="font-semibold text-navy-900">Мої продажі</p>
           <p className="text-gray-400 text-sm mt-0.5">Продані об'єкти</p>

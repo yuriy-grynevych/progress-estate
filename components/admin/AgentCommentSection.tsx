@@ -52,7 +52,7 @@ export default function AgentCommentSection({ propertyId, initialComments }: Pro
   }
 
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm">
+    <div className="bg-white rounded-2xl p-5 shadow-sm border border-gold-300">
       <h2 className="text-base font-bold text-navy-900 mb-3 flex items-center gap-2">
         <MessageCircle className="w-4 h-4 text-blue-400" />
         Коментарі агента

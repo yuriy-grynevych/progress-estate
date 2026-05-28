@@ -295,7 +295,7 @@ export default function ContactsManager({ initialContacts, agents, role, current
 
       {/* Page-level history panel (deleted contacts) */}
       {showPageHistory && (
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gold-300 overflow-hidden mb-4">
           <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 bg-purple-50">
             <History className="w-4 h-4 text-purple-600" />
             <span className="font-semibold text-sm text-purple-700">Видалені контакти</span>
@@ -358,7 +358,7 @@ export default function ContactsManager({ initialContacts, agents, role, current
 
       {/* Add form */}
       {showForm && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-sm border border-gold-300">
           <h3 className="font-semibold text-navy-900 mb-4">
             Новий {activeTab === "CLIENT" ? "клієнт" : "власник"}
           </h3>
@@ -468,7 +468,7 @@ export default function ContactsManager({ initialContacts, agents, role, current
           {filtered.map((c) => (
             <div
               key={c.id}
-              className={`bg-white border rounded-2xl p-4 shadow-sm ${
+              className={`bg-white border rounded-2xl p-4 shadow-sm border border-gold-300 ${
                 isOverdue(c) ? "border-amber-300 bg-amber-50" : "border-gray-200"
               }`}
             >
