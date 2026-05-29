@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 const STATUSES = [
-  { key: "ACTIVE",   label: "Активне",   cls: "bg-green-100 text-green-700 border-green-300" },
-  { key: "INACTIVE", label: "Неактивне", cls: "bg-gray-100 text-gray-600 border-gray-300" },
-  { key: "DEPOSIT",  label: "Завдаток",  cls: "bg-amber-100 text-amber-700 border-amber-300" },
-  { key: "SOLD",     label: "Продано",   cls: "bg-red-100 text-red-600 border-red-300" },
-  { key: "RENTED",   label: "Здано",     cls: "bg-blue-100 text-blue-700 border-blue-300" },
+  { key: "ACTIVE",   label: "Активне",   dot: "bg-green-500", cls: "bg-green-100 text-green-700 border-green-300" },
+  { key: "INACTIVE", label: "Неактивне", dot: "bg-gray-400",  cls: "bg-gray-100 text-gray-600 border-gray-300" },
+  { key: "DEPOSIT",  label: "Завдаток",  dot: "bg-amber-500", cls: "bg-amber-100 text-amber-700 border-amber-300" },
+  { key: "SOLD",     label: "Продано",   dot: "bg-red-500",   cls: "bg-red-100 text-red-600 border-red-300" },
+  { key: "RENTED",   label: "Здано",     dot: "bg-blue-500",  cls: "bg-blue-100 text-blue-700 border-blue-300" },
 ];
 
 export interface LastStatusChange {
@@ -57,12 +57,13 @@ export default function PropertyStatusPanel({ propertyId, currentStatus, lastCha
               key={s.key}
               onClick={() => changeStatus(s.key)}
               disabled={loading !== null}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold border transition ${
+              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition ${
                 isActive
                   ? `${s.cls} ring-2 ring-offset-1 ring-current`
                   : "bg-white text-gray-400 border-gray-200 hover:border-gray-300 hover:text-gray-600"
               }`}
             >
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? s.dot : "bg-gray-300"}`} />
               {loading === s.key ? "..." : s.label}
             </button>
           );

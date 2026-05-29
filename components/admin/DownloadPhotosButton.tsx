@@ -17,26 +17,28 @@ export default function DownloadPhotosButton({ images, title }: Props) {
     setLoading(true);
     setProgress(0);
 
+    const safeName = title.slice(0, 40).replace(/[^а-яёА-ЯЁіІїЇєЄa-zA-Z0-9]/g, "_");
+
     for (let i = 0; i < images.length; i++) {
       try {
-        const res = await fetch(images[i].url);
+        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(images[i].url)}`;
+        const res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error("fetch failed");
         const blob = await res.blob();
+        const ext = blob.type.includes("png") ? "png" : blob.type.includes("webp") ? "webp" : "jpg";
         const objectUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = objectUrl;
-        const rawExt = images[i].url.split(".").pop()?.split("?")[0] ?? "jpg";
-        const ext = rawExt.length <= 4 ? rawExt : "jpg";
-        const safeName = title.slice(0, 40).replace(/[^\wа-яёА-ЯЁіІїЇєЄ]/gi, "_");
         a.download = `${safeName}_${i + 1}.${ext}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(objectUrl);
-        setProgress(i + 1);
-        await new Promise((r) => setTimeout(r, 400));
+        await new Promise((r) => setTimeout(r, 500));
       } catch {
-        setProgress(i + 1);
+        // skip failed image, still increment progress
       }
+      setProgress(i + 1);
     }
 
     setLoading(false);
