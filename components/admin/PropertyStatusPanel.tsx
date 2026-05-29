@@ -63,7 +63,7 @@ export default function PropertyStatusPanel({ propertyId, currentStatus, lastCha
                   : "bg-white text-gray-400 border-gray-200 hover:border-gray-300 hover:text-gray-600"
               }`}
             >
-              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? s.dot : "bg-gray-300"}`} />
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`} />
               {loading === s.key ? "..." : s.label}
             </button>
           );
