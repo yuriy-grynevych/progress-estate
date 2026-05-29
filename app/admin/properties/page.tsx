@@ -189,6 +189,43 @@ export default async function AdminPropertiesPage({
     select: { agentToken: true },
   });
 
+  // Fetch who last changed status for each visible property
+  const statusChangerMap: Record<string, { userName: string; photoUrl?: string | null; accentColor?: string | null }> = {};
+  if (properties.length > 0) {
+    const propIds = properties.map(p => p.id);
+    const auditLogs = await prisma.propertyAuditLog.findMany({
+      where: { propertyId: { in: propIds } },
+      orderBy: { createdAt: "desc" },
+      select: { propertyId: true, userId: true, userName: true, changes: true },
+    });
+    const seenProps = new Set<string>();
+    const changerUserIds: string[] = [];
+    const logMap: Record<string, { userId: string; userName: string }> = {};
+    for (const log of auditLogs) {
+      if (!seenProps.has(log.propertyId) &&
+          log.changes && typeof log.changes === "object" &&
+          "status" in (log.changes as Record<string, unknown>)) {
+        seenProps.add(log.propertyId);
+        logMap[log.propertyId] = { userId: log.userId, userName: log.userName };
+        changerUserIds.push(log.userId);
+      }
+    }
+    const changerUsers = changerUserIds.length > 0
+      ? await prisma.user.findMany({
+          where: { id: { in: changerUserIds } },
+          select: { id: true, photoUrl: true, accentColor: true },
+        })
+      : [];
+    const changerUserMap = Object.fromEntries(changerUsers.map(u => [u.id, u]));
+    for (const [propId, { userId: cUid, userName }] of Object.entries(logMap)) {
+      statusChangerMap[propId] = {
+        userName,
+        photoUrl: changerUserMap[cUid]?.photoUrl ?? null,
+        accentColor: changerUserMap[cUid]?.accentColor ?? null,
+      };
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
@@ -410,6 +447,28 @@ export default async function AdminPropertiesPage({
                               {property.status}
                             </span>
                           )}
+
+                          {/* Who changed status */}
+                          {statusChangerMap[property.id] && (() => {
+                            const changer = statusChangerMap[property.id];
+                            const color = changer.accentColor ?? "#C9A84C";
+                            const firstName = changer.userName.split(" ")[0];
+                            return (
+                              <div className="flex items-center gap-1">
+                                <div
+                                  className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-[8px] font-bold text-white"
+                                  style={{ backgroundColor: color }}
+                                >
+                                  {changer.photoUrl ? (
+                                    <Image src={changer.photoUrl} alt={changer.userName} width={20} height={20} className="object-cover object-top w-full h-full" unoptimized />
+                                  ) : (
+                                    changer.userName[0]?.toUpperCase() ?? "?"
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-gray-400">{firstName}</span>
+                              </div>
+                            );
+                          })()}
 
                           {/* Agent badge with avatar */}
                           {property.assignedUser && (
