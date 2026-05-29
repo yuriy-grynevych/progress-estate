@@ -281,6 +281,7 @@ export default function PropertyForm({
       floor: v.floor, totalFloors: v.totalFloors, yearBuilt: v.yearBuilt,
       renovationType: (v as any).renovationType, heatingType: (v as any).heatingType,
       price: v.price, currency: v.currency,
+      existingDescription: v.descriptionUk ?? "",
     };
   }
 
