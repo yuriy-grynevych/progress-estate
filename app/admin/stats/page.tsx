@@ -2,10 +2,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import SourcePieChart from "@/components/admin/SourcePieChart";
 import SalesBarChart from "@/components/admin/SalesBarChart";
 
 export const dynamic = "force-dynamic";
+
+const UK_MONTHS = ["Січень","Лютий","Березень","Квітень","Травень","Червень","Липень","Серпень","Вересень","Жовтень","Листопад","Грудень"];
 
 function groupBySource(items: { source: string | null }[]) {
   const map: Record<string, number> = {};
@@ -18,12 +21,23 @@ function groupBySource(items: { source: string | null }[]) {
     .sort((a, b) => b.value - a.value);
 }
 
-export default async function StatsPage() {
+export default async function StatsPage({
+  searchParams,
+}: {
+  searchParams: { period?: string };
+}) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/auth/signin");
 
   const role = (session.user as any)?.role as string ?? "EMPLOYEE";
   const userId = (session.user as any)?.id as string;
+  const period = searchParams.period === "month" ? "month" : "all";
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthName = UK_MONTHS[now.getMonth()];
+
+  const dateFilter = period === "month" ? { gte: startOfMonth } : undefined;
 
   const propertyWhere = role === "ADMIN" ? {} : { assignedUserId: userId };
   const inquiryWhere = role === "ADMIN" ? {} : {
@@ -33,20 +47,24 @@ export default async function StatsPage() {
       { property: { assignedUserId: userId } },
     ],
   };
-
   const salesWhere = role === "ADMIN" ? {} : { agentId: userId };
 
   const [inquiries, properties, sales] = await Promise.all([
-    prisma.inquiry.findMany({ where: inquiryWhere, select: { source: true } }),
-    prisma.property.findMany({ where: propertyWhere, select: { source: true } }),
+    prisma.inquiry.findMany({
+      where: { ...inquiryWhere, ...(dateFilter ? { createdAt: dateFilter } : {}) },
+      select: { source: true },
+    }),
+    prisma.property.findMany({
+      where: { ...propertyWhere, ...(dateFilter ? { createdAt: dateFilter } : {}) },
+      select: { source: true },
+    }),
     prisma.sale.findMany({
-      where: salesWhere,
+      where: { ...salesWhere, ...(dateFilter ? { createdAt: dateFilter } : {}) },
       include: { agent: { select: { id: true, name: true } } },
       orderBy: { saleDate: "desc" },
     }),
   ]);
 
-  // Group sales by agent (for bar chart)
   const salesByAgent: Record<string, { agent: string; count: number; commission: number; currency: string }> = {};
   for (const s of sales) {
     const agentName = s.agent?.name ?? "Невідомий";
@@ -64,7 +82,31 @@ export default async function StatsPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-      <h1 className="text-2xl font-bold text-navy-900">Статистика</h1>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-2xl font-bold text-navy-900">Статистика</h1>
+        <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
+          <Link
+            href="/admin/stats"
+            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+              period === "all"
+                ? "bg-white text-navy-900 shadow-sm"
+                : "text-gray-500 hover:text-navy-900"
+            }`}
+          >
+            За весь час
+          </Link>
+          <Link
+            href="/admin/stats?period=month"
+            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
+              period === "month"
+                ? "bg-white text-navy-900 shadow-sm"
+                : "text-gray-500 hover:text-navy-900"
+            }`}
+          >
+            {monthName}
+          </Link>
+        </div>
+      </div>
 
       {/* KPI row */}
       <div className={`grid gap-4 ${role === "ADMIN" ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-1 sm:grid-cols-3"}`}>
@@ -87,12 +129,12 @@ export default async function StatsPage() {
         <SourcePieChart data={propertySources} title="Джерело об'єктів" />
       </div>
 
-      {/* Sales bar chart — by agent */}
+      {/* Sales bar chart */}
       <div className="bg-white rounded-2xl shadow-sm border border-gold-300 p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-semibold text-navy-900">Продажі по працівниках</h2>
-            <p className="text-xs text-gray-400 mt-0.5">{sales.length} продажів всього</p>
+            <p className="text-xs text-gray-400 mt-0.5">{sales.length} продажів{period === "month" ? ` у ${monthName.toLowerCase()}` : " всього"}</p>
           </div>
         </div>
         <SalesBarChart data={agentChartData} />
@@ -118,7 +160,6 @@ export default async function StatsPage() {
 
       {/* Source details grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Inquiries detail */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gold-300">
           <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
             <h2 className="font-semibold text-navy-900 text-sm">Деталі — Заявки</h2>
@@ -143,7 +184,6 @@ export default async function StatsPage() {
           </table>
         </div>
 
-        {/* Properties detail */}
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden border border-gold-300">
           <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
             <h2 className="font-semibold text-navy-900 text-sm">Деталі — Об'єкти</h2>

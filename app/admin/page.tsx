@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import Image from "next/image";
-import { Building2, MessageSquare, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone, Users, TrendingUp, Quote, Pin, Banknote, Target } from "lucide-react";
+import { Building2, MessageSquare, Star, Sparkles, ImageOff, Bell, AlertCircle, Phone, Users, TrendingUp, Quote, Pin, Target } from "lucide-react";
 import UnpinAnnouncementButton from "@/components/admin/UnpinAnnouncementButton";
 import { getSalesPlan } from "@/lib/company";
 
@@ -152,7 +152,7 @@ export default async function AdminDashboard() {
           color="bg-gray-100"
         />
         <StatCard
-          icon={<Banknote className="w-6 h-6 text-amber-600" />}
+          icon={<Building2 className="w-6 h-6 text-amber-600" />}
           label="На завдатку"
           value={depositProperties}
           href="/admin/properties?status=DEPOSIT"
