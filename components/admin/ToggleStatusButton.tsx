@@ -26,14 +26,20 @@ export default function ToggleStatusButton({ id, field, currentValue, isFeatured
     const cfg = STATUS_CONFIG[currentValue as string];
     if (!cfg?.toggle) return;
     setLoading(true);
-    const body = field === "status"
-      ? { status: currentValue === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
-      : { isFeatured: !currentValue };
-    await fetch(`/api/properties/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    if (field === "status") {
+      const newStatus = currentValue === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+      await fetch(`/api/properties/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } else {
+      await fetch(`/api/properties/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isFeatured: !currentValue }),
+      });
+    }
     setLoading(false);
     router.refresh();
   }

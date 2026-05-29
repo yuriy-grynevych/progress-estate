@@ -33,8 +33,8 @@ export default function PropertyStatusPanel({ propertyId, currentStatus, lastCha
   async function changeStatus(newStatus: string) {
     if (newStatus === status || loading) return;
     setLoading(newStatus);
-    await fetch(`/api/properties/${propertyId}`, {
-      method: "PUT",
+    await fetch(`/api/properties/${propertyId}/status`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
