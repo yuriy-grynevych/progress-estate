@@ -6,11 +6,30 @@ import { JK_DATA } from "@/lib/map-data";
 
 const JK_NAMES = [...new Set(JK_DATA.map(j => j.name))].sort((a, b) => a.localeCompare(b, "uk"));
 
+// Забудовники Івано-Франківська (джерело: lun.ua)
 const DEVELOPERS = [
-  "Авраменко Груп", "Будмайстер", "Галицька Спілка", "Галінвест",
-  "ІФ Сіті", "Інвестбуд", "Карпатбудінвест", "Конкорд", "Кварц",
-  "Міськбуд", "Новобуд", "Нові Горизонти", "Прикарпатбуд", "Промбуд",
-  "Рубікон", "Салют", "СпецБуд", "Стандарт", "Укрбуд", "Фенікс", "Ярбуд",
+  "AI Development", "ALEXA Development", "Alliance developer", "AlonBud",
+  "Altis-Holding", "ARHA GROUP", "Архітрав", "АРС-Дім",
+  "Аркада", "Atlant-ІФ", "BAUcomfort", "Blago",
+  "CEMMIX UA", "Continental Development", "Ecobud Berghaus", "EFFECTBUD Developer",
+  "Enhance Development", "Єврохолдінг", "Fomich Group", "ФранківськМіськБуд",
+  "Франківський Дім", "Франко Груп", "ГалКомБуд", "Галицький двір",
+  "ГарантПлюсБуд", "GREENWOOD Development", "Grim Invest", "ІБК Нове Місто",
+  "Інвестбуд", "In West City Плюс", "Івано-Франківськбуд", "Івано-Франківськміськбуд",
+  "KD-ENGINEERING", "Kontilium Group", "Ковчег", "КалушБуд-Інвест",
+  "КБК Форум", "KVARTAL", "LEV Development", "ЛММ Сервіс",
+  "Лісна", "LTBud", "MARKSEM", "MBA Development Group",
+  "MBT Group", "МЖК Експрес-24", "M Group Development", "ND Group Development",
+  "Novator Group", "NUMO Development", "Новий Дім Буд", "OCTO development group",
+  "Open City Group", "OZON Development", "Perfect Group", "Перспектива",
+  "Phoenix Invest", "Полярис", "Premier Development", "PROSTIR development",
+  "Ridnobud", "Ріел ІФ", "Роко Буд", "СБ ГРУП",
+  "Sensar", "Skogur", "Sociat Invest Group", "Socium Developer",
+  "Спілка забудівників", "СТАБІЛЬНІСТЬ", "Стандарт-ІФ", "Sttk Development",
+  "Технобуд", "Темп", "Тенко", "TheSolomonBud",
+  "Траян", "UBH", "УЛІС Інвестиції", "VAMBUD",
+  "VD Group", "Vertical Development", "VERTEX", "YARD DEVELOPMENT",
+  "Ярковиця", "Злагода-Буд",
 ].sort((a, b) => a.localeCompare(b, "uk"));
 
 interface DepositProperty { id: string; titleUk: string; district?: string; price: string; currency: string; areaSqm: number; }
