@@ -88,7 +88,7 @@ export default function CopyDescriptionButton({ agentName, agentPhone, propertyP
     const variant = CONTACT_VARIANTS[Math.floor(Math.random() * CONTACT_VARIANTS.length)];
     const contact = phone ? `\n\n${variant(name, phone)}` : "";
 
-    const text = body + contact;
+    const text = contact ? contact.trim() + "\n\n" + body : body;
 
     const write = (t: string) => {
       if (navigator.clipboard && window.isSecureContext) {
