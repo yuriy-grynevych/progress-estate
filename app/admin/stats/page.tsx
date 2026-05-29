@@ -84,28 +84,6 @@ export default async function StatsPage({
     <div className="max-w-5xl mx-auto space-y-5">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-navy-900">Статистика</h1>
-        <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
-          <Link
-            href="/admin/stats"
-            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
-              period === "all"
-                ? "bg-white text-navy-900 shadow-sm"
-                : "text-gray-500 hover:text-navy-900"
-            }`}
-          >
-            За весь час
-          </Link>
-          <Link
-            href="/admin/stats?period=month"
-            className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition ${
-              period === "month"
-                ? "bg-white text-navy-900 shadow-sm"
-                : "text-gray-500 hover:text-navy-900"
-            }`}
-          >
-            {monthName}
-          </Link>
-        </div>
       </div>
 
       {/* KPI row */}
@@ -131,10 +109,32 @@ export default async function StatsPage({
 
       {/* Sales bar chart */}
       <div className="bg-white rounded-2xl shadow-sm border border-gold-300 p-5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div>
             <h2 className="font-semibold text-navy-900">Продажі по працівниках</h2>
             <p className="text-xs text-gray-400 mt-0.5">{sales.length} продажів{period === "month" ? ` у ${monthName.toLowerCase()}` : " всього"}</p>
+          </div>
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+            <Link
+              href="/admin/stats"
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                period === "all"
+                  ? "bg-white text-navy-900 shadow-sm"
+                  : "text-gray-500 hover:text-navy-900"
+              }`}
+            >
+              За весь час
+            </Link>
+            <Link
+              href="/admin/stats?period=month"
+              className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                period === "month"
+                  ? "bg-white text-navy-900 shadow-sm"
+                  : "text-gray-500 hover:text-navy-900"
+              }`}
+            >
+              {monthName}
+            </Link>
           </div>
         </div>
         <SalesBarChart data={agentChartData} />

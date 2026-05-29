@@ -48,6 +48,15 @@ export default async function AdminMapPage({
     if (searchParams.areaMax) where.areaSqm.lte = parseFloat(searchParams.areaMax);
   }
 
+  const allDistricts = await prisma.property.findMany({
+    where: { status: "ACTIVE" },
+    select: { district: true, residentialComplex: true },
+    distinct: ["district"],
+  });
+  const districtOptions = Array.from(new Set(
+    allDistricts.flatMap(p => [p.district, p.residentialComplex].filter(Boolean) as string[])
+  )).sort((a, b) => a.localeCompare(b, "uk"));
+
   const properties = await prisma.property.findMany({
     where,
     select: {
@@ -137,7 +146,7 @@ export default async function AdminMapPage({
       {/* Filters */}
       <div className="flex-shrink-0 mb-2">
         <Suspense fallback={null}>
-          <MapFilterBar />
+          <MapFilterBar districtOptions={districtOptions} />
         </Suspense>
       </div>
 

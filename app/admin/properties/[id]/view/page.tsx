@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import CopyDescriptionButton from "@/components/admin/CopyDescriptionButton";
 import CopyAgentLinkButton from "@/components/admin/CopyAgentLinkButton";
+import PropertyStatusPanel, { type LastStatusChange } from "@/components/admin/PropertyStatusPanel";
+import DownloadPhotosButton from "@/components/admin/DownloadPhotosButton";
 
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE:   "Активне",
@@ -55,6 +57,30 @@ export default async function AgentPropertyViewPage({
     where: { id: currentUserId },
     select: { name: true, phone: true, agentToken: true },
   });
+
+  const recentAuditLogs = await prisma.propertyAuditLog.findMany({
+    where: { propertyId: id },
+    orderBy: { createdAt: "desc" },
+    take: 30,
+    select: { userId: true, userName: true, createdAt: true, changes: true },
+  });
+  const lastStatusLogEntry = recentAuditLogs.find(
+    (l) => l.changes && typeof l.changes === "object" && "status" in (l.changes as Record<string, unknown>)
+  );
+
+  let lastStatusChange: LastStatusChange | null = null;
+  if (lastStatusLogEntry) {
+    const changedUser = await prisma.user.findUnique({
+      where: { id: lastStatusLogEntry.userId },
+      select: { photoUrl: true, accentColor: true },
+    });
+    lastStatusChange = {
+      userName: lastStatusLogEntry.userName,
+      photoUrl: changedUser?.photoUrl ?? null,
+      accentColor: changedUser?.accentColor ?? null,
+      changedAt: lastStatusLogEntry.createdAt.toISOString(),
+    };
+  }
 
   const property = await prisma.property.findUnique({
     where: { id },
@@ -131,6 +157,7 @@ export default async function AgentPropertyViewPage({
               propertyId={property.id}
             />
           )}
+          <DownloadPhotosButton images={property.images} title={property.titleUk} />
           <Link
             href={`/uk/listings/${property.slug}`}
             target="_blank"
@@ -307,7 +334,7 @@ export default async function AgentPropertyViewPage({
                         alt={agent.name ?? ""}
                         width={56}
                         height={56}
-                        className="object-cover w-full h-full"
+                        className="object-cover object-top w-full h-full"
                         unoptimized
                       />
                     ) : (
@@ -427,6 +454,13 @@ export default async function AgentPropertyViewPage({
               </p>
             </div>
           </div>
+
+          {/* Status panel */}
+          <PropertyStatusPanel
+            propertyId={property.id}
+            currentStatus={property.status}
+            lastChange={lastStatusChange}
+          />
         </div>
       </div>
     </div>

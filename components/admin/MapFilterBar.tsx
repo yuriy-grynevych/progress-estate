@@ -12,7 +12,11 @@ const TYPES = [
   { key: "LAND",      label: "Земля" },
 ];
 
-export default function MapFilterBar() {
+interface Props {
+  districtOptions?: string[];
+}
+
+export default function MapFilterBar({ districtOptions = [] }: Props) {
   const router    = useRouter();
   const pathname  = usePathname();
   const sp        = useSearchParams();
@@ -141,11 +145,17 @@ export default function MapFilterBar() {
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Район / ЖК</p>
               <input
                 type="text"
+                list="district-options"
                 placeholder="Назва вулиці або ЖК..."
                 value={district}
                 onChange={e => push({ district: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-navy-900"
               />
+              {districtOptions.length > 0 && (
+                <datalist id="district-options">
+                  {districtOptions.map(d => <option key={d} value={d} />)}
+                </datalist>
+              )}
             </div>
           </div>
         </div>
