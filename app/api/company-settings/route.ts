@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
     const ALLOWED = new Set([
       ...Object.keys(DEFAULTS),
       "sales_plan_target", "sales_plan_label", "sales_plan_from",
+      "jk_list", "developers_list", "streets_list",
     ]);
     for (const [key, value] of Object.entries(body)) {
       if (ALLOWED.has(key)) {

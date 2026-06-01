@@ -7,10 +7,10 @@ import { z } from "zod";
 const schema = z.object({
   type: z.enum(["CLIENT", "OWNER"]),
   name: z.string().min(1),
-  phone: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
-  notes: z.string().optional(),
-  source: z.string().optional(),
+  phone: z.string().nullish(),
+  email: z.string().email().optional().or(z.literal("")).nullable(),
+  notes: z.string().nullish(),
+  source: z.string().nullish(),
   followUpAt: z.string().optional().nullable(),
   assignedUserId: z.string().optional().nullable(),
 });

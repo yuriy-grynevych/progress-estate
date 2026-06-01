@@ -44,7 +44,7 @@ export const propertySchema = z.object({
 
 export const inquirySchema = z.object({
   name: z.string().min(2, "Вкажіть ім'я"),
-  email: z.string().email("Невірний email"),
+  email: z.string().email("Невірний email").optional().or(z.literal("")),
   phone: z.string().optional(),
   message: z.string().min(10, "Мінімум 10 символів"),
   propertyId: z.string().optional(),

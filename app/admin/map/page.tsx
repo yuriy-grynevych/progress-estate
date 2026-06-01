@@ -23,9 +23,7 @@ export default async function AdminMapPage({
   const role = (session?.user as any)?.role ?? "EMPLOYEE";
   const userId = (session?.user as any)?.id as string;
 
-  const where: any = role === "ADMIN"
-    ? { status: "ACTIVE" }
-    : { status: "ACTIVE", assignedUserId: userId };
+  const where: any = { status: "ACTIVE" };
 
   if (searchParams.rooms) {
     const r = parseInt(searchParams.rooms);

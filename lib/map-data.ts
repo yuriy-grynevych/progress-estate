@@ -64,6 +64,11 @@ export const JK_PATTERNS: { patterns: string[]; lat: number; lng: number; name: 
   { name: "PHOENIX PLAZA",        patterns: ["phoenix plaza", "фенікс плаза"], lat: 48.9350, lng: 24.7000 },
   { name: "Comfort Park",         patterns: ["comfort park", "комфорт парк"], lat: 48.9454, lng: 24.7055 },
   { name: "Family Plaza",         patterns: ["family plaza", "фемілі плаза"], lat: 48.9336, lng: 24.7116 },
+  { name: "Коновальця",           patterns: ["коновальця", "жк коновальця"], lat: 48.9215, lng: 24.7200 },
+  { name: "Mélis",                patterns: ["mélis", "меліс", "апарт-готель меліс"], lat: 48.9200, lng: 24.7100 },
+  { name: "Рубін Апартамент",     patterns: ["рубін апартамент", "рубін", "rubin apart"], lat: 48.9220, lng: 24.7080 },
+  { name: "RAIT HOUSE",           patterns: ["rait house", "рейт хаус", "rait"], lat: 48.9329, lng: 24.7501 },
+  { name: "Гарантбуд",            patterns: ["гарантбуд", "жк гарантбуд"], lat: 48.9350, lng: 24.6950 },
 ];
 
 // Координати районів (fallback якщо ЖК не знайдено)
@@ -170,6 +175,11 @@ export const JK_DATA: { name: string; district: string; address: string; lat: nu
   { name: "Comfort Park",         district: "Пасічна",          address: "вул. Пасічна",            lat: 48.9454, lng: 24.7055 },
   { name: "Family Plaza",         district: "Княгинин",         address: "вул. Гетьмана Мазепи",    lat: 48.9336, lng: 24.7116 },
   { name: "Житловий район Княгинин", district: "Княгинин",      address: "вул. Гетьмана Мазепи",    lat: 48.9362, lng: 24.7094 },
+  { name: "Коновальця",            district: "Центр",           address: "вул. Коновальця",          lat: 48.9215, lng: 24.7200 },
+  { name: "Mélis",                 district: "Центр",           address: "вул. Незалежності",        lat: 48.9200, lng: 24.7100 },
+  { name: "Рубін Апартамент",      district: "Центр",           address: "вул. Незалежності",        lat: 48.9220, lng: 24.7080 },
+  { name: "RAIT HOUSE",            district: "Вовчинець",       address: "вул. Вовчинецька",         lat: 48.9329, lng: 24.7501 },
+  { name: "Гарантбуд",             district: "Пасічна",         address: "вул. Пасічна",             lat: 48.9350, lng: 24.6950 },
 ];
 
 // Функція: знайти координати по тексту назви/адреси/району

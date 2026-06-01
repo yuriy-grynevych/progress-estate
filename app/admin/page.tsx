@@ -23,20 +23,14 @@ async function getTodayReminders(role: string, userId: string) {
 }
 
 async function getStats(role: string, userId: string) {
-  const propertyWhere = role === "ADMIN" ? {} : { assignedUserId: userId };
-
   const [totalProperties, totalContacts, depositProperties] = await Promise.all([
-    prisma.property.count({ where: propertyWhere }),
-    prisma.contact.count(
-      role === "ADMIN"
-        ? { where: { deletedAt: null } }
-        : { where: { assignedUserId: userId, deletedAt: null } }
-    ),
-    prisma.property.count({ where: { ...propertyWhere, status: "DEPOSIT" } }),
+    prisma.property.count(),
+    prisma.contact.count({ where: { deletedAt: null } }),
+    prisma.property.count({ where: { status: "DEPOSIT" } }),
   ]);
 
   const recentProperties = await prisma.property.findMany({
-    where: { ...propertyWhere, status: { not: "SOLD" } },
+    where: { status: { not: "SOLD" } },
     take: 3,
     orderBy: { createdAt: "desc" },
     include: { images: { orderBy: { order: "asc" as const }, take: 1 } },
@@ -146,7 +140,7 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           icon={<Building2 className="w-6 h-6 text-gray-500" />}
-          label={role === "ADMIN" ? "Всього оголошень" : "Всього моїх"}
+          label="Всього оголошень"
           value={totalProperties}
           href="/admin/properties"
           color="bg-gray-100"

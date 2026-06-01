@@ -81,7 +81,7 @@ export default function UsersManager({ initialUsers }: { initialUsers: Employee[
 
   function copyToken(user: Employee) {
     const baseUrl = window.location.origin;
-    const url = `${baseUrl}/uk/listings?agent=${user.agentToken}`;
+    const url = `${baseUrl}/a/${user.agentToken}`;
     navigator.clipboard.writeText(url);
     setCopied(user.id);
     setTimeout(() => setCopied(null), 2000);
@@ -182,12 +182,15 @@ export default function UsersManager({ initialUsers }: { initialUsers: Employee[
               <div className="relative flex-shrink-0">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
                   {u.photoUrl ? (
-                    <Image src={u.photoUrl} alt={u.name ?? ""} width={64} height={64} className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400">
-                      {u.name?.[0]?.toUpperCase() ?? "?"}
-                    </div>
-                  )}
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={u.photoUrl} alt={u.name ?? ""} width={64} height={64}
+                      className="object-cover object-top w-full h-full"
+                      onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; (e.target as HTMLImageElement).nextElementSibling?.removeAttribute("style"); }}
+                    />
+                  ) : null}
+                  <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-400" style={u.photoUrl ? { display: "none" } : undefined}>
+                    {u.name?.[0]?.toUpperCase() ?? "?"}
+                  </div>
                 </div>
                 <button
                   onClick={() => fileInputRefs.current[u.id]?.click()}

@@ -2,6 +2,14 @@
 
 import { useState, useRef } from "react";
 import { Camera, Copy, Check, Save, Key, Send, Instagram } from "lucide-react";
+
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/>
+    </svg>
+  );
+}
 import Image from "next/image";
 
 const PRESET_COLORS = [
@@ -20,6 +28,8 @@ interface UserProfile {
   role: string;
   telegramChatId: string | null;
   instagram: string | null;
+  tiktok: string | null;
+  facebook: string | null;
   accentColor: string | null;
 }
 
@@ -29,6 +39,8 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
   const [phone, setPhone] = useState(user.phone ?? "");
   const [telegramChatId, setTelegramChatId] = useState(user.telegramChatId ?? "");
   const [instagram, setInstagram] = useState(user.instagram ?? "");
+  const [tiktok, setTiktok] = useState(user.tiktok ?? "");
+  const [facebook, setFacebook] = useState(user.facebook ?? "");
   const [telegramSaved, setTelegramSaved] = useState(false);
   const [accentColor, setAccentColor] = useState(user.accentColor ?? "#C9A84C");
   const [colorSaved, setColorSaved] = useState(false);
@@ -78,7 +90,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
     const res = await fetch("/api/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, phone, instagram: instagram || null }),
+      body: JSON.stringify({ name, phone, instagram: instagram || null, tiktok: tiktok || null, facebook: facebook || null }),
     });
     if (res.ok) {
       const updated = await res.json();
@@ -135,7 +147,7 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
           <div className="relative flex-shrink-0">
             <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 border-2 border-gray-200">
               {profile.photoUrl ? (
-                <Image src={profile.photoUrl} alt={profile.name ?? ""} width={80} height={80} className="object-cover w-full h-full" />
+                <Image src={profile.photoUrl} alt={profile.name ?? ""} width={80} height={80} className="object-cover w-full h-full" unoptimized={profile.photoUrl.startsWith("/uploads/")} />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-gray-400">
                   {profile.name?.[0]?.toUpperCase() ?? profile.email[0]?.toUpperCase()}
@@ -205,6 +217,32 @@ export default function ProfileEditor({ user }: { user: UserProfile }) {
                 onChange={(e) => setInstagram(e.target.value)}
                 className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
                 placeholder="@username"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">TikTok</label>
+            <div className="relative">
+              <TikTokIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                value={tiktok}
+                onChange={(e) => setTiktok(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
+                placeholder="@username"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-500 block mb-1">Facebook</label>
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              </svg>
+              <input
+                value={facebook}
+                onChange={(e) => setFacebook(e.target.value)}
+                className="w-full border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-navy-900"
+                placeholder="https://facebook.com/..."
               />
             </div>
           </div>

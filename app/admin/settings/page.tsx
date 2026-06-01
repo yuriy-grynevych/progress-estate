@@ -9,6 +9,8 @@ import EmailSettingsForm from "@/components/admin/EmailSettingsForm";
 import OlxSettingsForm from "@/components/admin/OlxSettingsForm";
 import { getCompanySettings, getSalesPlan } from "@/lib/company";
 import SalesPlanForm from "@/components/admin/SalesPlanForm";
+import ListsManager from "@/components/admin/ListsManager";
+import { RESIDENTIAL_COMPLEXES_IF, DEVELOPERS_IF } from "@/lib/constants";
 
 async function getDistricts() {
   try {
@@ -25,11 +27,28 @@ export default async function SettingsPage() {
   const session = await getServerSession(authOptions);
   if ((session?.user as any)?.role !== "ADMIN") redirect("/admin");
 
-  const [features, districts, company, plan] = await Promise.all([
+  async function getLists() {
+    try {
+      const rows = await prisma.$queryRawUnsafe<{ key: string; value: string }[]>(
+        `SELECT key, value FROM company_settings WHERE key IN ('jk_list','developers_list','streets_list')`
+      );
+      const map = Object.fromEntries(rows.map(r => [r.key, r.value]));
+      return {
+        jk: map.jk_list ? JSON.parse(map.jk_list) : [...RESIDENTIAL_COMPLEXES_IF],
+        developers: map.developers_list ? JSON.parse(map.developers_list) : [...DEVELOPERS_IF],
+        streets: map.streets_list ? JSON.parse(map.streets_list) : [],
+      };
+    } catch {
+      return { jk: [...RESIDENTIAL_COMPLEXES_IF], developers: [...DEVELOPERS_IF], streets: [] };
+    }
+  }
+
+  const [features, districts, company, plan, lists] = await Promise.all([
     prisma.feature.findMany({ orderBy: { order: "asc" } }),
     getDistricts(),
     getCompanySettings(),
     getSalesPlan(),
+    getLists(),
   ]);
 
   return (
@@ -61,6 +80,19 @@ export default async function SettingsPage() {
           Райони, які відображаються у пошуку та формі нерухомості.
         </p>
         <DistrictsManager initialDistricts={districts} />
+      </div>
+
+      {/* ЖК / Developers / Streets */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gold-300">
+        <h2 className="font-semibold text-navy-900 mb-1">ЖК, Забудовники, Вулиці</h2>
+        <p className="text-xs text-gray-400 mb-5">
+          Списки для фільтрів та автозаповнення адрес. Зміни набувають чинності одразу.
+        </p>
+        <ListsManager
+          initialJk={lists.jk}
+          initialDevelopers={lists.developers}
+          initialStreets={lists.streets}
+        />
       </div>
 
       {/* Email SMTP settings */}

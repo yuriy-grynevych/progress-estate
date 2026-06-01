@@ -104,8 +104,10 @@ export async function POST(req: NextRequest) {
       ? currentUserId
       : (body.assignedUserId || null);
 
+  const ownerContactId = body.ownerContactId || null;
+
   const property = await prisma.property.create({
-    data: { ...data, slug, price: data.price, assignedUserId } as any,
+    data: { ...data, slug, price: data.price, assignedUserId, ownerContactId } as any,
     include: { images: true },
   });
 

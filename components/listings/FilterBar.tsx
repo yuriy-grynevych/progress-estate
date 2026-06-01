@@ -1,13 +1,59 @@
 "use client";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { DISTRICTS_IF, RESIDENTIAL_COMPLEXES_IF } from "@/lib/constants";
+import { DISTRICTS_IF, RESIDENTIAL_COMPLEXES_IF, DEVELOPERS_IF } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { ChevronDown, SlidersHorizontal, X, ChevronUp } from "lucide-react";
 
 interface FilterBarProps {
   locale: string;
   searchParams: Record<string, string | undefined>;
+}
+
+function ComplexSearch({
+  items, selected, isUk, onSelect, placeholder,
+}: {
+  items: string[];
+  selected: string;
+  isUk: boolean;
+  onSelect: (v: string | null) => void;
+  placeholder?: string;
+}) {
+  const [q, setQ] = useState("");
+  const filtered = q.length >= 1
+    ? items.filter(n => n.toLowerCase().includes(q.toLowerCase()))
+    : items;
+  return (
+    <div className="w-56">
+      <input
+        autoFocus
+        type="text"
+        value={q}
+        onChange={e => setQ(e.target.value)}
+        placeholder={placeholder ?? (isUk ? "Пошук ЖК..." : "Search complex...")}
+        className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400 mb-1.5"
+      />
+      <div className="max-h-52 overflow-y-auto space-y-0.5">
+        <button
+          type="button"
+          onClick={() => onSelect(null)}
+          className={`w-full text-left px-3 py-1.5 text-sm rounded-lg transition ${!selected ? "bg-navy-900 text-white" : "hover:bg-gray-100 text-gray-700"}`}
+        >
+          {isUk ? "Всі" : "All"}
+        </button>
+        {filtered.map(n => (
+          <button
+            key={n}
+            type="button"
+            onClick={() => onSelect(n)}
+            className={`w-full text-left px-3 py-1.5 text-sm rounded-lg transition ${selected === n ? "bg-navy-900 text-white" : "hover:bg-gray-100 text-gray-700"}`}
+          >
+            {n}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 // ── Маленький дроп-компонент ────────────────────────────────────────────────
@@ -436,20 +482,13 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
           {/* ЖК */}
           <Drop label={complexLabel} active={!!complex} wide>
             {(close) => (
-              <div className="px-3 py-2.5">
-                <input type="text" placeholder={isUk ? "Назва ЖК..." : "Complex name..."} defaultValue={complex}
-                  list="filter-complexes"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      set("complex", (e.target as HTMLInputElement).value || null);
-                      close();
-                    }
-                  }}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400" autoFocus />
-                <datalist id="filter-complexes">
-                  {RESIDENTIAL_COMPLEXES_IF.map((n) => <option key={n} value={n} />)}
-                </datalist>
-                <p className="text-xs text-gray-400 mt-1">{isUk ? "Enter для вибору" : "Press Enter"}</p>
+              <div className="px-2 py-2">
+                <ComplexSearch
+                  items={RESIDENTIAL_COMPLEXES_IF as unknown as string[]}
+                  selected={complex}
+                  isUk={isUk}
+                  onSelect={(v) => { set("complex", v); close(); }}
+                />
               </div>
             )}
           </Drop>
@@ -457,12 +496,14 @@ export default function FilterBar({ locale, searchParams }: FilterBarProps) {
           {/* Забудовник */}
           <Drop label={developerLabel} active={!!developer}>
             {(close) => (
-              <div className="px-3 py-2.5">
-                <input type="text" placeholder={isUk ? "Назва забудовника..." : "Developer name..."} value={developer}
-                  onChange={(e) => setDeveloper(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { applyRanges(); close(); } }}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-400" autoFocus />
-                <p className="text-xs text-gray-400 mt-1">{isUk ? "Enter для пошуку" : "Press Enter"}</p>
+              <div className="px-2 py-2">
+                <ComplexSearch
+                  items={DEVELOPERS_IF as unknown as string[]}
+                  selected={developer}
+                  isUk={isUk}
+                  onSelect={(v) => { set("developer", v); close(); }}
+                  placeholder={isUk ? "Забудовник..." : "Developer..."}
+                />
               </div>
             )}
           </Drop>

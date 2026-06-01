@@ -41,6 +41,7 @@ const adminNavItems = [
 
 const employeeNavItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/stats", label: "Статистика", icon: BarChart2 },
   { href: "/admin/properties", label: "Нерухомість", icon: Building2 },
   { href: "/admin/collections", label: "Колекції", icon: FolderOpen },
   { href: "/admin/map", label: "Карта", icon: MapPin },

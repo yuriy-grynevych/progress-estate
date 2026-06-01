@@ -2,41 +2,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import InquiryStatusSelect from "@/components/admin/InquiryStatusSelect";
+import InquiryAssignSelect from "@/components/admin/InquiryAssignSelect";
+import AddToFunnelButton from "@/components/admin/AddToFunnelButton";
 import { Phone, Mail, Lock, Kanban, List } from "lucide-react";
 import ChatHistoryBlock from "@/components/admin/ChatHistoryBlock";
 
 const statusFilter = ["ALL", "NEW", "READ", "REPLIED", "ARCHIVED"] as const;
-
-async function getInquiries(status?: string, role?: string, userId?: string) {
-  const statusWhere =
-    status && status !== "ALL" ? { status: status as any } : {};
-
-  const roleWhere =
-    role === "ADMIN"
-      ? {}
-      : {
-          OR: [
-            { propertyId: null },
-            { property: { assignedUserId: userId } },
-            { referredByUserId: userId },
-          ],
-        };
-
-  return prisma.inquiry.findMany({
-    where: { ...statusWhere, ...roleWhere },
-    orderBy: { createdAt: "desc" },
-    include: {
-      property: {
-        select: {
-          titleUk: true,
-          slug: true,
-          assignedUserId: true,
-        },
-      },
-    },
-  });
-}
 
 export default async function InquiriesPage({
   searchParams,
@@ -44,30 +17,43 @@ export default async function InquiriesPage({
   searchParams: { status?: string };
 }) {
   const session = await getServerSession(authOptions);
+  if (!session) redirect("/auth/signin");
+
   const role = (session?.user as any)?.role as string ?? "EMPLOYEE";
   const userId = (session?.user as any)?.id as string;
 
-  const currentStatus = searchParams.status ?? "ALL";
-  const inquiries = await getInquiries(currentStatus, role, userId);
+  const isAdmin = role === "ADMIN";
 
-  const newCountWhere =
-    role === "ADMIN"
-      ? { status: "NEW" as const }
-      : {
-          status: "NEW" as const,
-          OR: [
-            { propertyId: null },
-            { property: { assignedUserId: userId } },
-            { referredByUserId: userId },
-          ],
-        };
-  const newCount = await prisma.inquiry.count({ where: newCountWhere });
+  const currentStatus = searchParams.status ?? "ALL";
+  const statusWhere = currentStatus !== "ALL" ? { status: currentStatus as any } : {};
+
+  // Employees see only their assigned inquiries; everyone only sees inFunnel=false here
+  const roleWhere = isAdmin ? {} : { assignedUserId: userId };
+  const where = { ...statusWhere, ...roleWhere, inFunnel: false } as any;
+
+  const [inquiries, agents] = await Promise.all([
+    prisma.inquiry.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      include: {
+        property: { select: { titleUk: true, slug: true, assignedUserId: true } },
+        assignedUser: { select: { id: true, name: true, email: true } },
+      },
+    }),
+    isAdmin
+      ? prisma.user.findMany({ select: { id: true, name: true, email: true }, orderBy: { name: "asc" } })
+      : Promise.resolve([]),
+  ]);
+
+  const newCount = isAdmin
+    ? await prisma.inquiry.count({ where: { status: "NEW", inFunnel: false } as any })
+    : await prisma.inquiry.count({ where: { assignedUserId: userId, status: "NEW", inFunnel: false } as any });
 
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-navy-900">
-          {role === "ADMIN" ? "Запити клієнтів" : "Мої запити"}
+          {isAdmin ? "Запити клієнтів" : "Мої запити"}
           {newCount > 0 && (
             <span className="ml-2 text-sm font-medium bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
               {newCount} нових
@@ -118,7 +104,6 @@ export default async function InquiriesPage({
           </div>
         )}
         {inquiries.map((inq) => {
-          const isOwned = role === "ADMIN" || inq.property?.assignedUserId === userId || (inq as any).referredByUserId === userId;
           const isGeneral = !inq.propertyId;
 
           return (
@@ -128,6 +113,16 @@ export default async function InquiriesPage({
                   <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <span className="font-semibold text-navy-900">{inq.name}</span>
                     <InquiryStatusSelect id={inq.id} currentStatus={inq.status} />
+                    {isAdmin && (
+                      <>
+                        <InquiryAssignSelect
+                          id={inq.id}
+                          currentAgentId={(inq as any).assignedUser?.id ?? null}
+                          agents={agents}
+                        />
+                        <AddToFunnelButton id={inq.id} />
+                      </>
+                    )}
                     {isGeneral && (
                       <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
                         Загальне
@@ -145,7 +140,7 @@ export default async function InquiriesPage({
 
                   {inq.property && (
                     <p className="text-xs text-gray-400 mb-2">
-                      Об'єкт:{" "}
+                      Об&apos;єкт:{" "}
                       <a
                         href={`/uk/listings/${inq.property.slug}`}
                         target="_blank"
@@ -166,30 +161,21 @@ export default async function InquiriesPage({
               )}
 
               <div className="flex items-center gap-4 mt-3 pt-3 border-t border-gray-50">
-                {isOwned ? (
-                  <>
-                    <a
-                      href={`mailto:${inq.email}`}
-                      className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-navy-900 transition"
-                    >
-                      <Mail className="w-4 h-4" />
-                      {inq.email}
-                    </a>
-                    {inq.phone && (
-                      <a
-                        href={`tel:${inq.phone}`}
-                        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-navy-900 transition"
-                      >
-                        <Phone className="w-4 h-4" />
-                        {inq.phone}
-                      </a>
-                    )}
-                  </>
-                ) : (
-                  <span className="flex items-center gap-1.5 text-sm text-gray-400">
-                    <Lock className="w-4 h-4" />
-                    Контактні дані доступні лише відповідальному агенту
-                  </span>
+                <a
+                  href={`mailto:${inq.email}`}
+                  className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-navy-900 transition"
+                >
+                  <Mail className="w-4 h-4" />
+                  {inq.email}
+                </a>
+                {inq.phone && (
+                  <a
+                    href={`tel:${inq.phone}`}
+                    className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-navy-900 transition"
+                  >
+                    <Phone className="w-4 h-4" />
+                    {inq.phone}
+                  </a>
                 )}
               </div>
             </div>

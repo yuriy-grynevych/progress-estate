@@ -25,13 +25,17 @@ export async function POST(req: NextRequest) {
 
   const { funnelStage, deadline, assignedUserId, ...rest } = parsed.data;
 
+  const createdByUserId = (session.user as any).id as string;
+
   const inquiry = await prisma.inquiry.create({
     data: {
       ...rest,
       email: rest.email ?? "",
       funnelStage,
+      inFunnel: true,
       deadline: deadline ? new Date(deadline) : null,
       assignedUserId: assignedUserId ?? null,
+      createdByUserId,
     } as any,
     include: {
       assignedUser: { select: { id: true, name: true, email: true, accentColor: true } },

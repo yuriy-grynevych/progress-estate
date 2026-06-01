@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import {
   DndContext,
@@ -114,6 +114,39 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
   const [images, setImages] = useState<UploadedImage[]>(initialImages);
   const [uploading, setUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingPreviews, setPendingPreviews] = useState<UploadedImage[]>([]);
+  const prevPropertyId = useRef(propertyId);
+
+  // When propertyId changes from "new" to a real ID → upload queued files
+  useEffect(() => {
+    if (prevPropertyId.current === "new" && propertyId && propertyId !== "new" && pendingFiles.length > 0) {
+      const filesToUpload = [...pendingFiles];
+      setPendingFiles([]);
+      setPendingPreviews([]);
+      setUploading(true);
+      const newImages: UploadedImage[] = [];
+      (async () => {
+        for (const file of filesToUpload) {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("propertyId", propertyId);
+          try {
+            const res = await fetch("/api/upload", { method: "POST", body: formData });
+            if (res.ok) {
+              const data = await res.json();
+              newImages.push({ id: data.id, url: data.url, isPrimary: newImages.length === 0 });
+            }
+          } catch {}
+        }
+        const updated = [...newImages];
+        setImages(updated);
+        onChange(updated);
+        setUploading(false);
+      })();
+    }
+    prevPropertyId.current = propertyId;
+  }, [propertyId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -123,7 +156,14 @@ export default function ImageUploader({
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (!propertyId || propertyId === "new") {
-        alert("Спочатку збережіть нерухомість, потім додайте фото.");
+        // Queue files and show local previews — will upload after property is saved
+        const previews: UploadedImage[] = acceptedFiles.map((file, i) => ({
+          id: `pending_${Date.now()}_${i}`,
+          url: URL.createObjectURL(file),
+          isPrimary: pendingPreviews.length === 0 && i === 0,
+        }));
+        setPendingFiles((prev) => [...prev, ...acceptedFiles]);
+        setPendingPreviews((prev) => [...prev, ...previews]);
         return;
       }
       setUploading(true);
@@ -154,7 +194,7 @@ export default function ImageUploader({
       onChange(updated);
       setUploading(false);
     },
-    [propertyId, images, onChange]
+    [propertyId, images, pendingPreviews, onChange]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -223,6 +263,26 @@ export default function ImageUploader({
         </p>
         <p className="text-xs text-gray-400 mt-1">JPG, PNG, WebP або MP4 (відео до 100MB)</p>
       </div>
+
+      {/* Pending previews (before save) */}
+      {pendingPreviews.length > 0 && (
+        <div>
+          <p className="text-xs text-amber-600 font-medium mb-2">
+            ⏳ {pendingPreviews.length} фото буде завантажено після збереження
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {pendingPreviews.map((img) => (
+              <div key={img.id} className="relative aspect-square rounded-xl overflow-hidden border-2 border-amber-300 opacity-70">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={img.url} alt="" className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-amber-900/20 flex items-center justify-center">
+                  <span className="text-white text-xs font-medium bg-amber-600/80 px-2 py-1 rounded-lg">В черзі</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Images grid */}
       {images.length > 0 && (

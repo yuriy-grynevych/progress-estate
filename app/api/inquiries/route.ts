@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
       ? {}
       : {
           OR: [
+            { assignedUserId: userId },
             { propertyId: null },
             { property: { assignedUserId: userId } },
             { referredByUserId: userId },

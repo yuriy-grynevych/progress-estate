@@ -24,14 +24,9 @@ export default function SalesBarChart({ data }: Props) {
 
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 4 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-        <XAxis
-          dataKey="agent"
-          tick={{ fontSize: 11, fill: "#9ca3af" }}
-          axisLine={false}
-          tickLine={false}
-        />
+        <XAxis dataKey="agent" tick={false} axisLine={false} tickLine={false} />
         <YAxis
           allowDecimals={false}
           tick={{ fontSize: 11, fill: "#9ca3af" }}

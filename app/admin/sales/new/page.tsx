@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Users, HardHat } from "lucide-react";
+import { Building2, Users, HardHat, ImagePlus, X } from "lucide-react";
+import Image from "next/image";
 import { JK_DATA } from "@/lib/map-data";
 
 const JK_NAMES = [...new Set(JK_DATA.map(j => j.name))].sort((a, b) => a.localeCompare(b, "uk"));
@@ -10,7 +11,7 @@ const JK_NAMES = [...new Set(JK_DATA.map(j => j.name))].sort((a, b) => a.localeC
 const DEVELOPERS = [
   "AI Development", "ALEXA Development", "Alliance developer", "AlonBud",
   "Altis-Holding", "ARHA GROUP", "Архітрав", "АРС-Дім",
-  "Аркада", "Atlant-ІФ", "BAUcomfort", "Blago",
+  "Аркада", "Атлант-ІФ", "BAUcomfort", "Blago",
   "CEMMIX UA", "Continental Development", "Ecobud Berghaus", "EFFECTBUD Developer",
   "Enhance Development", "Єврохолдінг", "Fomich Group", "ФранківськМіськБуд",
   "Франківський Дім", "Франко Груп", "ГалКомБуд", "Галицький двір",
@@ -24,7 +25,7 @@ const DEVELOPERS = [
   "Open City Group", "OZON Development", "Perfect Group", "Перспектива",
   "Phoenix Invest", "Полярис", "Premier Development", "PROSTIR development",
   "Ridnobud", "Ріел ІФ", "Роко Буд", "СБ ГРУП",
-  "Sensar", "Skogur", "Sociat Invest Group", "Socium Developer",
+  "Sensar", "Skogur", "Socrat Invest Group", "Socium Developer",
   "Спілка забудівників", "СТАБІЛЬНІСТЬ", "Стандарт-ІФ", "Sttk Development",
   "Технобуд", "Темп", "Тенко", "TheSolomonBud",
   "Траян", "UBH", "УЛІС Інвестиції", "VAMBUD",
@@ -53,6 +54,12 @@ export default function NewSalePage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // ── Photos for external/developer tabs ──
+  const [extPhotos, setExtPhotos] = useState<File[]>([]);
+  const [devPhotos, setDevPhotos] = useState<File[]>([]);
+  const extFileRef = useRef<HTMLInputElement>(null);
+  const devFileRef = useRef<HTMLInputElement>(null);
 
   // ── OWN ──
   const [ownProperty, setOwnProperty] = useState("");
@@ -134,9 +141,31 @@ export default function NewSalePage() {
       };
 
     const res = await fetch("/api/sales", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (!res.ok) { setSaving(false); setError("Помилка збереження. Спробуйте ще раз."); return; }
+
+    const sale = await res.json();
+    const photos = tab === "EXTERNAL" ? extPhotos : tab === "DEVELOPER" ? devPhotos : [];
+
+    if (photos.length > 0) {
+      const urls: string[] = [];
+      for (const file of photos) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("propertyId", `sale_${sale.id}`);
+        const up = await fetch("/api/upload", { method: "POST", body: fd });
+        if (up.ok) { const { url } = await up.json(); urls.push(url); }
+      }
+      if (urls.length > 0) {
+        await fetch(`/api/sales/${sale.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ photos: JSON.stringify(urls) }),
+        });
+      }
+    }
+
     setSaving(false);
-    if (res.ok) router.push("/admin/sales");
-    else setError("Помилка збереження. Спробуйте ще раз.");
+    router.push("/admin/sales");
   }
 
   const inp = "w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-navy-900/20 bg-white";
@@ -245,6 +274,28 @@ export default function NewSalePage() {
                 {contacts.map(c => <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>)}
               </select>
             </div>
+            <div>
+              <label className={lbl}>Фото нерухомості</label>
+              <input ref={extFileRef} type="file" accept="image/*" multiple className="hidden"
+                onChange={e => { const files = Array.from(e.target.files ?? []); setExtPhotos(p => [...p, ...files]); e.target.value = ""; }} />
+              <button type="button" onClick={() => extFileRef.current?.click()}
+                className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-navy-400 hover:text-navy-700 transition w-full justify-center">
+                <ImagePlus className="w-4 h-4" /> Додати фото
+              </button>
+              {extPhotos.length > 0 && (
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {extPhotos.map((f, i) => (
+                    <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                      <Image src={URL.createObjectURL(f)} alt="" fill className="object-cover" unoptimized />
+                      <button type="button" onClick={() => setExtPhotos(p => p.filter((_, j) => j !== i))}
+                        className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
 
@@ -286,6 +337,28 @@ export default function NewSalePage() {
                 {contacts.map(c => <option key={c.id} value={c.id}>{c.name}{c.phone ? ` · ${c.phone}` : ""}</option>)}
               </select>
               {!devClient && <p className="text-xs text-red-400 mt-1">Обов'язкове поле</p>}
+            </div>
+            <div>
+              <label className={lbl}>Фото нерухомості</label>
+              <input ref={devFileRef} type="file" accept="image/*" multiple className="hidden"
+                onChange={e => { const files = Array.from(e.target.files ?? []); setDevPhotos(p => [...p, ...files]); e.target.value = ""; }} />
+              <button type="button" onClick={() => devFileRef.current?.click()}
+                className="flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-navy-400 hover:text-navy-700 transition w-full justify-center">
+                <ImagePlus className="w-4 h-4" /> Додати фото
+              </button>
+              {devPhotos.length > 0 && (
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {devPhotos.map((f, i) => (
+                    <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                      <Image src={URL.createObjectURL(f)} alt="" fill className="object-cover" unoptimized />
+                      <button type="button" onClick={() => setDevPhotos(p => p.filter((_, j) => j !== i))}
+                        className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}

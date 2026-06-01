@@ -32,7 +32,7 @@ async function getProperty(slug: string) {
     include: {
       images: { orderBy: { order: "asc" } },
       assignedUser: {
-        select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true },
+        select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true, instagram: true, tiktok: true, facebook: true },
       },
     },
   });
@@ -41,7 +41,7 @@ async function getProperty(slug: string) {
 async function getAgentByToken(token: string) {
   return prisma.user.findUnique({
     where: { agentToken: token },
-    select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true },
+    select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true, instagram: true, tiktok: true, facebook: true },
   });
 }
 

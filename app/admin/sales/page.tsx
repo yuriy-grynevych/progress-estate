@@ -72,15 +72,19 @@ export default async function SalesPage() {
                 return (
                   <div key={s.id} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition group">
                     {/* Photo */}
-                    {isOwn && s.property?.images?.[0]?.url ? (
-                      <div className="w-48 h-32 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
-                        <Image src={s.property.images[0].url} alt={propertyTitle} width={192} height={128} className="object-cover w-full h-full" unoptimized />
-                      </div>
-                    ) : (
-                      <div className={`w-48 h-32 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-2xl ${isOwn ? "bg-navy-100 text-navy-700" : isDev ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
-                        {propertyTitle[0]?.toUpperCase() ?? "?"}
-                      </div>
-                    )}
+                    {(() => {
+                      const extPhotos: string[] = (() => { try { return JSON.parse((s as any).photos ?? "[]"); } catch { return []; } })();
+                      const photoUrl = isOwn ? s.property?.images?.[0]?.url : extPhotos[0] ?? null;
+                      return photoUrl ? (
+                        <div className="w-48 h-32 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100">
+                          <Image src={photoUrl} alt={propertyTitle} width={192} height={128} className="object-cover w-full h-full" unoptimized />
+                        </div>
+                      ) : (
+                        <div className={`w-48 h-32 rounded-xl flex items-center justify-center flex-shrink-0 font-bold text-2xl ${isOwn ? "bg-navy-100 text-navy-700" : isDev ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
+                          {propertyTitle[0]?.toUpperCase() ?? "?"}
+                        </div>
+                      );
+                    })()}
                     {/* Property */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">

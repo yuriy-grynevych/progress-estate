@@ -468,8 +468,8 @@ export default function ContactsManager({ initialContacts, agents, role, current
           {filtered.map((c) => (
             <div
               key={c.id}
-              className={`bg-white border rounded-2xl p-4 shadow-sm border border-gold-300 ${
-                isOverdue(c) ? "border-amber-300 bg-amber-50" : "border-gray-200"
+              className={`bg-white border rounded-2xl p-4 shadow-sm ${
+                isOverdue(c) ? "border-amber-300 bg-amber-50" : "border-gold-300"
               }`}
             >
               {editingId === c.id ? (

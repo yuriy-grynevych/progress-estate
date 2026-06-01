@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import {
   MessageSquarePlus, MapPin, Home, Building2, Layers, DollarSign,
-  FileText, Image, Info, ChevronLeft, Save, Loader2, X, Tag, Sparkles, ClipboardCopy, Check,
+  FileText, Image, Info, ChevronLeft, Save, Loader2, X, Tag, Sparkles, ClipboardCopy, Check, Search, User, Link2, Plus,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import {
@@ -48,7 +48,7 @@ const schema = z.object({
   residentialComplex: z.string().optional().nullable(),
   landmark: z.string().optional().nullable(),
   pricePer: z.string().optional().nullable(),
-  source: z.string().optional().nullable(),
+  source: z.string().min(1, "Виберіть джерело"),
   commissionAmount: z.number().optional().nullable(),
   commissionType: z.string().optional().nullable(),
   commissionCurrency: z.string().optional().nullable(),
@@ -150,6 +150,59 @@ export default function PropertyForm({
   const [copying, setCopying] = useState(false);
   const [copied, setCopied] = useState(false);
   const isEdit = Boolean(initialData?.id);
+
+  const [ownerContact, setOwnerContact] = useState<{id:string;name:string;phone:string|null}|null>(
+    (initialData as any)?.ownerContact ? {
+      id: (initialData as any).ownerContact.id,
+      name: (initialData as any).ownerContact.name,
+      phone: (initialData as any).ownerContact.phone ?? null,
+    } : null
+  );
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const [ownerResults, setOwnerResults] = useState<{id:string;name:string;phone:string|null}[]>([]);
+  const [ownerSearching, setOwnerSearching] = useState(false);
+  const [showOwnerSearch, setShowOwnerSearch] = useState(false);
+  const [showNewOwnerForm, setShowNewOwnerForm] = useState(false);
+  const [newOwnerName, setNewOwnerName] = useState("");
+  const [newOwnerPhone, setNewOwnerPhone] = useState("");
+  const [creatingOwner, setCreatingOwner] = useState(false);
+
+  async function searchOwners(q: string) {
+    setOwnerSearch(q);
+    if (!q || q.length < 2) { setOwnerResults([]); return; }
+    setOwnerSearching(true);
+    try {
+      const res = await fetch(`/api/contacts?type=OWNER&search=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      setOwnerResults((Array.isArray(data) ? data : data.contacts ?? []).slice(0, 6));
+    } finally {
+      setOwnerSearching(false);
+    }
+  }
+
+  async function createNewOwner() {
+    if (!newOwnerName.trim()) return;
+    setCreatingOwner(true);
+    try {
+      const res = await fetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newOwnerName.trim(), phone: newOwnerPhone.trim() || null, type: "OWNER" }),
+      });
+      if (res.ok) {
+        const contact = await res.json();
+        setOwnerContact({ id: contact.id, name: contact.name, phone: contact.phone ?? null });
+        setShowNewOwnerForm(false);
+        setNewOwnerName("");
+        setNewOwnerPhone("");
+      } else {
+        const err = await res.json();
+        if (err.error === "DUPLICATE_PHONE") alert("Контакт з таким телефоном вже існує. Використайте «Прив'язати».");
+      }
+    } finally {
+      setCreatingOwner(false);
+    }
+  }
 
   function getCategoryFromType(t: string): string {
     if (["APARTMENT","ROOM","HOUSE","APARTMENT_PREMIUM","VILLA","PENTHOUSE","TOWNHOUSE","DUPLEX"].includes(t)) return "RESIDENTIAL";
@@ -334,6 +387,16 @@ export default function PropertyForm({
   async function onSubmit(data: any) {
     setSaving(true);
     setSaveError(null);
+    if (!isEdit && role === "ADMIN" && !data.assignedUserId) {
+      setSaveError("Обов'язково призначте відповідального агента.");
+      setSaving(false);
+      return;
+    }
+    if (role === "ADMIN" && !ownerContact) {
+      setSaveError("Обов'язково вкажіть власника об'єкта.");
+      setSaving(false);
+      return;
+    }
     const method = isEdit ? "PUT" : "POST";
     const url    = isEdit ? `/api/properties/${initialData!.id}` : "/api/properties";
     const toN    = (v: unknown) => { const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
@@ -362,6 +425,7 @@ export default function PropertyForm({
       floor: toN(data.floor), totalFloors: toN(data.totalFloors), yearBuilt: toN(data.yearBuilt),
       kitchenSqm: toN(data.kitchenSqm), latitude: toN(data.latitude), longitude: toN(data.longitude),
       agentComments: comments,
+      ownerContactId: ownerContact?.id ?? null,
     };
 
     try {
@@ -728,6 +792,96 @@ export default function PropertyForm({
             </div>
           </Card>
 
+          {/* ── 4.5. Власник об'єкта ── */}
+          {role === "ADMIN" && (
+            <div className="bg-white rounded-2xl border border-gold-300 shadow-sm overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-50">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-gray-400" />
+                  <span className="font-semibold text-navy-900 text-sm">Власник об'єкта <span className="text-red-400">*</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {ownerContact && (
+                    <button type="button" onClick={() => setOwnerContact(null)} className="text-gray-400 hover:text-red-500 transition">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                  {!ownerContact && !showOwnerSearch && !showNewOwnerForm && (
+                    <>
+                      <button type="button" onClick={() => { setShowOwnerSearch(true); setShowNewOwnerForm(false); }}
+                        className="flex items-center gap-1.5 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 text-navy-700 transition">
+                        <Link2 className="w-3.5 h-3.5" /> Прив'язати
+                      </button>
+                      <button type="button" onClick={() => { setShowNewOwnerForm(true); setShowOwnerSearch(false); }}
+                        className="flex items-center gap-1.5 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 hover:bg-gray-50 text-navy-700 transition">
+                        <Plus className="w-3.5 h-3.5" /> Новий власник
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="px-5 py-4">
+                {ownerContact ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-navy-100 flex items-center justify-center flex-shrink-0">
+                      <User className="w-4 h-4 text-navy-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-navy-900">{ownerContact.name}</p>
+                      {ownerContact.phone && <p className="text-xs text-gray-400">{ownerContact.phone}</p>}
+                    </div>
+                  </div>
+                ) : showOwnerSearch ? (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                      <input autoFocus type="text" value={ownerSearch}
+                        onChange={(e) => searchOwners(e.target.value)}
+                        placeholder="Пошук за ім'ям або телефоном..."
+                        className="w-full pl-8 pr-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-navy-400 bg-white" />
+                    </div>
+                    {ownerSearching && <p className="text-xs text-gray-400">Пошук...</p>}
+                    {ownerResults.map((c) => (
+                      <button key={c.id} type="button"
+                        onClick={() => { setOwnerContact(c); setShowOwnerSearch(false); setOwnerSearch(""); setOwnerResults([]); }}
+                        className="w-full text-left px-3 py-2 text-sm bg-white hover:bg-navy-50 rounded-lg border border-gray-100 transition">
+                        <span className="font-medium text-navy-900">{c.name}</span>
+                        {c.phone && <span className="text-gray-400 ml-2 text-xs">{c.phone}</span>}
+                      </button>
+                    ))}
+                    {ownerSearch.length >= 2 && !ownerSearching && ownerResults.length === 0 && (
+                      <p className="text-xs text-gray-400">Нічого не знайдено</p>
+                    )}
+                    <button type="button" onClick={() => { setShowOwnerSearch(false); setOwnerSearch(""); setOwnerResults([]); }}
+                      className="text-xs text-gray-400 hover:text-gray-600">Скасувати</button>
+                  </div>
+                ) : showNewOwnerForm ? (
+                  <div className="space-y-2">
+                    <input value={newOwnerName} onChange={(e) => setNewOwnerName(e.target.value)}
+                      placeholder="Ім'я та прізвище *"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-navy-400 bg-white" />
+                    <input value={newOwnerPhone} onChange={(e) => setNewOwnerPhone(e.target.value)}
+                      placeholder="Телефон"
+                      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-navy-400 bg-white" />
+                    <div className="flex gap-2">
+                      <button type="button" onClick={createNewOwner}
+                        disabled={!newOwnerName.trim() || creatingOwner}
+                        className="flex-1 py-2 text-xs bg-navy-900 text-white rounded-lg hover:bg-navy-800 disabled:opacity-50 transition">
+                        {creatingOwner ? "Збереження..." : "Зберегти власника"}
+                      </button>
+                      <button type="button" onClick={() => { setShowNewOwnerForm(false); setNewOwnerName(""); setNewOwnerPhone(""); }}
+                        className="px-3 py-2 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                        Скасувати
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400">Власника не прив'язано</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* ── 5. Опис ── */}
           <Card>
             <CardHeader icon={<FileText className="w-4 h-4" />} title="Опис" />
@@ -755,12 +909,6 @@ export default function PropertyForm({
           <Card>
             <CardHeader icon={<Image className="w-4 h-4" />} title="Фото" />
             <div className="p-6">
-              {propertyId === "new" && (
-                <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-700 text-sm px-4 py-3 rounded-xl mb-4">
-                  <span className="text-lg">💡</span>
-                  Спочатку збережіть («Створити»), потім додайте фото.
-                </div>
-              )}
               <ImageUploader propertyId={propertyId} initialImages={images} onChange={setImages} />
             </div>
           </Card>
@@ -905,7 +1053,7 @@ export default function PropertyForm({
             <CardHeader icon={<Info className="w-4 h-4" />} title="Додатково" />
             <div className="p-5 space-y-4">
               <div>
-                <Label>Джерело</Label>
+                <Label required>Джерело</Label>
                 <FSelect {...register("source")}>
                   <option value="">— Не вказано —</option>
                   {SOURCE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
@@ -913,19 +1061,21 @@ export default function PropertyForm({
               </div>
               <div>
                 <Label>Комісія</Label>
-                <div className="flex gap-1.5">
+                <div className="space-y-1.5">
+                  <div className="flex gap-1.5">
+                    <FSelect {...register("commissionType")} className="flex-1">
+                      {COMMISSION_TYPES.map((c) => <option key={c.value} value={c.value}>{c.labelUk}</option>)}
+                    </FSelect>
+                    <FSelect {...register("commissionCurrency")} className="w-[72px]">
+                      {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </FSelect>
+                  </div>
                   <Controller name="commissionAmount" control={control}
                     render={({ field: { onChange, value, ref, name } }) => (
-                      <Input type="number" name={name} ref={ref} value={value ?? ""} placeholder="500"
-                        className="flex-1 min-w-0"
+                      <Input type="number" name={name} ref={ref} value={value ?? ""} placeholder="Сума комісії"
+                        className="w-full"
                         onChange={(e) => { const v = parseFloat(e.target.value); onChange(isNaN(v) ? null : v); }} />
                     )} />
-                  <FSelect {...register("commissionType")} className="w-28">
-                    {COMMISSION_TYPES.map((c) => <option key={c.value} value={c.value}>{c.labelUk}</option>)}
-                  </FSelect>
-                  <FSelect {...register("commissionCurrency")} className="w-16">
-                    {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </FSelect>
                 </div>
               </div>
               <div>

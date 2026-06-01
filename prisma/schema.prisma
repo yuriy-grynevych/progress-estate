@@ -25,6 +25,8 @@ model User {
   agentToken     String   @unique @default(cuid())
   telegramChatId String?
   instagram      String?
+  tiktok         String?
+  facebook       String?
   accentColor    String?  @default("#C9A84C")
   role           UserRole @default(EMPLOYEE)
   createdAt      DateTime @default(now())
@@ -33,6 +35,7 @@ model User {
   assignedProperties Property[]
   referredInquiries  Inquiry[]  @relation("ReferredBy")
   assignedInquiries  Inquiry[]  @relation("InquiryAssigned")
+  createdInquiries   Inquiry[]  @relation("InquiryCreatedBy")
   contacts           Contact[]
   sentMessages       ChatMessage[]
   sales              Sale[]
@@ -227,14 +230,19 @@ model Inquiry {
   source           String?
   chatHistory      Json?
 
+  inFunnel         Boolean   @default(false)
   funnelStage      String    @default("NEW")
   deadline         DateTime?
+  notes            String?
 
   referredByUserId String?
   referredBy       User?   @relation("ReferredBy", fields: [referredByUserId], references: [id], onDelete: SetNull)
 
   assignedUserId   String?
   assignedUser     User?     @relation("InquiryAssigned", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
+  createdByUserId  String?
+  createdBy        User?     @relation("InquiryCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
 
   property         Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
@@ -342,6 +350,7 @@ model Sale {
   currency        String    @default("USD")
   saleDate        DateTime  @default(now())
   note            String?
+  photos          String?   // JSON array of photo URLs
 
   agentId         String?
   agent           User?     @relation(fields: [agentId], references: [id], onDelete: SetNull)

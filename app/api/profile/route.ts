@@ -4,34 +4,16 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-async function uploadAvatarToCloudinary(buffer: Buffer, userId: string): Promise<string> {
-  const base64 = buffer.toString("base64");
-  const dataUri = `data:image/jpeg;base64,${base64}`;
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME!;
-  const apiKey = process.env.CLOUDINARY_API_KEY!;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET!;
-  const folder = "avatars";
-  const publicId = `avatars/avatar_${userId}`;
-  const timestamp = Math.floor(Date.now() / 1000);
-  const crypto = await import("crypto");
-  const signature = crypto.createHash("sha1").update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`).digest("hex");
-  const fd = new FormData();
-  fd.append("file", dataUri);
-  fd.append("public_id", publicId);
-  fd.append("timestamp", String(timestamp));
-  fd.append("api_key", apiKey);
-  fd.append("signature", signature);
-  fd.append("overwrite", "true");
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: "POST", body: fd });
-  if (!res.ok) throw new Error("Cloudinary upload failed");
-  const data = await res.json();
-  return data.secure_url as string;
-}
+import path from "path";
+import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   phone: z.string().optional(),
   instagram: z.string().optional().nullable(),
+  tiktok: z.string().optional().nullable(),
+  facebook: z.string().optional().nullable(),
   accentColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional().nullable(),
   telegramChatId: z.string().optional().nullable(),
   currentPassword: z.string().optional(),
@@ -47,9 +29,8 @@ export async function PATCH(req: NextRequest) {
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
-  const { name, phone, instagram, accentColor, telegramChatId, currentPassword, newPassword } = parsed.data;
+  const { name, phone, instagram, tiktok, facebook, accentColor, telegramChatId, currentPassword, newPassword } = parsed.data;
 
-  // Password change requires current password verification
   if (newPassword) {
     if (!currentPassword) return NextResponse.json({ error: "Вкажіть поточний пароль" }, { status: 400 });
     const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -63,11 +44,13 @@ export async function PATCH(req: NextRequest) {
       ...(name !== undefined && { name }),
       ...(phone !== undefined && { phone }),
       ...(instagram !== undefined && { instagram }),
+      ...(tiktok !== undefined && { tiktok }),
+      ...(facebook !== undefined && { facebook }),
       ...(accentColor !== undefined && { accentColor }),
       ...(telegramChatId !== undefined && { telegramChatId }),
       ...(newPassword && { password: await bcrypt.hash(newPassword, 10) }),
     },
-    select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true, role: true, telegramChatId: true, instagram: true, accentColor: true },
+    select: { id: true, name: true, email: true, phone: true, photoUrl: true, agentToken: true, role: true, telegramChatId: true, instagram: true, tiktok: true, facebook: true, accentColor: true },
   });
 
   return NextResponse.json(updated);
@@ -86,7 +69,26 @@ export async function POST(req: NextRequest) {
   if (!allowed.includes(file.type)) return NextResponse.json({ error: "Invalid type" }, { status: 400 });
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const photoUrl = await uploadAvatarToCloudinary(buffer, userId);
+  const filename = `${uuidv4()}.webp`;
+  const dir = path.join(process.cwd(), "public", "uploads", "avatars");
+  fs.mkdirSync(dir, { recursive: true });
+  const outputPath = path.join(dir, filename);
+
+  const sharp = (await import("sharp")).default;
+  await sharp(buffer)
+    .resize(200, 200, { fit: "cover", position: "top" })
+    .webp({ quality: 90 })
+    .toFile(outputPath);
+
+  const photoUrl = `/uploads/avatars/${filename}`;
+
+  // Delete old local photo if exists
+  const existing = await prisma.user.findUnique({ where: { id: userId }, select: { photoUrl: true } });
+  if (existing?.photoUrl?.startsWith("/uploads/")) {
+    const oldPath = path.join(process.cwd(), "public", existing.photoUrl);
+    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+  }
+
   await prisma.user.update({ where: { id: userId }, data: { photoUrl } });
   return NextResponse.json({ photoUrl });
 }

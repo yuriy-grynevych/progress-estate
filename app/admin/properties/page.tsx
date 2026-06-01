@@ -22,6 +22,14 @@ const TYPE_LABELS: Record<string, string> = {
   OFFICE: "Офіс",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  ACTIVE:   "Активне",
+  INACTIVE: "Неактивне",
+  SOLD:     "Продано",
+  RENTED:   "Здано",
+  DEPOSIT:  "Завдаток",
+};
+
 async function getProperties(opts: {
   search?: string;
   listingType?: string;
@@ -441,34 +449,13 @@ export default async function AdminPropertiesPage({
                               field="status"
                               currentValue={property.status}
                               isFeatured={property.isFeatured}
+                              changer={statusChangerMap[property.id] ?? null}
                             />
                           ) : (
                             <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">
-                              {property.status}
+                              {STATUS_LABELS[property.status] ?? property.status}
                             </span>
                           )}
-
-                          {/* Who changed status */}
-                          {statusChangerMap[property.id] && (() => {
-                            const changer = statusChangerMap[property.id];
-                            const color = changer.accentColor ?? "#C9A84C";
-                            const firstName = changer.userName.split(" ")[0];
-                            return (
-                              <div className="flex items-center gap-1">
-                                <div
-                                  className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-[8px] font-bold text-white"
-                                  style={{ backgroundColor: color }}
-                                >
-                                  {changer.photoUrl ? (
-                                    <Image src={changer.photoUrl} alt={changer.userName} width={20} height={20} className="object-cover object-top w-full h-full" unoptimized />
-                                  ) : (
-                                    changer.userName[0]?.toUpperCase() ?? "?"
-                                  )}
-                                </div>
-                                <span className="text-[10px] text-gray-400">{firstName}</span>
-                              </div>
-                            );
-                          })()}
 
                           {/* Agent badge with avatar */}
                           {property.assignedUser && (

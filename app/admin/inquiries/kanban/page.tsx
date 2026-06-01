@@ -15,28 +15,25 @@ export default async function InquiryKanbanPage() {
   const role = (session.user as any)?.role as string ?? "EMPLOYEE";
   const userId = (session.user as any)?.id as string;
 
-  const where = role === "ADMIN" ? {} : {
-    OR: [
-      { assignedUserId: userId },
-      { referredByUserId: userId },
-      { propertyId: null },
-      { property: { assignedUserId: userId } },
-    ],
-  };
+  const inquiryWhere = role === "ADMIN"
+    ? { inFunnel: true } as any
+    : { inFunnel: true, assignedUserId: userId } as any;
 
   const [inquiries, agents, allInquiries] = await Promise.all([
     prisma.inquiry.findMany({
-      where,
+      where: inquiryWhere,
       orderBy: { createdAt: "desc" },
       include: {
         property: { select: { titleUk: true, slug: true } },
         assignedUser: { select: { id: true, name: true, email: true, accentColor: true } },
+        createdBy: { select: { id: true, name: true, email: true } },
       },
+      // @ts-ignore — notes added via raw SQL migration
     }),
     role === "ADMIN"
       ? prisma.user.findMany({ select: { id: true, name: true, email: true, accentColor: true }, orderBy: { name: "asc" } })
       : Promise.resolve([]),
-    prisma.inquiry.count({ where }),
+    prisma.inquiry.count({ where: inquiryWhere }),
   ]);
 
   const cards = inquiries.map((inq, i) => ({
@@ -44,11 +41,13 @@ export default async function InquiryKanbanPage() {
     name: inq.name,
     phone: inq.phone,
     message: inq.message,
+    notes: (inq as any).notes ?? null,
     source: inq.source,
     funnelStage: (inq as any).funnelStage ?? "NEW",
     deadline: (inq as any).deadline ? (inq as any).deadline.toISOString() : null,
     createdAt: inq.createdAt.toISOString(),
     assignedUser: (inq as any).assignedUser ?? null,
+    createdBy: (inq as any).createdBy ?? null,
     property: inq.property,
     seqNum: allInquiries - i,
   }));
@@ -79,7 +78,7 @@ export default async function InquiryKanbanPage() {
       </div>
 
       <div className="flex-1">
-        <InquiryKanban initialCards={cards} agents={agents} />
+        <InquiryKanban initialCards={cards} agents={agents} role={role} currentUserId={userId} />
       </div>
     </div>
   );

@@ -2,6 +2,22 @@ import Image from "next/image";
 import { Phone, Instagram } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
+function TikTokIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.17 8.17 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/>
+    </svg>
+  );
+}
+
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+    </svg>
+  );
+}
+
 // Maps email → local photo path (from /public/team/)
 const PHOTO_MAP: Record<string, string> = {
   "vladgrenevich7@gmail.com":       "/team/hrynevych-vladyslav.jpg",
@@ -34,7 +50,7 @@ export default async function TeamSection({ locale }: TeamSectionProps) {
 
   const employees = await prisma.user.findMany({
     where: { role: { in: ["EMPLOYEE", "ADMIN"] } },
-    select: { name: true, email: true, phone: true, photoUrl: true, instagram: true },
+    select: { name: true, email: true, phone: true, photoUrl: true, instagram: true, tiktok: true, facebook: true },
     orderBy: { name: "asc" },
   });
 
@@ -48,8 +64,8 @@ export default async function TeamSection({ locale }: TeamSectionProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5">
           {employees.map((member) => {
             const photo =
-              PHOTO_MAP[member.email] ??
               member.photoUrl ??
+              PHOTO_MAP[member.email] ??
               "/team/hrynevych-vladyslav.jpg";
             const phone = member.phone ? formatPhone(member.phone) : null;
 
@@ -63,6 +79,7 @@ export default async function TeamSection({ locale }: TeamSectionProps) {
                     fill
                     className="object-cover object-[center_20%] group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    unoptimized={photo.startsWith("/uploads/")}
                   />
                 </div>
                 {/* Info */}
@@ -78,17 +95,41 @@ export default async function TeamSection({ locale }: TeamSectionProps) {
                     {phone}
                   </a>
                 )}
-                {member.instagram && (
-                  <a
-                    href={`https://instagram.com/${member.instagram.replace(/^@/, "")}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gold-500 transition-colors"
-                  >
-                    <Instagram className="w-3 h-3 flex-shrink-0" />
-                    {member.instagram.startsWith("@") ? member.instagram : `@${member.instagram}`}
-                  </a>
-                )}
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {member.instagram && (
+                    <a
+                      href={`https://instagram.com/${member.instagram.replace(/^@/, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-pink-500 transition-colors"
+                      title="Instagram"
+                    >
+                      <Instagram className="w-4 h-4" />
+                    </a>
+                  )}
+                  {member.tiktok && (
+                    <a
+                      href={`https://tiktok.com/@${member.tiktok.replace(/^@/, "")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-black transition-colors"
+                      title="TikTok"
+                    >
+                      <TikTokIcon className="w-4 h-4" />
+                    </a>
+                  )}
+                  {member.facebook && (
+                    <a
+                      href={member.facebook.startsWith("http") ? member.facebook : `https://facebook.com/${member.facebook}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-gray-400 hover:text-blue-600 transition-colors"
+                      title="Facebook"
+                    >
+                      <FacebookIcon className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
               </div>
             );
           })}

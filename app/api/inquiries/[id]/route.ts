@@ -23,6 +23,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (body.funnelStage !== undefined) data.funnelStage = body.funnelStage;
   if (body.deadline !== undefined) data.deadline = body.deadline ? new Date(body.deadline) : null;
   if (body.assignedUserId !== undefined) data.assignedUserId = body.assignedUserId || null;
+  if (body.message !== undefined) data.message = body.message;
+  if (body.name !== undefined) data.name = body.name;
+  if (body.phone !== undefined) data.phone = body.phone || null;
+  if (body.notes !== undefined) data.notes = body.notes || null;
+  if (body.inFunnel !== undefined) data.inFunnel = body.inFunnel;
   const inquiry = await prisma.inquiry.update({ where: { id: params.id }, data });
   return NextResponse.json(inquiry);
 }

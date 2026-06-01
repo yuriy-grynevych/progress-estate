@@ -45,7 +45,7 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
         <div className="flex flex-col sm:flex-row">
 
           {/* Main photo */}
-          <div className="relative sm:w-[42%] aspect-[4/3] sm:aspect-auto flex-shrink-0 bg-gray-100 overflow-hidden">
+          <div className="relative sm:w-[42%] aspect-[4/3] sm:aspect-auto sm:h-[220px] flex-shrink-0 bg-gray-100 overflow-hidden">
             {mainImage ? (
               <Image
                 key={mainImage.url}
@@ -91,14 +91,12 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
             </div>
           </div>
 
-          {/* Thumbnails 2×2 */}
-          <div className="hidden sm:grid grid-cols-2 sm:w-[22%] flex-shrink-0 gap-0.5 bg-gray-100">
-            {[0, 1, 2, 3].map((i) => {
-              const img = thumbs[i];
-              return img ? (
-                <div key={i} className="relative aspect-square overflow-hidden bg-gray-200">
+          {/* Thumbnails — adaptive grid, no empty cells */}
+          {thumbs.length > 0 && (
+            <div className={`hidden sm:grid sm:w-[22%] sm:h-[220px] flex-shrink-0 gap-0.5 bg-gray-100 overflow-hidden ${thumbs.length <= 2 ? "grid-cols-1" : "grid-cols-2"}`}>
+              {thumbs.map((img, i) => (
+                <div key={i} className="relative overflow-hidden bg-gray-200 min-h-0">
                   <Image
-                    key={img.url}
                     src={cloudinaryUrl(img.url, { width: 120, quality: 40 })}
                     alt={`${title} ${i + 2}`}
                     fill
@@ -109,11 +107,9 @@ export default function PropertyCard({ property, locale }: PropertyCardProps) {
                     loading="lazy"
                   />
                 </div>
-              ) : (
-                <div key={i} className="aspect-square bg-gray-100" />
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Info */}
           <div className="flex-1 p-5 flex flex-col justify-between">

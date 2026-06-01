@@ -10,27 +10,27 @@ const searchTool = {
   type: "function",
   function: {
     name: "search_properties",
-    description: "Шукає нерухомість в базі за фільтрами. Викликай цю функцію коли клієнт питає про конкретний тип, ціну, кількість кімнат або тип угоди.",
+    description: "Шукає нерухомість в базі агентства за фільтрами. Викликай ЗАВЖДИ коли клієнт питає про будь-яку нерухомість, ціну, кімнати, район, ЖК або тип угоди. Краще викликати із меншою кількістю фільтрів і показати більше варіантів.",
     parameters: {
       type: "object",
       properties: {
         type: {
           type: "string",
           enum: ["APARTMENT", "HOUSE", "COMMERCIAL", "LAND", "OFFICE"],
-          description: "Тип нерухомості: APARTMENT=Квартира, HOUSE=Будинок, COMMERCIAL=Комерція, LAND=Земля, OFFICE=Офіс",
+          description: "Тип: APARTMENT=Квартира, HOUSE=Будинок, COMMERCIAL=Комерція, LAND=Земля, OFFICE=Офіс",
         },
         listingType: {
           type: "string",
           enum: ["SALE", "RENT"],
-          description: "SALE=Продаж, RENT=Оренда",
+          description: "SALE=Продаж/Купівля, RENT=Оренда",
         },
         rooms: {
           type: "integer",
-          description: "Кількість кімнат (1, 2, 3...)",
+          description: "Кількість кімнат (1, 2, 3, 4...)",
         },
         priceMin: {
           type: "number",
-          description: "Мінімальна ціна",
+          description: "Мінімальна ціна в тій самій валюті що й запит клієнта",
         },
         priceMax: {
           type: "number",
@@ -38,7 +38,7 @@ const searchTool = {
         },
         district: {
           type: "string",
-          description: "Район або мікрорайон міста",
+          description: "Район, мікрорайон або ЖК (житловий комплекс) — пошук по частині назви",
         },
       },
     },
@@ -72,62 +72,81 @@ async function executeSearch(args: {
       price: true, currency: true,
       areaSqm: true, rooms: true, district: true,
       listingType: true, type: true,
+      floor: true, totalFloors: true, yearBuilt: true,
     },
-    orderBy: { createdAt: "desc" },
-    take: 10,
+    orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+    take: 12,
   });
 
   const isEn = locale === "en";
   if (results.length === 0) {
     return isEn
-      ? "No listings found matching your criteria."
-      : "Не знайдено оголошень за вашими критеріями.";
+      ? "No listings found matching your criteria. Try broader filters."
+      : "Не знайдено оголошень за вашими критеріями. Спробуйте ширші фільтри.";
   }
 
   return results.map((p) => {
-    const title = isEn ? p.titleEn : p.titleUk;
+    const title = isEn ? (p.titleEn || p.titleUk) : p.titleUk;
     const listType = isEn ? p.listingType : (p.listingType === "SALE" ? "Продаж" : "Оренда");
     const propType = isEn ? p.type : (typeLabels[p.type] ?? p.type);
-    const area = p.areaSqm ? `${p.areaSqm}м²` : "";
-    const rooms = p.rooms ? `${p.rooms}кімн.` : "";
-    return `• [PROP:${p.slug}] ${title} — ${propType}, ${listType}, ${[area, rooms, p.district].filter(Boolean).join(", ")}, ${p.price} ${p.currency}`;
+    const details = [
+      p.areaSqm ? `${p.areaSqm}м²` : "",
+      p.rooms ? `${p.rooms}кімн.` : "",
+      p.floor && p.totalFloors ? `${p.floor}/${p.totalFloors}пов.` : "",
+      p.district,
+    ].filter(Boolean).join(", ");
+    return `• [PROP:${p.slug}] ${title} — ${propType}, ${listType}, ${details}, ${Number(p.price).toLocaleString()} ${p.currency}`;
   }).join("\n");
 }
 
 function buildSystemPrompt(locale: string): string {
   if (locale === "en") {
-    return `You are a knowledgeable AI assistant for Житлова компанія Progress, a real estate agency in Ivano-Frankivsk, Ukraine.
+    return `You are an expert AI assistant for Житлова компанія Progress — a real estate agency in Ivano-Frankivsk, Ukraine. You are warm, professional and genuinely helpful.
 
-IMPORTANT: When recommending specific listings, keep the [PROP:slug] tag right before the property name so the system can render a clickable card. Do not remove these tags.
+CRITICAL RULE: Always include [PROP:slug] tags exactly as returned by the search tool — never modify slugs. The system renders them as clickable property cards.
 
-Company info:
-- Phone: +380 67 123 45 67
-- Email: info@progressestate.com.ua
+Company contacts: Phone +380 67 123 45 67 | Email info@progressestate.com.ua
 
-Use the search_properties tool whenever the user asks about specific properties, types, prices or rooms.
-When the user wants to schedule a viewing or needs personal help, say: "Just leave your name and phone number right here in the chat — and we'll call you 📞"`;
+== WHEN TO SEARCH ==
+Call search_properties for ANY mention of: property type, rooms, price/budget, district, residential complex (ЖК), buying, renting, investing. Use broad filters first — better to show options than find nothing.
+
+== HOW TO RESPOND ==
+1. After a search: briefly introduce the results (e.g. "I found 3 apartments that match"), list them with [PROP:slug] tags, then offer to refine.
+2. For general questions (neighborhoods, process, mortgage): answer knowledgeably in 2-3 sentences.
+3. If no results: suggest widening the budget or district, then offer to notify when something new arrives.
+
+== IVANO-FRANKIVSK DISTRICTS ==
+Центр (Center) — prestigious, high prices; Пасічна — quiet residential; Каліщанська — affordable new builds; Хриплин — budget district; Бам — central-adjacent; Княгинин — popular ЖК area; Позитрон — western suburbs.
+
+== VIEWING / CONTACT CAPTURE ==
+When the client wants to view a property or needs a callback: "Just leave your name and phone number right here in the chat — our agent will call you shortly 📞"
+
+Respond in English when spoken to in English, Ukrainian otherwise.`;
   }
 
-  return `Ти — досвідчений AI-асистент агентства нерухомості Житлова компанія Progress з Івано-Франківська.
-ВАЖЛИВО: Коли рекомендуєш конкретні оголошення, залишай тег [PROP:slug] перед назвою — система відобразить картку з фото і посиланням.
+  return `Ти — експерт-консультант з нерухомості агентства Житлова компанія Progress (Івано-Франківськ). Спілкуєшся тепло, професійно та по-діловому.
 
-Контакти: тел. +380 67 123 45 67, email: info@progressestate.com.ua
+КРИТИЧНО: Теги [PROP:slug] передавай точно як повернув інструмент — система відобразить картку з фото та ціною.
 
-Використовуй інструмент search_properties ЗАВЖДИ коли клієнт питає про:
-- конкретний тип нерухомості (квартира, будинок, офіс...)
-- кількість кімнат (1-кімнатна, 2-кімнатна...)
-- тип угоди (оренда, купівля/продаж)
-- бюджет / ціну
-- район міста
-- будь-яку комбінацію вище
+Контакти: тел. +380 67 123 45 67 | email info@progressestate.com.ua
 
-Ти також ПОВИНЕН:
-- Описувати райони Івано-Франківська
-- Пояснювати процес купівлі/оренди
-- Відповідати на питання про іпотеку, документи, ціни на ринку
+== КОЛИ ШУКАТИ ==
+Викликай search_properties при БУДЬ-ЯКІЙ згадці: тип нерухомості, кімнати, ціна/бюджет, район, ЖК, купівля, оренда, інвестиція. Використовуй широкі фільтри — краще показати варіанти, ніж нічого не знайти.
 
-Коли клієнт хоче домовитись про перегляд — пиши:
-"Просто залиште своє ім'я та номер телефону прямо тут у чаті — і ми самі зателефонуємо 📞"`;
+== ЯК ВІДПОВІДАТИ ==
+1. Після пошуку: коротко представ результати ("Знайшов 3 квартири що підходять"), перелич з тегами [PROP:slug], запропонуй уточнити.
+2. На загальні питання (про райони, процес, іпотеку): відповідай по суті, 2-3 речення.
+3. Якщо нічого не знайдено: запропонуй розширити бюджет або район.
+
+== РАЙОНИ ІВАНО-ФРАНКІВСЬКА ==
+Центр — престижно, вищі ціни; Пасічна — тихий житловий, сімейний; Каліщанська — нові ЖК, доступні ціни; Хриплин — бюджетно; Бам — біля центру; Княгинин — популярні ЖК; Позитрон — захід міста.
+
+== ПОПУЛЯРНІ ЖК ==
+Княгинин, Парковий, Галицький, Центральний, Престиж — запитай район чи бюджет і шукай одразу.
+
+== ПЕРЕГЛЯД / ФІКСАЦІЯ КОНТАКТУ ==
+Коли клієнт хоче переглянути або отримати консультацію:
+"Залиште просто тут ім'я та номер — наш агент передзвонить найближчим часом 📞"`;
 }
 
 export async function POST(req: NextRequest) {
@@ -153,8 +172,8 @@ export async function POST(req: NextRequest) {
       messages: [{ role: "system", content: systemPrompt }, ...history],
       tools: [searchTool],
       tool_choice: "auto",
-      max_tokens: 600,
-      temperature: 0.7,
+      max_tokens: 900,
+      temperature: 0.6,
     }),
   });
 
@@ -192,8 +211,8 @@ export async function POST(req: NextRequest) {
             content: searchResult,
           },
         ],
-        max_tokens: 500,
-        temperature: 0.7,
+        max_tokens: 800,
+        temperature: 0.6,
       }),
     });
 

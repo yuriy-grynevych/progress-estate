@@ -144,6 +144,10 @@ export default function ChatPanel() {
       const key = channelKey(ch);
       const last = lastCreatedRef.current[key];
 
+      // If this channel was never loaded (no timestamp marker), treat as initial
+      // to avoid race condition where polling marks already-read messages as unread
+      if (!initial && !last) initial = true;
+
       let url = `/api/admin/chat?channel=${ch.type}`;
       if (ch.type === "dm") url += `&with=${ch.user.id}`;
       if (!initial && last) url += `&after=${encodeURIComponent(last)}`;
