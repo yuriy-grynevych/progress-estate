@@ -14,18 +14,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
-  const role = (session.user as any).role as string;
   const currentUserId = (session.user as any).id as string;
 
   const existing = await prisma.property.findUnique({
     where: { id: params.id },
-    select: { status: true, assignedUserId: true },
+    select: { status: true },
   });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-
-  if (role === "EMPLOYEE" && existing.assignedUserId !== currentUserId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   const statusChanged = existing.status !== status;
 
